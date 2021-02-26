@@ -10,7 +10,7 @@ require (
 	github.com/gin-gonic/gin v1.6.3
 	github.com/magiconair/properties v1.8.4 // indirect
 	github.com/mitchellh/mapstructure v1.4.1 // indirect
-	github.com/morrocker/errors v0.0.0-20210225232242-8791a4ec7ec5
+	github.com/morrocker/errors v0.0.0-20210226011741-e7b1a26c3430
 	github.com/pelletier/go-toml v1.8.1 // indirect
 	github.com/spf13/afero v1.5.1 // indirect
 	github.com/spf13/cast v1.3.1 // indirect

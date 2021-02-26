@@ -159,6 +159,10 @@ github.com/modern-go/reflect2 v1.0.1 h1:9f412s+6RmYXLWZSEzVVgPGK7C2PphHj5RJrvfx9
 github.com/modern-go/reflect2 v1.0.1/go.mod h1:bx2lNnkwVCuqBIxFjflWJWanXIb3RllmbCylyMrvgv0=
 github.com/morrocker/errors v0.0.0-20210225232242-8791a4ec7ec5 h1:AsMVHPxyXLV6hryTp3L6oveBTbqdsk+rN0oBP5t1cIQ=
 github.com/morrocker/errors v0.0.0-20210225232242-8791a4ec7ec5/go.mod h1:MaVAsvgPemd2kMO+0xRrt0yeflz4aaWX1it59qu3/gU=
+github.com/morrocker/errors v0.0.0-20210226011256-dc91711f6fc0 h1:mojVHf+QR+ILnHoiWVyzZd+E8A4uoVBYa7Shukvz610=
+github.com/morrocker/errors v0.0.0-20210226011256-dc91711f6fc0/go.mod h1:MaVAsvgPemd2kMO+0xRrt0yeflz4aaWX1it59qu3/gU=
+github.com/morrocker/errors v0.0.0-20210226011741-e7b1a26c3430 h1:cqGktoOYnOVJ54cH7GBHqjFjqMOUY310bG/41S/NziM=
+github.com/morrocker/errors v0.0.0-20210226011741-e7b1a26c3430/go.mod h1:MaVAsvgPemd2kMO+0xRrt0yeflz4aaWX1it59qu3/gU=
 github.com/mwitkow/go-conntrack v0.0.0-20161129095857-cc309e4a2223/go.mod h1:qRWi+5nqEBWmkhHvq77mSJWrCKwh8bxhgT7d/eI7P4U=
 github.com/oklog/ulid v1.3.1/go.mod h1:CirwcVhetQ6Lv90oh/F+FBtV6XMibvdAFo93nm5qn4U=
 github.com/pascaldekloe/goe v0.0.0-20180627143212-57f6aae5913c/go.mod h1:lzWF7FIEvWOWxwDKqyGYQf6ZUaNfKdP144TG7ZOy1lc=

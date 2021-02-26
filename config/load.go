@@ -9,12 +9,9 @@ import (
 	"github.com/spf13/viper"
 )
 
-var err errors.Error
-	err.SetPath("config")
-
 // Conf stores the configuration info imported from the configuration file
-var Conf Config{Clouds:make(map[string]Cloud)}
-
+var Conf = Config{Clouds: make(map[string]Cloud)}
+var err = errors.Error{Path: "config"}
 
 // LoadConfig loads the config for the server execution. By default config.json
 func LoadConfig(name string) error {
