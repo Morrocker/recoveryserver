@@ -1,0 +1,30 @@
+{
+    "Clouds":{
+        "main":{
+            "ClonerKey":"asdfasdfas",
+            "FilesAddress":"https://zifre.cloner.cl",
+            "Stores":[
+                {
+                    "Address":"https://alpha.cloner.cl",
+                    "Magic":"youarethebest"
+                },
+                {
+                    "Address":"https://zulu.cloner.cl",
+                    "Magic":"youarethebackup"
+                }
+            ]
+        },
+        "opencloud":{
+            "ClonerKey":"qwerqwerqwerqwerwqer",
+            "FilesAddress":"http://opencloud.cloner.cl",
+            "Stores":[
+                {
+                    "Address":"http://opencloud.cloner.cl",
+                    "Magic":"youaretheopencloud"
+                }
+            ]
+        }
+    },
+    "SlackToken":"notworkingyet",
+    "SlackChannel":"sandbox"
+}

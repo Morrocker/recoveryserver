@@ -16,10 +16,10 @@ func main() {
 
 	config.SetFlags()
 	configName := viper.GetString("config")
-	config.LoadConfig(configName)
-
-	// log.Info("%s", viper.Get("config"))
-	// log.Info("%v", viper.GetBool("debug"))
+	if e := config.LoadConfig(configName); e != nil {
+		log.Error("%s", e)
+		return
+	}
 
 	// cancel := make(chan struct{})
 	// errc := make(chan error)
