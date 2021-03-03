@@ -2,8 +2,7 @@ package main
 
 import (
 	log "github.com/Morrocker/logger"
-	"github.com/recoveryserver/config"
-	"github.com/spf13/viper"
+	"github.com/recoveryserver/server"
 )
 
 const addr string = "localhost:5000"
@@ -13,34 +12,8 @@ func init() {
 }
 
 func main() {
+	server := server.New()
 
-	config.SetFlags()
-	configName := viper.GetString("config")
-	if e := config.LoadConfig(configName); e != nil {
-		log.Error("%s", e)
-		return
-	}
-
-	// cancel := make(chan struct{})
-	// errc := make(chan error)
-	// errc2 := make(chan error)
-	// logger.Info("Creating service with address %s", addr)
-	// s, err := service.New(addr)
-	// if err != nil {
-	// 	logger.Error("%v", err)
-	// }
-
-	// go func() {
-	// 	logger.Info("Starting server on %s", addr)
-	// 	errc <- s.Serve()
-	// }()
-
-	// defer close(cancel)
-	// select {
-	// case err := <-errc:
-	// 	logger.Error("Server error: %v", err)
-	// 	errc2 <- err
-	// }
-
-	// return
+	server.StartService(addr)
+	return
 }

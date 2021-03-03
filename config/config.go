@@ -12,6 +12,7 @@ type Cloud struct {
 	ClonerKey    string
 	FilesAddress string
 	Stores       []BlocksMaster
+	Legacy       bool
 }
 
 //BlocksMaster stores the address and magic to use for each store

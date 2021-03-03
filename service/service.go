@@ -45,7 +45,7 @@ func (s *Service) Handler() http.Handler {
 	// mux.Use(s.handleAuth)
 	// mux.Use(s.monitorHandler())
 
-	mux.GET("/test", s.testFunc)
+	mux.POST("/test", s.testFunc)
 
 	return mux
 }

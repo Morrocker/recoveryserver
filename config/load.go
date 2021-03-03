@@ -10,26 +10,26 @@ import (
 )
 
 // Conf stores the configuration info imported from the configuration file
-var Conf = Config{Clouds: make(map[string]Cloud)}
 var err = errors.Error{Path: "config"}
 
 // LoadConfig loads the config for the server execution. By default config.json
-func LoadConfig(name string) error {
+func LoadConfig(name string) (Config, error) {
+	Conf := Config{Clouds: make(map[string]Cloud)}
 	err.SetFunc("LoadConfig()")
 	name, cType := parseConfigName(name)
 	if name == "" || cType == "" {
 		err.New("config fileType not supported. Exiting")
-		return err
+		return Conf, err
 	}
 
 	viper.SetConfigName(name)
 	viper.SetConfigType(cType)
 	viper.AddConfigPath(".")
 	if err := viper.ReadInConfig(); err != nil {
-		return err
+		return Conf, err
 	}
 	viper.Unmarshal(&Conf)
-	return nil
+	return Conf, nil
 }
 
 // SetFlags sets the flags for the application

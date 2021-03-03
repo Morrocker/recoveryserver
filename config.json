@@ -12,7 +12,8 @@
                     "Address":"https://zulu.cloner.cl",
                     "Magic":"youarethebackup"
                 }
-            ]
+            ],
+            "Legacy":false
         },
         "opencloud":{
             "ClonerKey":"qwerqwerqwerqwerwqer",
@@ -22,7 +23,8 @@
                     "Address":"http://opencloud.cloner.cl",
                     "Magic":"youaretheopencloud"
                 }
-            ]
+            ],
+            "Legacy":true
         }
     },
     "SlackToken":"notworkingyet",
