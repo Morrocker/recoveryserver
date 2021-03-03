@@ -11,20 +11,22 @@ import (
 	"github.com/spf13/viper"
 )
 
+// Server groups all server information
 type Server struct {
-	config     config.Config
-	cancel     chan struct{}
-	service    *service.Service
-	recoveries map[string]recovery.RecoveryGroup
-	Lock       sync.Mutex
+	config  config.Config
+	cancel  chan struct{}
+	service *service.Service
+	Lock    sync.Mutex
 }
 
+// New initializes and returns a new recovery Server
 func New() (server *Server) {
 	server.cancel = make(chan struct{})
-	server.recoveries = make(map[string]recovery.RecoveryGroup)
+	server.service.recoveries = make(map[string]*recovery.Recovery)
 	return
 }
 
+// StartService starts the recovry server and listens for requests
 func (s *Server) StartService(addr string) {
 	errc := make(chan error)
 	errc2 := make(chan error)
@@ -48,13 +50,14 @@ func (s *Server) StartService(addr string) {
 	}
 }
 
+// LoadConfig loads the configuration file into the server
 func (s *Server) LoadConfig() {
 	config.SetFlags()
 	configName := viper.GetString("config")
-	if conf, e := config.LoadConfig(configName); e != nil {
-		log.Error("%s", e)
+	conf, err := config.LoadConfig(configName)
+	if err != nil {
+		log.Error("%s", err)
 		return
-	} else {
-		s.config = conf
 	}
+	s.config = conf
 }

@@ -7,13 +7,15 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/recoveryserver/recovery"
 )
 
 // Service contains all the information used to run a successful service.
 type Service struct {
-	addr     string
-	magic    string
-	listener net.Listener
+	addr       string
+	magic      string
+	listener   net.Listener
+	recoveries map[string]*recovery.Recovery
 
 	mu sync.Mutex // guards s
 	s  *http.Server
