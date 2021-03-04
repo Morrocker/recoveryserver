@@ -1,13 +1,6 @@
 package recovery
 
-// StartGroupRecovery Starts a single recovery.
-// func (r *Group) StartGroupRecovery() {
-// 	for _, recovery := range r.Recoveries {
-// 		recovery.GetTreeStruct()
-// 	}
-// }
-
-func (r *Recovery) RunRecovery() {
+func (r *Recovery) Run() {
 
 }
 

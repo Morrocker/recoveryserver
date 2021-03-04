@@ -12,10 +12,10 @@ import (
 
 // Service contains all the information used to run a successful service.
 type Service struct {
-	addr       string
-	magic      string
-	listener   net.Listener
-	recoveries map[string]*recovery.Recovery
+	addr     string
+	magic    string
+	Director recovery.Director
+	listener net.Listener
 
 	mu sync.Mutex // guards s
 	s  *http.Server
@@ -48,6 +48,7 @@ func (s *Service) Handler() http.Handler {
 	// mux.Use(s.monitorHandler())
 
 	mux.POST("/test", s.testFunc)
+	mux.POST("/add", s.addRecovery)
 
 	return mux
 }

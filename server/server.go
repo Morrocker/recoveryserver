@@ -15,15 +15,15 @@ import (
 type Server struct {
 	config  config.Config
 	cancel  chan struct{}
-	service *service.Service
+	Service *service.Service
 	Lock    sync.Mutex
 }
 
 // New initializes and returns a new recovery Server
-func New() (server *Server) {
+func New() *Server {
+	var server Server
 	server.cancel = make(chan struct{})
-	server.service.recoveries = make(map[string]*recovery.Recovery)
-	return
+	return &server
 }
 
 // StartService starts the recovry server and listens for requests
@@ -35,11 +35,12 @@ func (s *Server) StartService(addr string) {
 	if err != nil {
 		log.Error("%v", err)
 	}
-	s.service = srv
+	s.Service = srv
+	s.Service.Director.Recoveries = make(map[string]*recovery.Recovery)
 
 	go func() {
 		log.Info("Starting server on %s", addr)
-		errc <- s.service.Serve()
+		errc <- s.Service.Serve()
 	}()
 
 	defer close(s.cancel)

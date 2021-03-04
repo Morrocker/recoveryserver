@@ -1,9 +1,5 @@
 package recovery
 
-import (
-	"sync"
-)
-
 const (
 	Queue = iota
 	Stop
@@ -22,36 +18,23 @@ const (
 
 // Recovery stores a single recovery data
 type Recovery struct {
-	info     *Data
-	Status   int
-	Priority int
+	Info        Data
+	Destination string
+	Status      int
+	Priority    int
 }
 
+// Data stores the data needed to execute a recovery
 type Data struct {
 	User         string
 	Machine      string
 	Metafile     string
 	Repository   string
 	Disk         string
-	Organization string
+	Organization int
 	Deleted      bool
 	Date         string
 }
-
-// Group stores a group of recoveries to be ejecuted
-type Organizer struct {
-	Recoveries map[string]Recovery
-	Lock       sync.Mutex
-}
-
-// AddRecovery adds a single recovery to a recovery group
-// func (g *Group) AddRecovery(r Recovery) string {
-// 	g.Lock.Lock()
-// 	defer g.Lock.Unlock()
-// 	hash := utils.RandString(8)
-// 	g.Recoveries[hash] = r
-// 	return hash
-// }
 
 // Pause stops a recovery execution
 func (r *Recovery) Pause() {
@@ -61,6 +44,16 @@ func (r *Recovery) Pause() {
 // Start starts (or resumes) a recovery execution
 func (r *Recovery) Start() {
 	r.Status = Start
+}
+
+// Done sets a recovery status as Done
+func (r *Recovery) Done() {
+	r.Status = Done
+}
+
+// Cancel sets a recovery status as Cancel
+func (r *Recovery) Cancel() {
+
 }
 
 //

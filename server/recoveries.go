@@ -3,7 +3,6 @@ package server
 import (
 	"encoding/json"
 	"io/ioutil"
-	"time"
 
 	"github.com/recoveryserver/recovery"
 )
@@ -31,7 +30,7 @@ func (s *Server) AddRecovery(h string, r recovery.Recovery) {
 // WriteRecoveryJSON writes the recoveries data into a JSON
 func (s *Server) WriteRecoveryJSON() {
 
-	json, err := json.Marshal(s.service.recoveries)
+	json, err := json.Marshal(s.Service)
 	if err != nil {
 		// SEE error later
 	}
@@ -45,15 +44,7 @@ func (s *Server) ReadRecoveryJSON() {
 
 }
 
+// StartWorkers asdfasd
 func (s *Server) StartWorkers() {
-	for {
-		s.Lock.Lock()
-		for key, recover := range s.service.recoveries {
-			if recover.Status == recovery.Queue {
-				go s.service.recoveries[key].RunRecovery()
-			}
-		}
-		s.Lock.Unlock()
-		time.Sleep(10 * time.Second)
-	}
+	s.Service.Director.StartWorkers()
 }
