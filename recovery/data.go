@@ -1,23 +1,40 @@
 package recovery
 
 const (
-	Queue = iota
+	// Entry default entry status for a recovery
+	Entry = iota
+	// Queue recovery in queue to initilize recovery worker
+	Queue
+	// Stop recovery queued and waiting to start running
 	Stop
+	// Start Recovery running currently
 	Start
+	// Pause Recovery temporarily stopped
+	Pause
+	// Done Recovery finished
 	Done
+	// Cancel Recovery to be removed
 	Cancel
 )
 
 const (
-	Low = iota
+	// VeryLow just a priority
+	VeryLow = iota
+	// Low just a priority
+	Low
+	// Medium just a priority
 	Medium
+	// High just a priority
 	High
+	// VeryHigh just a priority
 	VeryHigh
+	// Urgent just a priority
 	Urgent
 )
 
 // Recovery stores a single recovery data
 type Recovery struct {
+	ID          string
 	Info        Data
 	Destination string
 	Status      int
@@ -34,6 +51,11 @@ type Data struct {
 	Organization int
 	Deleted      bool
 	Date         string
+}
+
+// Multiple stores multiple recoveries
+type Multiple struct {
+	Recoveries []Data
 }
 
 // Pause stops a recovery execution

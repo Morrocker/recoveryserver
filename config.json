@@ -1,4 +1,7 @@
 {
+    "AutoQueueRecoveries":false,
+    "AutoRunRecoveries":false,
+    "HostAddr":"localhost:5000",
     "Clouds":{
         "main":{
             "ClonerKey":"asdfasdfas",

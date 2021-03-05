@@ -1,19 +1,24 @@
 package main
 
 import (
-	log "github.com/Morrocker/logger"
-	"github.com/recoveryserver/server"
+	"github.com/morrocker/logger"
+	"github.com/morrocker/recoveryserver/config"
+	"github.com/morrocker/recoveryserver/server"
+	"github.com/spf13/viper"
 )
 
-const addr string = "localhost:5000"
-
 func init() {
-	log.ToggleTimestamp()
+	// logger.ToggleTimestamp()
+	logger.Info("Setting flags")
+	config.SetFlags()
+	logger.Info("Loading server config")
+	config.LoadConfig()
+	logger.SetModes(viper.GetBool("verbose"), viper.GetBool("debug"))
 }
 
 func main() {
+	logger.Info("Starting Recovery Server")
 	server := server.New()
-
-	server.StartService(addr)
+	server.StartServer()
 	return
 }

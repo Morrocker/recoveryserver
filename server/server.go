@@ -3,17 +3,13 @@ package server
 import (
 	"sync"
 
-	"github.com/Morrocker/logger"
-	log "github.com/Morrocker/logger"
-	"github.com/recoveryserver/config"
-	"github.com/recoveryserver/recovery"
-	"github.com/recoveryserver/service"
-	"github.com/spf13/viper"
+	"github.com/morrocker/logger"
+	"github.com/morrocker/recoveryserver/config"
+	"github.com/morrocker/recoveryserver/service"
 )
 
 // Server groups all server information
 type Server struct {
-	config  config.Config
 	cancel  chan struct{}
 	Service *service.Service
 	Lock    sync.Mutex
@@ -26,22 +22,23 @@ func New() *Server {
 	return &server
 }
 
-// StartService starts the recovry server and listens for requests
-func (s *Server) StartService(addr string) {
+// StartServer starts the recovry server and listens for requests
+func (s *Server) StartServer() {
 	errc := make(chan error)
 	errc2 := make(chan error)
-	log.Info("Creating service with address %s", addr)
-	srv, err := service.New(addr)
+	logger.InfoV("Creating service with address %s", config.Data.HostAddr)
+	srv, err := service.New(config.Data.HostAddr)
 	if err != nil {
-		log.Error("%v", err)
+		logger.Error("%v", err)
 	}
 	s.Service = srv
-	s.Service.Director.Recoveries = make(map[string]*recovery.Recovery)
 
 	go func() {
-		log.Info("Starting server on %s", addr)
+		logger.Info("Serving service on address %s", config.Data.HostAddr)
 		errc <- s.Service.Serve()
 	}()
+
+	s.Service.StartDirector(config.Data)
 
 	defer close(s.cancel)
 	select {
@@ -49,16 +46,4 @@ func (s *Server) StartService(addr string) {
 		logger.Error("Server error: %v", err)
 		errc2 <- err
 	}
-}
-
-// LoadConfig loads the configuration file into the server
-func (s *Server) LoadConfig() {
-	config.SetFlags()
-	configName := viper.GetString("config")
-	conf, err := config.LoadConfig(configName)
-	if err != nil {
-		log.Error("%s", err)
-		return
-	}
-	s.config = conf
 }

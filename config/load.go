@@ -13,29 +13,30 @@ import (
 var err = errors.Error{Path: "config"}
 
 // LoadConfig loads the config for the server execution. By default config.json
-func LoadConfig(name string) (Config, error) {
-	Conf := Config{Clouds: make(map[string]Cloud)}
+func LoadConfig() error {
+	name := viper.GetString("config")
 	err.SetFunc("LoadConfig()")
 	name, cType := parseConfigName(name)
 	if name == "" || cType == "" {
 		err.New("config fileType not supported. Exiting")
-		return Conf, err
+		return err
 	}
 
 	viper.SetConfigName(name)
 	viper.SetConfigType(cType)
 	viper.AddConfigPath(".")
 	if err := viper.ReadInConfig(); err != nil {
-		return Conf, err
+		return err
 	}
-	viper.Unmarshal(&Conf)
-	return Conf, nil
+	viper.Unmarshal(&Data)
+	return nil
 }
 
 // SetFlags sets the flags for the application
 func SetFlags() {
 	pflag.StringP("config", "c", "config.json", "Sets the configuration filename. [Default: config.json] ")
 	pflag.BoolP("debug", "d", false, "Enables debug mode")
+	pflag.BoolP("verbose", "v", false, "Enables verbose mode")
 
 	pflag.Parse()
 	viper.BindPFlags(pflag.CommandLine)

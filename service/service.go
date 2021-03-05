@@ -7,7 +7,8 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/recoveryserver/recovery"
+	"github.com/morrocker/recoveryserver/config"
+	"github.com/morrocker/recoveryserver/recovery"
 )
 
 // Service contains all the information used to run a successful service.
@@ -49,6 +50,11 @@ func (s *Service) Handler() http.Handler {
 
 	mux.POST("/test", s.testFunc)
 	mux.POST("/add", s.addRecovery)
+	mux.POST("/add_multiple", s.addRecoveries)
+	mux.POST("/change_priority", s.changePriority)
+	mux.GET("/run_recoveries", s.runDirector)
+	mux.GET("/stop_recoveries", s.pauseDirector)
+	mux.POST("/queue_recovery", s.queueRecovery)
 
 	return mux
 }
@@ -84,7 +90,9 @@ func (s *Service) Close() error {
 // Serve accepts incoming connections Service's listener, creating a
 // new service goroutine for each. The service goroutines read requests and
 // then call s.Handler() to reply to them.
-func (s *Service) Serve() error { return s.server().Serve(s.listener) }
+func (s *Service) Serve() error {
+	return s.server().Serve(s.listener)
+}
 
 // ServeTLS accepts incoming connections Service's listener, creating a
 // new service goroutine for each. The service goroutines read requests and
@@ -113,4 +121,9 @@ func (ln tcpKeepAliveListener) Accept() (c net.Conn, err error) {
 	tc.SetKeepAlive(true)
 	tc.SetKeepAlivePeriod(3 * time.Minute)
 	return tc, nil
+}
+
+// StartDirector starts the recovery Director processes
+func (s *Service) StartDirector(c config.Config) {
+	s.Director.StartDirector(c)
 }
