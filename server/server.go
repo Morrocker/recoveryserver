@@ -37,8 +37,8 @@ func (s *Server) StartServer() {
 		logger.Info("Serving service on address %s", config.Data.HostAddr)
 		errc <- s.Service.Serve()
 	}()
-
-	s.Service.StartDirector(config.Data)
+	e := s.Service.StartDirector(config.Data)
+	errc <- e
 
 	defer close(s.cancel)
 	select {

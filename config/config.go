@@ -6,6 +6,7 @@ type Config struct {
 	AutoRunRecoveries   bool
 	LoginAddr           bool
 	HostAddr            string
+	RecoveriesJSON      string
 	Clouds              map[string]Cloud
 	SlackToken          string
 	SlackChannel        string

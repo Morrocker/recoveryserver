@@ -1,11 +1,11 @@
 {
-    "AutoQueueRecoveries":false,
+    "AutoQueueRecoveries":true,
     "AutoRunRecoveries":true,
     "LoginAddr":"https://login.cloner.cl",
     "HostAddr":"localhost:5000",
     "Clouds":{
         "main":{
-            "ClonerKey":"asdfasdfas",
+            "ClonerKey":"6f9536809658ceda12ae071783417d656e997409c83254dc85d391516abb0d7d66069bc77f68a0d30d77e261332a7e09429d96cd7909fbc00e46fef005d8737f",
             "FilesAddress":"https://zifre.cloner.cl",
             "Stores":[
                 {
@@ -20,7 +20,7 @@
             "Legacy":false
         },
         "opencloud":{
-            "ClonerKey":"qwerqwerqwerqwerwqer",
+            "ClonerKey":"96a1964daa3d49fc1c2b93991233557136e0d3e49867335d309acee3f507b1b062cff3d609b3968c2d2c969fd1957333f513565869dbfa8060e127d4153942cd",
             "FilesAddress":"http://opencloud.cloner.cl",
             "Stores":[
                 {
@@ -31,6 +31,7 @@
             "Legacy":true
         }
     },
+    "RecoveriesJSON":"recoveries.json",
     "SlackToken":"notworkingyet",
     "SlackChannel":"sandbox"
 }

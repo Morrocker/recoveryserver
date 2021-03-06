@@ -54,6 +54,7 @@ func (s *Service) Handler() http.Handler {
 	mux.GET("/run_recoveries", s.runDirector)
 	mux.GET("/stop_recoveries", s.pauseDirector)
 	mux.GET("/queue_recovery", s.queueRecovery)
+	mux.GET("/start_recovery", s.startRecovery)
 
 	return mux
 }
@@ -123,6 +124,9 @@ func (ln tcpKeepAliveListener) Accept() (c net.Conn, err error) {
 }
 
 // StartDirector starts the recovery Director processes
-func (s *Service) StartDirector(c config.Config) {
-	s.Director.StartDirector(c)
+func (s *Service) StartDirector(c config.Config) error {
+	if err := s.Director.StartDirector(c); err != nil {
+		return err
+	}
+	return nil
 }

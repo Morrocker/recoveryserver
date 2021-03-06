@@ -1,7 +1,5 @@
 package recovery
 
-import "github.com/morrocker/errors"
-
 const (
 	// Entry default entry status for a recovery
 	Entry = iota
@@ -53,14 +51,13 @@ type Data struct {
 	Organization int
 	Deleted      bool
 	Date         string
+	Version      int
 }
 
 // Multiple stores multiple recoveries
 type Multiple struct {
 	Recoveries []Data
 }
-
-var e = errors.Error{Path: "recovery"}
 
 // Pause stops a recovery execution
 func (r *Recovery) Pause() {

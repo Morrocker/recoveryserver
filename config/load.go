@@ -10,25 +10,21 @@ import (
 	"github.com/spf13/viper"
 )
 
-var e = errors.Error{Path: "config"}
-
 // Load loads the config for the server execution. By default config.json
 func (c *Config) Load() error {
-	e.SetFunc("LoadConfig()")
+	errPath := "config.Load()"
 	name := viper.GetString("config")
 	logger.TaskV("Loading Config file %s", name)
 	name, cType := parseConfigName(name)
 	if name == "" || cType == "" {
-		e.New("config fileType not supported. Exiting")
-		return e
+		return errors.New(errPath, "config fileType not supported. Exiting")
 	}
 
 	viper.SetConfigName(name)
 	viper.SetConfigType(cType)
 	viper.AddConfigPath(".")
 	if err := viper.ReadInConfig(); err != nil {
-		e.New(err)
-		return e
+		return errors.New(errPath, err)
 	}
 	viper.Unmarshal(&c)
 	return nil
@@ -36,15 +32,14 @@ func (c *Config) Load() error {
 
 // SetFlags sets the flags for the application
 func SetFlags() error {
-	e.SetFunc("SetFlags()")
+	errPath := "config.SetFlags()"
 	pflag.StringP("config", "c", "config.json", "Sets the configuration filename. [Default: config.json] ")
 	pflag.BoolP("debug", "d", false, "Enables debug mode")
 	pflag.BoolP("verbose", "v", false, "Enables verbose mode")
 
 	pflag.Parse()
 	if err := viper.BindPFlags(pflag.CommandLine); err != nil {
-		e.New(err)
-		return e
+		return errors.New(errPath, err)
 	}
 	return nil
 }
