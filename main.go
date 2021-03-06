@@ -9,15 +9,12 @@ import (
 
 func init() {
 	// logger.ToggleTimestamp()
-	logger.Info("Setting flags")
 	config.SetFlags()
-	logger.Info("Loading server config")
-	config.LoadConfig()
 	logger.SetModes(viper.GetBool("verbose"), viper.GetBool("debug"))
+	config.Data.Load()
 }
 
 func main() {
-	logger.Info("Starting Recovery Server")
 	server := server.New()
 	server.StartServer()
 	return

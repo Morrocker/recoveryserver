@@ -8,24 +8,10 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/davecgh/go-spew/spew"
 	"github.com/gin-gonic/gin"
 	"github.com/morrocker/logger"
 	"github.com/morrocker/recoveryserver/recovery"
 )
-
-func (s *Service) testFunc(c *gin.Context) {
-	bodyBytes, err := ioutil.ReadAll(c.Request.Body)
-	if err != nil {
-		logger.Error("%v", err)
-		return
-	}
-
-	var recoveryData recovery.Data
-	json.Unmarshal(bodyBytes, &recoveryData)
-
-	spew.Dump(recoveryData)
-}
 
 func (s *Service) addRecovery(c *gin.Context) {
 	bodyBytes, err := ioutil.ReadAll(c.Request.Body)
@@ -40,7 +26,6 @@ func (s *Service) addRecovery(c *gin.Context) {
 	}
 
 	hash := s.Director.AddRecovery(recoveryData)
-
 	msg := fmt.Sprintf("Recovery %v added with Id:%s", recoveryData, hash)
 	c.Data(http.StatusOK, "text", []byte(msg))
 
@@ -89,19 +74,13 @@ func (s *Service) deleteRecovery(c *gin.Context) {
 func (s *Service) changePriority(c *gin.Context) {
 	id, ok := c.GetQuery("Id")
 	if !ok {
-		c.JSON(
-			http.StatusBadRequest,
-			errors.New("Misssing recovery Id in request"),
-		)
+		c.JSON(http.StatusBadRequest, errors.New("Misssing recovery Id in request"))
 		return
 	}
 
 	n, ok := c.GetQuery("Priority")
 	if !ok {
-		c.JSON(
-			http.StatusBadRequest,
-			errors.New("Misssing set priority in request"),
-		)
+		c.JSON(http.StatusBadRequest, errors.New("Misssing set priority in request"))
 		return
 	}
 	x, err := strconv.Atoi(n)
@@ -125,17 +104,11 @@ func (s *Service) runDirector(c *gin.Context) {
 func (s *Service) queueRecovery(c *gin.Context) {
 	id, ok := c.GetQuery("Id")
 	if !ok {
-		c.JSON(
-			http.StatusBadRequest,
-			errors.New("Misssing recovery Id in request"),
-		)
+		c.JSON(http.StatusBadRequest, errors.New("Misssing recovery Id in request"))
 		return
 	}
 	if err := s.Director.QueueRecovery(id); err != nil {
-		c.JSON(
-			http.StatusBadRequest,
-			errors.New("Recovery does not exist"),
-		)
+		c.JSON(http.StatusBadRequest, err)
 		return
 	}
 	msg := fmt.Sprintf("Recovery %s queued", id)

@@ -28,6 +28,5 @@ func RandString(n int) string {
 		cache >>= letterIdxBits
 		remain--
 	}
-
 	return string(b)
 }

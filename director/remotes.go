@@ -1,4 +1,4 @@
-package recovery
+package director
 
 import (
 	"github.com/clonercl/blockserver/blocks"

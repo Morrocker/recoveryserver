@@ -4,6 +4,7 @@ package config
 type Config struct {
 	AutoQueueRecoveries bool
 	AutoRunRecoveries   bool
+	LoginAddr           bool
 	HostAddr            string
 	Clouds              map[string]Cloud
 	SlackToken          string
@@ -24,4 +25,5 @@ type BlocksMaster struct {
 	Address string
 }
 
+// Data stores the recovery server's configuration data
 var Data Config

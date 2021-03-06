@@ -8,17 +8,17 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/morrocker/recoveryserver/config"
-	"github.com/morrocker/recoveryserver/recovery"
+	"github.com/morrocker/recoveryserver/director"
 )
 
 // Service contains all the information used to run a successful service.
 type Service struct {
 	addr     string
 	magic    string
-	Director recovery.Director
+	Director director.Director
 	listener net.Listener
 
-	mu sync.Mutex // guards s
+	mu sync.Mutex
 	s  *http.Server
 }
 
@@ -48,13 +48,12 @@ func (s *Service) Handler() http.Handler {
 	// mux.Use(s.handleAuth)
 	// mux.Use(s.monitorHandler())
 
-	mux.POST("/test", s.testFunc)
 	mux.POST("/add", s.addRecovery)
 	mux.POST("/add_multiple", s.addRecoveries)
 	mux.POST("/change_priority", s.changePriority)
 	mux.GET("/run_recoveries", s.runDirector)
 	mux.GET("/stop_recoveries", s.pauseDirector)
-	mux.POST("/queue_recovery", s.queueRecovery)
+	mux.GET("/queue_recovery", s.queueRecovery)
 
 	return mux
 }
