@@ -1,36 +1,59 @@
 {
-  "269rxmp5": {
-    "ID": "269rxmp5",
+  "4fj32ly3": {
+    "ID": "4fj32ly3",
     "Info": {
-      "User": "morocco2@cloner.cl",
+      "User": "ir@opencloud.cloner.cl",
       "Machine": "moroccos22",
       "Metafile": "fasfdaasadfsadffdas",
       "Repository": "dfaqwerqasdfasfdwerqwerwre",
       "Disk": "c://",
-      "Organization": 20,
+      "RootGroup": 20,
       "Deleted": false,
       "Date": "2000-02-01",
-      "Version": 0
+      "Version": 0,
+      "Exclusions": null,
+      "Server": ""
     },
     "Destination": "",
-    "Status": 0,
+    "Status": 1,
     "Priority": 2
   },
-  "tagp4xnn": {
-    "ID": "tagp4xnn",
+  "op6awhr5": {
+    "ID": "op6awhr5",
     "Info": {
-      "User": "morocco@cloner.cl",
+      "User": "ir+zifre@cloner.cl",
       "Machine": "moroccos",
       "Metafile": "fasfdaasfdas",
       "Repository": "dfaqwerqwerqwerwre",
       "Disk": "c://",
-      "Organization": 20,
+      "RootGroup": 20,
       "Deleted": false,
       "Date": "2000-02-01",
-      "Version": 0
+      "Version": 0,
+      "Exclusions": null,
+      "Server": ""
     },
     "Destination": "",
-    "Status": 0,
+    "Status": 2,
+    "Priority": 2
+  },
+  "q8qbao67": {
+    "ID": "q8qbao67",
+    "Info": {
+      "User": "ir+zifre@cloner.cl",
+      "Machine": "moroccos",
+      "Metafile": "fasfdaasfdas",
+      "Repository": "dfaqwerqwerqwerwre",
+      "Disk": "c://",
+      "RootGroup": 20,
+      "Deleted": false,
+      "Date": "2000-02-01",
+      "Version": 0,
+      "Exclusions": null,
+      "Server": ""
+    },
+    "Destination": "",
+    "Status": 1,
     "Priority": 2
   }
 }

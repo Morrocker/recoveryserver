@@ -13,6 +13,8 @@ import (
 	"github.com/morrocker/recoveryserver/recovery"
 )
 
+// FIX ALL RESPONSES. RIGHT NOW ALL WE WILL GET BACK IS EMPTY IN MOST CASES
+
 func (s *Service) addRecovery(c *gin.Context) {
 	logger.TaskV("Adding new recovery")
 	errPath := "service.addRecovery()"
@@ -34,8 +36,8 @@ func (s *Service) addRecovery(c *gin.Context) {
 
 	hash, err := s.Director.AddRecovery(recoveryData)
 	if err != nil {
-		err = errors.New(errPath, err)
-		c.JSON(http.StatusBadRequest, err)
+		err := errors.New(errPath, err)
+		c.Data(http.StatusBadRequest, "text", []byte(err.Error()))
 		logger.Error("Error while adding recovery: %s", err)
 		return
 	}
@@ -67,7 +69,7 @@ func (s *Service) addRecoveries(c *gin.Context) {
 		hash, err := s.Director.AddRecovery(recovery)
 		if err != nil {
 			err = errors.Extend(errPath, err)
-			c.JSON(http.StatusBadRequest, err)
+			c.Data(http.StatusBadRequest, "text", []byte(err.Error()))
 			logger.Error("%s", err)
 			return
 		}

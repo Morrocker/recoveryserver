@@ -4,9 +4,10 @@ package config
 type Config struct {
 	AutoQueueRecoveries bool
 	AutoRunRecoveries   bool
-	LoginAddr           bool
+	LoginAddr           string
 	HostAddr            string
 	RecoveriesJSON      string
+	MetafileWorkers     int
 	Clouds              map[string]Cloud
 	SlackToken          string
 	SlackChannel        string

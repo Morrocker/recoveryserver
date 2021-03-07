@@ -43,15 +43,18 @@ type Recovery struct {
 
 // Data stores the data needed to execute a recovery
 type Data struct {
-	User         string
-	Machine      string
-	Metafile     string
-	Repository   string
-	Disk         string
-	Organization int
-	Deleted      bool
-	Date         string
-	Version      int
+	User       string
+	Machine    string
+	Metafile   string
+	Repository string
+	Disk       string
+	RootGroup  int
+	Deleted    bool
+	Date       string
+	Version    int
+	Exclusions []string
+	Server     string
+	ClonerKey  string
 }
 
 // Multiple stores multiple recoveries

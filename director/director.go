@@ -7,6 +7,7 @@ import (
 
 	"github.com/morrocker/errors"
 	"github.com/morrocker/logger"
+	tracker "github.com/morrocker/progress-tracker"
 	"github.com/morrocker/recoveryserver/config"
 	"github.com/morrocker/recoveryserver/recovery"
 	"github.com/morrocker/recoveryserver/utils"
@@ -17,9 +18,11 @@ type Director struct {
 	Run       bool
 	AutoQueue bool
 
-	Clouds     map[string]*Cloud
-	Recoveries map[string]*recovery.Recovery
-	Lock       sync.Mutex
+	SuperTracker *tracker.SuperTracker
+	Clouds       map[string]*Cloud
+	Recoveries   map[string]*recovery.Recovery
+	RunLock      sync.Mutex
+	Lock         sync.Mutex
 }
 
 // StartDirector starts the Director service and all subservices
@@ -36,13 +39,21 @@ func (d *Director) StartDirector(c config.Config) error {
 	if err := d.ReadRecoveryJSON(); err != nil {
 		err = errors.New(errPath, err)
 		logger.Error("%v", err)
-		return err
 	}
 	if d.AutoQueue {
-		for hash := range d.Recoveries {
-			d.Recoveries[hash].Status = recovery.Queue
+		for id := range d.Recoveries {
+			d.QueueRecovery(id)
 		}
 	}
+	st, err := tracker.New()
+	d.SuperTracker = st
+	if err != nil {
+		err = errors.New(errPath, err)
+		logger.Error("%v", err)
+		return err
+	}
+	// d.SuperTracker.AddGauge("tree", "Parallel Metafiles", config.Data.ConcurrentGetTree)
+
 	go d.StartWorkers()
 	go d.PickRecovery()
 	return nil
@@ -55,7 +66,7 @@ func (d *Director) StartWorkers() {
 		d.Lock.Lock()
 		for key, recover := range d.Recoveries {
 			if recover.Status == recovery.Queue {
-				go d.Recoveries[key].Run()
+				go d.Recoveries[key].Run(&d.RunLock)
 			}
 		}
 		d.Lock.Unlock()
@@ -78,7 +89,7 @@ func (d *Director) AddRecovery(r recovery.Data) (string, error) {
 	if r.Metafile == "" {
 		return "", errors.New(errPath, "Metafil parameter empty or missing")
 	}
-	if r.Organization == 0 {
+	if r.RootGroup == 0 {
 		return "", errors.New(errPath, "Organization parameter empty or missing")
 	}
 	if r.Repository == "" {
@@ -88,15 +99,15 @@ func (d *Director) AddRecovery(r recovery.Data) (string, error) {
 		return "", errors.New(errPath, "Disk parameter empty or missing")
 	}
 
-	hash := utils.RandString(8)
-	d.Recoveries[hash] = &recovery.Recovery{Info: r, ID: hash, Priority: recovery.Medium}
+	id := utils.RandString(8)
+	d.Recoveries[id] = &recovery.Recovery{Info: r, ID: id, Priority: recovery.Medium}
 	if d.AutoQueue {
-		d.Recoveries[hash].Status = recovery.Queue
+		d.QueueRecovery(id)
 	}
 	if err := d.WriteRecoveryJSON(); err != nil {
 		return "", errors.Extend(errPath, err)
 	}
-	return hash, nil
+	return id, nil
 }
 
 // Stop sets Run to false
@@ -206,12 +217,27 @@ func (d *Director) StartRecovery(id string) error {
 
 // QueueRecovery sets a recovery status to Queue. Needed when autoqueue is off.
 func (d *Director) QueueRecovery(id string) error {
-	logger.TaskD("Queueing recovery %s", id)
+	logger.TaskV("Queueing recovery %s", id)
 	errPath := "director.QueueRecovery()"
 	Recovery, ok := d.Recoveries[id]
 	if !ok {
 		msg := fmt.Sprintf("Recovery %s not found", id)
 		return errors.New(errPath, msg)
+	}
+	if err := Recovery.GetLogin(); err != nil {
+		err = errors.Extend(errPath, err)
+		return err
+	}
+	found := false
+	for _, cloud := range d.Clouds {
+		if cloud.FilesAddress == Recovery.Info.Server {
+			Recovery.Info.ClonerKey = cloud.ClonerKey
+			found = true
+			break
+		}
+	}
+	if !found {
+		return errors.New(errPath, "Failed to fetch Cloner key for recovery")
 	}
 	Recovery.Queue()
 	return nil
