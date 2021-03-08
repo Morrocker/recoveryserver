@@ -1,5 +1,11 @@
 package recovery
 
+import (
+	"github.com/morrocker/errors"
+	"github.com/morrocker/logger"
+	tracker "github.com/morrocker/progress-tracker"
+)
+
 const (
 	// Entry default entry status for a recovery
 	Entry = iota
@@ -34,11 +40,12 @@ const (
 
 // Recovery stores a single recovery data
 type Recovery struct {
-	ID          string
-	Info        Data
-	Destination string
-	Status      int
-	Priority    int
+	ID           string
+	Info         Data
+	Destination  string
+	Status       int
+	Priority     int
+	SuperTracker *tracker.SuperTracker
 }
 
 // Data stores the data needed to execute a recovery
@@ -85,4 +92,20 @@ func (r *Recovery) Cancel() {
 // Queue sets a recovery status as Done
 func (r *Recovery) Queue() {
 	r.Status = Queue
+}
+
+// StartTracker starts a new tracker for a Recovery
+func (r *Recovery) StartTracker() error {
+	errPath := "recovery.StartTracker()"
+	st, err := tracker.New()
+	r.SuperTracker = st
+	if err != nil {
+		err = errors.New(errPath, err)
+		logger.Error("%v", err)
+		return err
+	}
+	r.SuperTracker.AddGauge("files", "Files", 0)
+	r.SuperTracker.AddGauge("blocks", "Blocks", 0)
+	r.SuperTracker.AddGauge("size", "Size", 0)
+	return nil
 }

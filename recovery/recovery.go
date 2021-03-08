@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/url"
+	"strings"
 	"sync"
 	"time"
 
@@ -24,7 +25,7 @@ func (r *Recovery) Run(lock *sync.Mutex) {
 	r.Status = Stop
 	exitCode := 0
 	for {
-		logger.Info("Recovery %s worker is waiting to start!. BTW login is %s", r.ID, r.Info.Server)
+		logger.Info("Recovery %s worker is waiting to start!. BTW login is %s and cloner key is %s", r.ID, r.Info.Server, r.Info.ClonerKey)
 		switch r.Status {
 		case Start:
 			goto Metafiles
@@ -35,10 +36,14 @@ func (r *Recovery) Run(lock *sync.Mutex) {
 		time.Sleep(10 * time.Second)
 	}
 Metafiles:
-	for x := 0; x < 3; x++ {
-		logger.Info("Finding metafiles for recovery %s", r.ID)
-		time.Sleep(10 * time.Second)
-	}
+	go func() {
+		cf, tf, _ := r.SuperTracker.GetValues("files")
+		cb, tb, _ := r.SuperTracker.GetValues("blocks")
+		cs, ts, _ := r.SuperTracker.GetValues("size")
+		logger.Info("Files: %d/%d | Size: %d/%d | Blocks: %d/%d", cf, tf, cb, tb, cs, ts)
+		time.Sleep(5 * time.Second)
+	}()
+	GetRecoveryTree(r, r.SuperTracker)
 	for x := 0; x < 5; x++ {
 		for {
 			switch r.Status {
@@ -99,6 +104,8 @@ func (r *Recovery) GetLogin() error {
 	}
 	resp.Body.Close()
 
-	r.Info.Server = string(body)
+	s := string(body)
+	out := strings.Trim(s, "\"")
+	r.Info.Server = out
 	return nil
 }

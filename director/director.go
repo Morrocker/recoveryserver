@@ -42,17 +42,10 @@ func (d *Director) StartDirector(c config.Config) error {
 	}
 	if d.AutoQueue {
 		for id := range d.Recoveries {
-			d.QueueRecovery(id)
+			err := d.QueueRecovery(id)
+			logger.Alert("%s", errors.New(errPath, err))
 		}
 	}
-	st, err := tracker.New()
-	d.SuperTracker = st
-	if err != nil {
-		err = errors.New(errPath, err)
-		logger.Error("%v", err)
-		return err
-	}
-	// d.SuperTracker.AddGauge("tree", "Parallel Metafiles", config.Data.ConcurrentGetTree)
 
 	go d.StartWorkers()
 	go d.PickRecovery()
@@ -102,7 +95,8 @@ func (d *Director) AddRecovery(r recovery.Data) (string, error) {
 	id := utils.RandString(8)
 	d.Recoveries[id] = &recovery.Recovery{Info: r, ID: id, Priority: recovery.Medium}
 	if d.AutoQueue {
-		d.QueueRecovery(id)
+		err := d.QueueRecovery(id)
+		logger.Alert("%s", errors.New(errPath, err))
 	}
 	if err := d.WriteRecoveryJSON(); err != nil {
 		return "", errors.Extend(errPath, err)
@@ -238,6 +232,9 @@ func (d *Director) QueueRecovery(id string) error {
 	}
 	if !found {
 		return errors.New(errPath, "Failed to fetch Cloner key for recovery")
+	}
+	if err := Recovery.StartTracker(); err != nil {
+		return errors.New(errPath, err)
 	}
 	Recovery.Queue()
 	return nil
