@@ -42,7 +42,7 @@ func Trimmer(hash string) string {
 	return ret
 }
 
-func B2H(n uint64) string {
+func B2H(n int64) string {
 	idx := 0
 	b := float64(n)
 	byteUnits := []string{"b", "MB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB"}

@@ -41,6 +41,13 @@ func (d *Director) StartDirector(c config.Config) error {
 		err = errors.New(errPath, err)
 		logger.Error("%v", err)
 	}
+
+	for _, r := range d.Recoveries {
+		if err := r.StartTracker(); err != nil {
+			logger.Alert("%s", errors.Extend(errPath, err))
+		}
+	}
+
 	if d.AutoQueue {
 		for id := range d.Recoveries {
 			if err := d.QueueRecovery(id); err != nil {
@@ -259,7 +266,7 @@ func (d *Director) findRecovery(id string) (*recovery.Recovery, error) {
 	errPath := "recovery.findRecovery()"
 	Recovery, ok := d.Recoveries[id]
 	if !ok {
-		return nil, errors.New(errPath, fmt.Sprintf("Recovery %s not found", id))
+		return nil, errors.New(errPath, fmt.Sprintf("Recovery %s not found\n", id))
 	}
 	return Recovery, nil
 

@@ -12,6 +12,7 @@ import (
 	"github.com/morrocker/errors"
 	"github.com/morrocker/logger"
 	"github.com/morrocker/recoveryserver/config"
+	"github.com/morrocker/recoveryserver/utils"
 )
 
 const (
@@ -24,42 +25,30 @@ const (
 func (r *Recovery) Run(lock *sync.Mutex) {
 	errPath := "recovery.Run()"
 	r.Status = Stop
-	logger.Info("Recovery %s worker is waiting to start!. BTW login is %s and cloner key is %s", r.ID, r.Data.Server, r.Data.ClonerKey)
-	for {
-		switch r.Status {
-		case Start:
-			goto Metafiles
-			// case Cancel:
-			// 	exitCode = exitAlone
-			// 	goto EndPoint
+	logger.Info("Recovery %s worker is waiting to start!", r.ID)
+	r.stopGate()
+	go func() {
+		for {
+			fc, ft, _ := r.SuperTracker.GetValues("files")
+			bc, bt, _ := r.SuperTracker.GetValues("blocks")
+			sc, st, _ := r.SuperTracker.GetValues("size")
+			erro, _, _ := r.SuperTracker.GetValues("errors")
+			if erro != 0 {
+				logger.Info("Files: %d/%d | Blocks: %d/%d | Size: %s/%s (Errors:%d)", fc, ft, bc, bt, utils.B2H(sc), utils.B2H(st), erro)
+			} else {
+				logger.Info("Files: %d/%d | Blocks: %d/%d | Size: %s/%s", fc, ft, bc, bt, utils.B2H(sc), utils.B2H(st))
+			}
+			time.Sleep(time.Second)
 		}
-		time.Sleep(10 * time.Second)
-	}
-Metafiles:
-	// go func() {
-	// 	for {
-	// 		cf, tf, _ := r.SuperTracker.GetValues("files")
-	// 		cb, tb, _ := r.SuperTracker.GetValues("blocks")
-	// 		cs, ts, _ := r.SuperTracker.GetValues("size")
-	// 		logger.Info("Files: %d/%d | Blocks: %d/%d | Size: %d/%d", cf, tf, cb, tb, cs, ts)
-	// 		time.Sleep(5 * time.Second)
-	// 	}
-	// }()
-	tree, err := GetRecoveryTree(r.Data, r.SuperTracker)
+	}()
+
+	tree, err := r.GetRecoveryTree()
 	if err != nil {
 		err = errors.Extend(errPath, err)
 		logger.Error("%s", err)
 	}
-	// REMOVE LATER
 	logger.Notice("Metafiles Done")
-	for {
-		switch r.Status {
-		case Start:
-			break
-		}
-		time.Sleep(5 * time.Second)
-		break
-	}
+	r.stopGate()
 
 	if err := r.getFiles(tree); err != nil {
 		err = errors.Extend(errPath, err)

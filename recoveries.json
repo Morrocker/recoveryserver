@@ -4,8 +4,8 @@
     "Data": {
       "User": "crrespaldo@vyv-dsd.cl",
       "Machine": "No-matter",
-      "Metafile": "aa5812cc234e7af85c582dddab7bc0ea823a4d363d57989fd9df1b86a281dd36ec1c18991d341b7680044f48a19987e20757a696535ee2455f7087bd0329b6d4",
-      "Repository": "48391c4108b5737a1e78c82942956de4176fab513feb5ceb8d1c057c506c95fd8f648cf23dfade3c427c3a1bded074dcac33bac9a718722d90be6708f7cf469a",
+      "Metafile": "dcf594a1514c65d65a404d5c68adc3db096e8f632234efd2bc96f688fdf0d9915156c9e255e2b13c989ac06c68dbbd0fee6f3c7c49b091e18d4b62d590d04745",
+      "Repository": "5934d0e9a2052239ae76708bacecc70ed392a911f0eabead81aa9fd3cce22a2a447f4a9b8a531382b087b87982f47fadff6adaf027736372ec4e95daae9561d0",
       "Disk": "c://",
       "RootGroup": 20,
       "Deleted": false,
@@ -15,7 +15,7 @@
       "Server": "",
       "ClonerKey": ""
     },
-    "Destination": "/Users/morocco/Documents",
+    "Destination": "/Users/morocco/Documents/TestRecovery",
     "Status": 0,
     "Priority": 2,
     "SuperTracker": null

@@ -11,7 +11,6 @@ import (
 	"github.com/clonercl/reposerver"
 	"github.com/morrocker/errors"
 	"github.com/morrocker/logger"
-	tracker "github.com/morrocker/progress-tracker"
 	"github.com/morrocker/recoveryserver/config"
 )
 
@@ -19,54 +18,61 @@ import (
 type MetaTree struct {
 	mf       *reposerver.Metafile
 	children []*MetaTree
+	path     string
 	lock     sync.Mutex
 }
 
 // Queues asdf as
-type Queues struct {
+type metaQueue struct {
 	lock          sync.Mutex
 	ToDoQueue     []*MetaTree
 	NextToDoQueue []*MetaTree
 }
 
-var queue Queues
+var mq metaQueue = metaQueue{}
+
+// NewMetaTree asfas
+func NewMetaTree(mf *reposerver.Metafile) *MetaTree {
+	tree := &MetaTree{mf: mf}
+	return tree
+}
 
 // GetRecoveryTree takes in a recovery data and returns a metafileTree
-func GetRecoveryTree(d *Data, t *tracker.SuperTracker) (*MetaTree, error) {
+func (r *Recovery) GetRecoveryTree() (*MetaTree, error) {
 	errPath := "recovery.GetRecoveryTree()"
 	logger.Notice("Starting metafile tree retrieval")
 
 	var wg sync.WaitGroup
 	tc := make(chan *MetaTree)
-	if len(d.Exclusions) > 0 {
+	if len(r.Data.Exclusions) > 0 {
 		logger.Info("List of metafiles (and their children) that will be excluded")
-		for hash := range d.Exclusions {
+		for hash := range r.Data.Exclusions {
 			logger.Info("ID: %s", hash)
 		}
 	}
 
 	for x := 0; x < config.Data.MetafileWorkers; x++ {
-		go getChildMetaTree(tc, d, &wg, t)
+		go r.getChildMetaTree(tc, &wg)
 	}
 
 	logger.Task("Getting root metafile")
-	mf, err := getMetafile(d)
+	mf, err := r.getRootMetafile()
 	if err != nil {
 		err := errors.New(errPath, err)
 		return nil, err
 	}
 
 	recoveryTree := NewMetaTree(mf)
-	queue.addTree(recoveryTree)
+	mq.addTree(recoveryTree)
 
 	for {
-		queue.restart()
-		for _, tree := range queue.ToDoQueue {
+		mq.restart()
+		for _, tree := range mq.ToDoQueue {
 			tc <- tree
 		}
 		time.Sleep(1 * time.Second)
 		wg.Wait()
-		if len(queue.NextToDoQueue) <= 0 {
+		if len(mq.NextToDoQueue) <= 0 {
 			break
 		}
 	}
@@ -74,19 +80,20 @@ func GetRecoveryTree(d *Data, t *tracker.SuperTracker) (*MetaTree, error) {
 	return recoveryTree, nil
 }
 
-func getChildMetaTree(tc chan *MetaTree, d *Data, wg *sync.WaitGroup, t *tracker.SuperTracker) {
+func (r *Recovery) getChildMetaTree(tc chan *MetaTree, wg *sync.WaitGroup) {
 	errPath := "recoveries.getChildMetaTree()"
 	for mt := range tc {
+		r.stopGate()
 		wg.Add(1)
 
-		if d.Exclusions[mt.mf.ID] {
+		if r.Data.Exclusions[mt.mf.ID] {
 			fmt.Printf("%s excluded\n", mt.mf.Name)
 			wg.Done()
 			continue
 		}
 
 		if mt.mf.Type == reposerver.FolderType {
-			children, err := getChildren(mt.mf.ID, d)
+			children, err := r.getChildren(mt.mf.ID)
 			if err != nil {
 				err = errors.Extend(errPath, err)
 				logger.Error("Couldnt retrieve metafile: %s", err)
@@ -95,32 +102,32 @@ func getChildMetaTree(tc chan *MetaTree, d *Data, wg *sync.WaitGroup, t *tracker
 			for _, child := range children {
 				childTree := NewMetaTree(child)
 				mt.AddChildren(childTree)
-				queue.addTree(childTree)
+				mq.addTree(childTree)
 			}
 			wg.Done()
 			continue
 		}
-		updateTracker(mt.mf.Size, t)
+		r.updateTrackerTotals(mt.mf.Size)
 		wg.Done()
 	}
 }
 
-func getChildren(id string, d *Data) ([]*reposerver.Metafile, error) {
+func (r *Recovery) getChildren(id string) ([]*reposerver.Metafile, error) {
 	errPath := "getLatestChildren()"
 	var errOut error
 	for retries := 0; retries < 5; retries++ {
 		errOut = nil
 		var newQuery string
-		if d.Deleted {
-			newQuery = fmt.Sprintf("%sapi/latestsChilden?id=%s&repo_id=%s", d.Server, id, d.Repository)
+		if r.Data.Deleted {
+			newQuery = fmt.Sprintf("%sapi/latestsChilden?id=%s&repo_id=%s", r.Data.Server, id, r.Data.Repository)
 		} else {
 			var version int
-			if d.Version == 0 {
+			if r.Data.Version == 0 {
 				version = 999999999
 			} else {
-				version = d.Version
+				version = r.Data.Version
 			}
-			newQuery = fmt.Sprintf("%sapi/children?id=%s&version=%d&repo_id=%s", d.Server, id, version, d.Repository)
+			newQuery = fmt.Sprintf("%sapi/children?id=%s&version=%d&repo_id=%s", r.Data.Server, id, version, r.Data.Repository)
 		}
 		req, err := http.NewRequest("GET", newQuery, nil)
 		if err != nil {
@@ -129,7 +136,7 @@ func getChildren(id string, d *Data) ([]*reposerver.Metafile, error) {
 			continue
 		}
 
-		req.Header.Add("Cloner_key", d.ClonerKey)
+		req.Header.Add("Cloner_key", r.Data.ClonerKey)
 		resp, err := http.DefaultClient.Do(req)
 		if err != nil {
 			spPath := fmt.Sprintf("%s Failed to obtain metafile %s", errPath, id)
@@ -161,18 +168,18 @@ func getChildren(id string, d *Data) ([]*reposerver.Metafile, error) {
 	return nil, errOut
 }
 
-func getMetafile(d *Data) (*reposerver.Metafile, error) {
+func (r *Recovery) getRootMetafile() (*reposerver.Metafile, error) {
 	errPath := "recovery.getMetafile()"
 	var errOut error
 	for retries := 0; retries < 5; retries++ {
-		newQuery := fmt.Sprintf("%sapi/metafile?id=%s&repo_id=%s", d.Server, d.Metafile, d.Repository)
+		newQuery := fmt.Sprintf("%sapi/metafile?id=%s&repo_id=%s", r.Data.Server, r.Data.Metafile, r.Data.Repository)
 		req, err := http.NewRequest("GET", newQuery, nil)
 		if err != nil {
 			errOut = errors.New(errPath+"Failed to obtain root metafile", err)
 			continue
 		}
 
-		req.Header.Add("Cloner_key", d.ClonerKey)
+		req.Header.Add("Cloner_key", r.Data.ClonerKey)
 		resp, err := http.DefaultClient.Do(req)
 		if err != nil {
 			errOut = errors.New(errPath+"Failed to obtain root metafile", err)
@@ -202,25 +209,6 @@ func getMetafile(d *Data) (*reposerver.Metafile, error) {
 	return nil, errOut
 }
 
-func updateTracker(size int64, t *tracker.SuperTracker) {
-	blocks := int64(1)                // fileblock
-	blocks += (int64(size) / 1024000) // 1 MB blocks
-	remainder := size % 1024000
-	if remainder != 0 {
-		blocks++
-	}
-	t.ChangeTotal("size", size)
-	t.ChangeTotal("files", 1)
-	t.ChangeTotal("blocks", blocks)
-}
-
-// NewMetaTree asfas
-func NewMetaTree(mf *reposerver.Metafile) *MetaTree {
-	tree := &MetaTree{mf: mf}
-	return tree
-
-}
-
 // AddChildren adfa fa
 func (m *MetaTree) AddChildren(mt *MetaTree) {
 	m.lock.Lock()
@@ -228,13 +216,13 @@ func (m *MetaTree) AddChildren(mt *MetaTree) {
 	m.children = append(m.children, mt)
 }
 
-func (q *Queues) addTree(mt *MetaTree) {
+func (q *metaQueue) addTree(mt *MetaTree) {
 	q.lock.Lock()
 	defer q.lock.Unlock()
 	q.NextToDoQueue = append(q.NextToDoQueue, mt)
 }
 
-func (q *Queues) restart() {
+func (q *metaQueue) restart() {
 	q.lock.Lock()
 	defer q.lock.Unlock()
 	q.ToDoQueue = q.NextToDoQueue

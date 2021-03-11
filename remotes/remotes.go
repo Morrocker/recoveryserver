@@ -8,6 +8,8 @@ import (
 	blocksremote "github.com/clonercl/blockserver/blocks/master/remote"
 	legacy "github.com/clonercl/kaon/blocks"
 	legacyremote "github.com/clonercl/kaon/blocks/master/remote"
+	"github.com/morrocker/errors"
+	"github.com/morrocker/logger"
 	"github.com/morrocker/recoveryserver/config"
 )
 
@@ -45,15 +47,16 @@ func NewCloud(c config.Cloud) *Cloud {
 
 // GetBlockslist
 func (c *Cloud) GetBlocksList(hash, user string) *BlocksList {
+	errPath := "remotes.GetBlockList()"
 	block, err := c.GetBlock(hash, user)
 	if err != nil {
-		fmt.Println(err)
+		logger.Error("%s", errors.Extend(errPath, err))
 		return nil
 	}
 
 	ret := &BlocksList{}
 	if err := json.Unmarshal(block, ret); err != nil {
-		fmt.Println(err)
+		logger.Error("%s", errors.Extend(errPath, err))
 		return nil
 	}
 	return ret

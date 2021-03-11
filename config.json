@@ -1,6 +1,6 @@
 {
     "AutoQueueRecoveries":true,
-    "AutoRunRecoveries":true,
+    "AutoRunRecoveries":false,
     "LoginAddr":"https://login.cloner.cl/api/server",
     "HostAddr":"localhost:5000",
     "Clouds":{

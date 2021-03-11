@@ -98,7 +98,15 @@ func (s *Service) startRecoveryGroup(c *gin.Context) {
 }
 
 func (s *Service) pauseRecovery(c *gin.Context) {
-
+	errPath := "service.pauseRecovery()"
+	id, ok := c.GetQuery("Id")
+	if !ok {
+		err := errors.New(errPath, "Query missing recovery Id")
+		c.Data(http.StatusBadRequest, "text", []byte(err.Error()))
+		return
+	}
+	s.Director.PauseRecovery(id)
+	c.Data(http.StatusOK, "text", []byte(fmt.Sprintf("Pausing Recovery with id:%s", id)))
 }
 
 func (s *Service) pauseRecoveryGroup(c *gin.Context) {
@@ -107,39 +115,6 @@ func (s *Service) pauseRecoveryGroup(c *gin.Context) {
 
 func (s *Service) deleteRecovery(c *gin.Context) {
 
-}
-
-func (s *Service) changePriority(c *gin.Context) {
-	errPath := "service.changePriority()"
-	id, ok := c.GetQuery("Id")
-	if !ok {
-		err := errors.New(errPath, "Query missing recovery Id")
-		c.Data(http.StatusBadRequest, "text", []byte(err.Error()))
-		logger.Error("%s", err)
-		return
-	}
-
-	n, ok := c.GetQuery("Priority")
-	if !ok {
-		err := errors.New(errPath, "Query missing priority")
-		c.Data(http.StatusBadRequest, "text", []byte(err.Error()))
-		logger.Error("%s", err)
-		return
-	}
-	x, err := strconv.Atoi(n)
-	if err != nil {
-		err := errors.New(errPath, err)
-		c.Data(http.StatusBadRequest, "text", []byte(err.Error()))
-		logger.Error("%s", err)
-		return
-	}
-	if err := s.Director.ChangePriority(id, x); err != nil {
-		err := errors.New(errPath, err)
-		c.Data(http.StatusBadRequest, "text", []byte(err.Error()))
-		logger.Error("%s", err)
-		return
-	}
-	c.Data(http.StatusOK, "text", []byte(fmt.Sprintf("Recovery %s set priority to %d:", id, x)))
 }
 
 func (s *Service) pauseDirector(c *gin.Context) {
@@ -187,4 +162,37 @@ func (s *Service) setDestination(c *gin.Context) {
 		return
 	}
 
+}
+
+func (s *Service) changePriority(c *gin.Context) {
+	errPath := "service.changePriority()"
+	id, ok := c.GetQuery("Id")
+	if !ok {
+		err := errors.New(errPath, "Query missing recovery Id")
+		c.Data(http.StatusBadRequest, "text", []byte(err.Error()))
+		logger.Error("%s", err)
+		return
+	}
+
+	n, ok := c.GetQuery("Priority")
+	if !ok {
+		err := errors.New(errPath, "Query missing priority")
+		c.Data(http.StatusBadRequest, "text", []byte(err.Error()))
+		logger.Error("%s", err)
+		return
+	}
+	x, err := strconv.Atoi(n)
+	if err != nil {
+		err := errors.New(errPath, err)
+		c.Data(http.StatusInternalServerError, "text", []byte(err.Error()))
+		logger.Error("%s", err)
+		return
+	}
+	if err := s.Director.ChangePriority(id, x); err != nil {
+		err := errors.New(errPath, err)
+		c.Data(http.StatusBadRequest, "text", []byte(err.Error()))
+		logger.Error("%s", err)
+		return
+	}
+	c.Data(http.StatusOK, "text", []byte(fmt.Sprintf("Recovery %s set priority to %d:", id, x)))
 }

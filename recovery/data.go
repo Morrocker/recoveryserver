@@ -75,7 +75,7 @@ type Multiple struct {
 func New(id string, data *Data) *Recovery {
 	errPath := "recovery.New()"
 	newRecovery := &Recovery{Data: data, ID: id, Priority: MediumPr}
-	if err := newRecovery.startTracker(); err != nil {
+	if err := newRecovery.StartTracker(); err != nil {
 		logger.Alert("%s", errors.Extend(errPath, err))
 	}
 	return newRecovery
@@ -107,7 +107,7 @@ func (r *Recovery) Queue() {
 }
 
 // StartTracker starts a new tracker for a Recovery
-func (r *Recovery) startTracker() error {
+func (r *Recovery) StartTracker() error {
 	errPath := "recovery.StartTracker()"
 	st, err := tracker.New()
 	r.SuperTracker = st
@@ -119,6 +119,7 @@ func (r *Recovery) startTracker() error {
 	r.SuperTracker.AddGauge("files", "Files", 0)
 	r.SuperTracker.AddGauge("blocks", "Blocks", 0)
 	r.SuperTracker.AddGauge("size", "Size", 0)
+	r.SuperTracker.AddGauge("errors", "Errors", 0)
 	return nil
 }
 
@@ -138,4 +139,32 @@ func (r *Recovery) SetPriority(p int) error {
 	}
 	r.Priority = p
 	return nil
+}
+
+func (r *Recovery) updateTrackerTotals(size int64) {
+	blocks := int64(1)                // fileblock
+	blocks += (int64(size) / 1024000) // 1 MB blocks
+	remainder := size % 1024000
+	if remainder != 0 {
+		blocks++
+	}
+	r.SuperTracker.ChangeTotal("size", size)
+	r.SuperTracker.ChangeTotal("files", 1)
+	r.SuperTracker.ChangeTotal("blocks", blocks)
+}
+
+func (r *Recovery) updateTrackerCurrent(size int64) {
+	blocks := int64(1)                // fileblock
+	blocks += (int64(size) / 1024000) // 1 MB blocks
+	remainder := size % 1024000
+	if remainder != 0 {
+		blocks++
+	}
+	r.SuperTracker.ChangeCurr("size", size)
+	r.SuperTracker.ChangeCurr("files", 1)
+	r.SuperTracker.ChangeCurr("blocks", blocks)
+}
+
+func (r *Recovery) increaseErrors() {
+	r.SuperTracker.IncreaseCurr("errors")
 }
