@@ -22,55 +22,50 @@ const (
 
 // Run starts a recovery execution
 func (r *Recovery) Run(lock *sync.Mutex) {
+	errPath := "recovery.Run()"
 	r.Status = Stop
-	exitCode := 0
+	logger.Info("Recovery %s worker is waiting to start!. BTW login is %s and cloner key is %s", r.ID, r.Data.Server, r.Data.ClonerKey)
 	for {
-		logger.Info("Recovery %s worker is waiting to start!. BTW login is %s and cloner key is %s", r.ID, r.Info.Server, r.Info.ClonerKey)
 		switch r.Status {
 		case Start:
 			goto Metafiles
-		case Cancel:
-			exitCode = exitAlone
-			goto EndPoint
+			// case Cancel:
+			// 	exitCode = exitAlone
+			// 	goto EndPoint
 		}
 		time.Sleep(10 * time.Second)
 	}
 Metafiles:
-	go func() {
-		cf, tf, _ := r.SuperTracker.GetValues("files")
-		cb, tb, _ := r.SuperTracker.GetValues("blocks")
-		cs, ts, _ := r.SuperTracker.GetValues("size")
-		logger.Info("Files: %d/%d | Size: %d/%d | Blocks: %d/%d", cf, tf, cb, tb, cs, ts)
-		time.Sleep(5 * time.Second)
-	}()
-	GetRecoveryTree(r, r.SuperTracker)
-	for x := 0; x < 5; x++ {
-		for {
-			switch r.Status {
-			case Start:
-				goto Next
-			case Cancel:
-				exitCode = exitDelete
-				goto EndPoint
-			}
-			time.Sleep(5 * time.Second)
+	// go func() {
+	// 	for {
+	// 		cf, tf, _ := r.SuperTracker.GetValues("files")
+	// 		cb, tb, _ := r.SuperTracker.GetValues("blocks")
+	// 		cs, ts, _ := r.SuperTracker.GetValues("size")
+	// 		logger.Info("Files: %d/%d | Blocks: %d/%d | Size: %d/%d", cf, tf, cb, tb, cs, ts)
+	// 		time.Sleep(5 * time.Second)
+	// 	}
+	// }()
+	tree, err := GetRecoveryTree(r.Data, r.SuperTracker)
+	if err != nil {
+		err = errors.Extend(errPath, err)
+		logger.Error("%s", err)
+	}
+	// REMOVE LATER
+	logger.Notice("Metafiles Done")
+	for {
+		switch r.Status {
+		case Start:
+			break
 		}
-	Next:
-		logger.Info("Recovering file #%d from recovery %s", x, r.ID)
 		time.Sleep(5 * time.Second)
+		break
 	}
-EndPoint:
-	if exitCode == exitDelete {
-		r.RemoveFiles()
+
+	if err := r.getFiles(tree); err != nil {
+		err = errors.Extend(errPath, err)
 	}
-	r.Status = Done
+	logger.Info("Recovery finished")
 }
-
-// LegacyRecovery recovers files using legacy blockserver remote
-func (r *Recovery) LegacyRecovery() {}
-
-// Recovery recovers files using current blockserver remote
-func (r *Recovery) Recovery() {}
 
 // RemoveFiles removes any recovered file from the destination location
 func (r *Recovery) RemoveFiles() {
@@ -81,7 +76,7 @@ func (r *Recovery) RemoveFiles() {
 func (r *Recovery) GetLogin() error {
 	errPath := "recovery.GetLogin()"
 
-	user := url.QueryEscape(r.Info.User)
+	user := url.QueryEscape(r.Data.User)
 	query := fmt.Sprintf("%s?login=%s", config.Data.LoginAddr, user)
 	req, err := http.NewRequest("GET", query, nil)
 	if err != nil {
@@ -106,6 +101,6 @@ func (r *Recovery) GetLogin() error {
 
 	s := string(body)
 	out := strings.Trim(s, "\"")
-	r.Info.Server = out
+	r.Data.Server = out
 	return nil
 }

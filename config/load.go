@@ -35,6 +35,7 @@ func SetFlags() error {
 	errPath := "config.SetFlags()"
 	pflag.StringP("config", "c", "config.json", "Sets the configuration filename. [Default: config.json] ")
 	pflag.BoolP("debug", "d", false, "Enables debug mode")
+	pflag.BoolP("benchmark", "b", false, "Enables benchmark mode")
 	pflag.BoolP("verbose", "v", false, "Enables verbose mode")
 
 	pflag.Parse()

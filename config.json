@@ -32,7 +32,8 @@
         }
     },
     "RecoveriesJSON":"recoveries.json",
-    "MetafileWorkers":50,
+    "MetafileWorkers":30,
+    "FileWorkers":50,
     "SlackToken":"notworkingyet",
     "SlackChannel":"sandbox"
 }

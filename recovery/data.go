@@ -4,6 +4,7 @@ import (
 	"github.com/morrocker/errors"
 	"github.com/morrocker/logger"
 	tracker "github.com/morrocker/progress-tracker"
+	"github.com/morrocker/recoveryserver/remotes"
 )
 
 const (
@@ -24,27 +25,28 @@ const (
 )
 
 const (
-	// VeryLow just a priority
-	VeryLow = iota
-	// Low just a priority
-	Low
-	// Medium just a priority
-	Medium
-	// High just a priority
-	High
-	// VeryHigh just a priority
-	VeryHigh
-	// Urgent just a priority
-	Urgent
+	// VeryLowPr just a priority
+	VeryLowPr = iota
+	// LowPr just a priority
+	LowPr
+	// MediumPr just a priority
+	MediumPr
+	// HighPr just a priority
+	HighPr
+	// VeryHighPr just a priority
+	VeryHighPr
+	// UrgentPr just a priority
+	UrgentPr
 )
 
 // Recovery stores a single recovery data
 type Recovery struct {
 	ID           string
-	Info         Data
+	Data         *Data
 	Destination  string
 	Status       int
 	Priority     int
+	Cloud        *remotes.Cloud
 	SuperTracker *tracker.SuperTracker
 }
 
@@ -59,14 +61,24 @@ type Data struct {
 	Deleted    bool
 	Date       string
 	Version    int
-	Exclusions []string
+	Exclusions map[string]bool
 	Server     string
 	ClonerKey  string
 }
 
 // Multiple stores multiple recoveries
 type Multiple struct {
-	Recoveries []Data
+	Recoveries []*Data
+}
+
+// New returns a new Recovery object from the given recovery data
+func New(id string, data *Data) *Recovery {
+	errPath := "recovery.New()"
+	newRecovery := &Recovery{Data: data, ID: id, Priority: MediumPr}
+	if err := newRecovery.startTracker(); err != nil {
+		logger.Alert("%s", errors.Extend(errPath, err))
+	}
+	return newRecovery
 }
 
 // Pause stops a recovery execution
@@ -95,7 +107,7 @@ func (r *Recovery) Queue() {
 }
 
 // StartTracker starts a new tracker for a Recovery
-func (r *Recovery) StartTracker() error {
+func (r *Recovery) startTracker() error {
 	errPath := "recovery.StartTracker()"
 	st, err := tracker.New()
 	r.SuperTracker = st
@@ -107,5 +119,23 @@ func (r *Recovery) StartTracker() error {
 	r.SuperTracker.AddGauge("files", "Files", 0)
 	r.SuperTracker.AddGauge("blocks", "Blocks", 0)
 	r.SuperTracker.AddGauge("size", "Size", 0)
+	return nil
+}
+
+func (r *Recovery) SetCloud(rc *remotes.Cloud) {
+	r.Cloud = rc
+	r.Data.ClonerKey = rc.ClonerKey
+}
+
+func (r *Recovery) SetDestination(dst string) {
+	r.Destination = dst
+}
+
+func (r *Recovery) SetPriority(p int) error {
+	errPath := "recovery.SetPriority()"
+	if p > VeryHighPr || p < VeryLowPr {
+		return errors.New(errPath, "Priority value outside allowed parameters")
+	}
+	r.Priority = p
 	return nil
 }

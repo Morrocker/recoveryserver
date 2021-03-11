@@ -1,2 +1,23 @@
 {
+  "jnak416t": {
+    "ID": "jnak416t",
+    "Data": {
+      "User": "crrespaldo@vyv-dsd.cl",
+      "Machine": "No-matter",
+      "Metafile": "aa5812cc234e7af85c582dddab7bc0ea823a4d363d57989fd9df1b86a281dd36ec1c18991d341b7680044f48a19987e20757a696535ee2455f7087bd0329b6d4",
+      "Repository": "48391c4108b5737a1e78c82942956de4176fab513feb5ceb8d1c057c506c95fd8f648cf23dfade3c427c3a1bded074dcac33bac9a718722d90be6708f7cf469a",
+      "Disk": "c://",
+      "RootGroup": 20,
+      "Deleted": false,
+      "Date": "",
+      "Version": 0,
+      "Exclusions": null,
+      "Server": "",
+      "ClonerKey": ""
+    },
+    "Destination": "/Users/morocco/Documents",
+    "Status": 0,
+    "Priority": 2,
+    "SuperTracker": null
+  }
 }

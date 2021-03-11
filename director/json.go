@@ -9,8 +9,6 @@ import (
 	"github.com/morrocker/recoveryserver/config"
 )
 
-const recoveriesFile string = "currentRecoveries.json"
-
 // WriteRecoveryJSON writes the recoveries data into a JSON
 func (d *Director) WriteRecoveryJSON() error {
 	logger.TaskV("Writing Recovery JSON")
@@ -33,14 +31,8 @@ func (d *Director) ReadRecoveryJSON() error {
 	if err != nil {
 		return errors.New(errPath, err)
 	}
-	if err := json.Unmarshal(jsonBytes, &d.Recoveries); err != nil {
+	if errb := json.Unmarshal(jsonBytes, &d.Recoveries); errb != nil {
 		return errors.New(errPath, err)
 	}
-
 	return nil
 }
-
-// // StartWorkers asdfasd
-// func (s *Server) StartWorkers() {
-// 	s.Service.Director.StartWorkers()
-// }

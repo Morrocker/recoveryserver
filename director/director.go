@@ -10,6 +10,7 @@ import (
 	tracker "github.com/morrocker/progress-tracker"
 	"github.com/morrocker/recoveryserver/config"
 	"github.com/morrocker/recoveryserver/recovery"
+	"github.com/morrocker/recoveryserver/remotes"
 	"github.com/morrocker/recoveryserver/utils"
 )
 
@@ -19,7 +20,7 @@ type Director struct {
 	AutoQueue bool
 
 	SuperTracker *tracker.SuperTracker
-	Clouds       map[string]*Cloud
+	Clouds       map[string]*remotes.Cloud
 	Recoveries   map[string]*recovery.Recovery
 	RunLock      sync.Mutex
 	Lock         sync.Mutex
@@ -30,11 +31,11 @@ func (d *Director) StartDirector(c config.Config) error {
 	errPath := "director.StartDirector()"
 	logger.TaskV("Starting director services")
 	//LOAD CONFIG HERE
-	d.Clouds = make(map[string]*Cloud)
+	d.Clouds = make(map[string]*remotes.Cloud)
 	d.Recoveries = make(map[string]*recovery.Recovery)
 	d.Run = c.AutoRunRecoveries
 	d.AutoQueue = c.AutoQueueRecoveries
-	d.SetClouds()
+	d.InitClouds()
 
 	if err := d.ReadRecoveryJSON(); err != nil {
 		err = errors.New(errPath, err)
@@ -42,8 +43,9 @@ func (d *Director) StartDirector(c config.Config) error {
 	}
 	if d.AutoQueue {
 		for id := range d.Recoveries {
-			err := d.QueueRecovery(id)
-			logger.Alert("%s", errors.New(errPath, err))
+			if err := d.QueueRecovery(id); err != nil {
+				logger.Alert("%s", errors.New(errPath, err))
+			}
 		}
 	}
 
@@ -68,35 +70,36 @@ func (d *Director) StartWorkers() {
 }
 
 // AddRecovery adds the given recovery data to create a new entry on the Recoveries map
-func (d *Director) AddRecovery(r recovery.Data) (string, error) {
+func (d *Director) AddRecovery(data *recovery.Data) (string, error) {
 	logger.TaskV("Adding new recovery")
 	errPath := ("director.AddRecovery()")
 
 	// Sanitizing parameters
-	if r.User == "" {
+	if data.User == "" {
 		return "", errors.New(errPath, "User parameter empty or missing")
 	}
-	if r.Machine == "" {
+	if data.Machine == "" {
 		return "", errors.New(errPath, "Machine parameter empty or missing")
 	}
-	if r.Metafile == "" {
+	if data.Metafile == "" {
 		return "", errors.New(errPath, "Metafil parameter empty or missing")
 	}
-	if r.RootGroup == 0 {
+	if data.RootGroup == 0 {
 		return "", errors.New(errPath, "Organization parameter empty or missing")
 	}
-	if r.Repository == "" {
+	if data.Repository == "" {
 		return "", errors.New(errPath, "Repository parameter empty or missing")
 	}
-	if r.Disk == "" {
+	if data.Disk == "" {
 		return "", errors.New(errPath, "Disk parameter empty or missing")
 	}
 
 	id := utils.RandString(8)
-	d.Recoveries[id] = &recovery.Recovery{Info: r, ID: id, Priority: recovery.Medium}
+	d.Recoveries[id] = recovery.New(id, data)
 	if d.AutoQueue {
-		err := d.QueueRecovery(id)
-		logger.Alert("%s", errors.New(errPath, err))
+		if err := d.QueueRecovery(id); err != nil {
+			logger.Alert("%s", errors.New(errPath, err))
+		}
 	}
 	if err := d.WriteRecoveryJSON(); err != nil {
 		return "", errors.Extend(errPath, err)
@@ -122,16 +125,16 @@ func (d *Director) PickRecovery() {
 	for {
 	Start:
 		if !d.Run {
-			logger.Info("Director set Run to false. Sleeping")
+			logger.InfoV("Director set Run to false. Sleeping")
 			time.Sleep(30 * time.Second)
 			continue
 		}
-		logger.Info("Trying to decide new recovery to run")
+		logger.InfoV("Trying to decide new recovery to run")
 		var nextRecovery *recovery.Recovery = &recovery.Recovery{Priority: -1}
 		var nextRecoveryHash string
 		for hash, Recovery := range d.Recoveries {
 			if Recovery.Status == recovery.Start {
-				logger.Info("A recovery is already running. Sleeping for a while")
+				logger.InfoV("A recovery is already running. Sleeping for a while")
 				time.Sleep(30 * time.Second)
 				goto Start
 			}
@@ -143,11 +146,11 @@ func (d *Director) PickRecovery() {
 			}
 		}
 		if nextRecoveryHash == "" {
-			logger.Info("No recovery found. Starting again.")
+			logger.InfoV("No recovery found. Starting again.")
 			time.Sleep(30 * time.Second)
 			continue
 		}
-		d.Recoveries[nextRecoveryHash].Status = recovery.Start
+		d.Recoveries[nextRecoveryHash].Start()
 		// 30 seconds is for test purposes. Change later
 		time.Sleep(30 * time.Second)
 		continue
@@ -160,10 +163,11 @@ func (d *Director) ChangePriority(id string, value int) error {
 	errPath := "director.ChangePriority"
 	d.Lock.Lock()
 	defer d.Lock.Unlock()
-	if value > recovery.VeryHigh || value < recovery.VeryLow {
-		return errors.New(errPath, "Priority value outside allowed parameters")
+	r, err := d.findRecovery(id)
+	if err != nil {
+		return errors.Extend(errPath, err)
 	}
-	d.Recoveries[id].Priority = value
+	r.SetPriority(value)
 	return nil
 }
 
@@ -187,12 +191,11 @@ func (d *Director) RunPicker() {
 func (d *Director) PauseRecovery(id string) error {
 	logger.TaskD("Pausing recovery %s", id)
 	errPath := "director.PauseRecovery()"
-	Recovery, ok := d.Recoveries[id]
-	if !ok {
-		msg := fmt.Sprintf("Recovery %s not found", id)
-		return errors.New(errPath, msg)
+	r, err := d.findRecovery(id)
+	if err != nil {
+		return errors.Extend(errPath, err)
 	}
-	Recovery.Pause()
+	r.Pause()
 	return nil
 }
 
@@ -200,12 +203,11 @@ func (d *Director) PauseRecovery(id string) error {
 func (d *Director) StartRecovery(id string) error {
 	logger.TaskD("Starting/Resuming recovery %s", id)
 	errPath := "director.StartRecovery()"
-	Recovery, ok := d.Recoveries[id]
-	if !ok {
-		msg := fmt.Sprintf("Recovery %s not found", id)
-		return errors.New(errPath, msg)
+	r, err := d.findRecovery(id)
+	if err != nil {
+		return errors.Extend(errPath, err)
 	}
-	Recovery.Start()
+	r.Start()
 	return nil
 }
 
@@ -213,36 +215,52 @@ func (d *Director) StartRecovery(id string) error {
 func (d *Director) QueueRecovery(id string) error {
 	logger.TaskV("Queueing recovery %s", id)
 	errPath := "director.QueueRecovery()"
-	Recovery, ok := d.Recoveries[id]
-	if !ok {
-		msg := fmt.Sprintf("Recovery %s not found", id)
-		return errors.New(errPath, msg)
+	r, err := d.findRecovery(id)
+	if err != nil {
+		return errors.Extend(errPath, err)
 	}
-	if err := Recovery.GetLogin(); err != nil {
-		err = errors.Extend(errPath, err)
-		return err
+	if err := r.GetLogin(); err != nil {
+		return errors.Extend(errPath, err)
 	}
 	found := false
 	for _, cloud := range d.Clouds {
-		if cloud.FilesAddress == Recovery.Info.Server {
-			Recovery.Info.ClonerKey = cloud.ClonerKey
+		if cloud.FilesAddress == r.Data.Server {
+			r.SetCloud(cloud)
 			found = true
 			break
 		}
 	}
 	if !found {
-		return errors.New(errPath, "Failed to fetch Cloner key for recovery")
+		return errors.New(errPath, "Failed to find match recovery with any existing Cloud")
 	}
-	if err := Recovery.StartTracker(); err != nil {
-		return errors.New(errPath, err)
-	}
-	Recovery.Queue()
+	r.Queue()
 	return nil
 }
 
-// SetClouds asdfsa asdf a
-func (d *Director) SetClouds() {
+// InitClouds
+func (d *Director) InitClouds() {
 	for _, cloud := range config.Data.Clouds {
-		d.Clouds[cloud.FilesAddress] = NewCloud(cloud)
+		d.Clouds[cloud.FilesAddress] = remotes.NewCloud(cloud)
 	}
+}
+
+// SetDestination
+func (d *Director) SetDestination(id, dst string) error {
+	errPath := "director.SetDestination()"
+	r, err := d.findRecovery(id)
+	if err != nil {
+		return errors.Extend(errPath, err)
+	}
+	r.SetDestination(dst)
+	return nil
+}
+
+func (d *Director) findRecovery(id string) (*recovery.Recovery, error) {
+	errPath := "recovery.findRecovery()"
+	Recovery, ok := d.Recoveries[id]
+	if !ok {
+		return nil, errors.New(errPath, fmt.Sprintf("Recovery %s not found", id))
+	}
+	return Recovery, nil
+
 }

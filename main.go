@@ -8,9 +8,9 @@ import (
 )
 
 func init() {
-	// logger.ToggleTimestamp()
+	logger.ToggleTimestamp()
 	config.SetFlags()
-	logger.SetModes(viper.GetBool("verbose"), viper.GetBool("debug"))
+	logger.SetModes(viper.GetBool("verbose"), viper.GetBool("debug"), viper.GetBool("benchmar"))
 	config.Data.Load()
 }
 

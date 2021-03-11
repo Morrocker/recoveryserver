@@ -55,6 +55,7 @@ func (s *Service) Handler() http.Handler {
 	mux.GET("/stop_recoveries", s.pauseDirector)
 	mux.GET("/queue_recovery", s.queueRecovery)
 	mux.GET("/start_recovery", s.startRecovery)
+	mux.GET("/set_destination", s.setDestination)
 
 	return mux
 }

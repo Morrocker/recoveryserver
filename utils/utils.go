@@ -1,7 +1,10 @@
 package utils
 
 import (
+	"fmt"
 	"math/rand"
+	"reflect"
+	"runtime"
 	"time"
 )
 
@@ -29,4 +32,32 @@ func RandString(n int) string {
 		remain--
 	}
 	return string(b)
+}
+
+// Trimmer asfda
+func Trimmer(hash string) string {
+	head := hash[:6]
+	tail := hash[len(hash)-6:]
+	ret := head + "..." + tail
+	return ret
+}
+
+func B2H(n uint64) string {
+	idx := 0
+	b := float64(n)
+	byteUnits := []string{"b", "MB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB"}
+	for b > 1024 {
+		b /= 1024
+		idx++
+	}
+
+	if idx == 0 {
+		return fmt.Sprintf("%.0f b", b)
+	}
+	return fmt.Sprintf("%.1f %s", b, byteUnits[idx])
+}
+
+// GetFunctionName
+func GetFunctionName(i interface{}) string {
+	return runtime.FuncForPC(reflect.ValueOf(i).Pointer()).Name()
 }

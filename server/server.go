@@ -3,6 +3,7 @@ package server
 import (
 	"sync"
 
+	"github.com/morrocker/errors"
 	"github.com/morrocker/logger"
 	"github.com/morrocker/recoveryserver/config"
 	"github.com/morrocker/recoveryserver/service"
@@ -24,12 +25,13 @@ func New() *Server {
 
 // StartServer starts the recovry server and listens for requests
 func (s *Server) StartServer() {
+	errPath := "server.StartServer()"
 	errc := make(chan error)
 	errc2 := make(chan error)
 	logger.InfoV("Creating service with address %s", config.Data.HostAddr)
 	srv, err := service.New(config.Data.HostAddr)
 	if err != nil {
-		logger.Error("%v", err)
+		logger.Error("%v", errors.Extend(errPath, err))
 	}
 	s.Service = srv
 
