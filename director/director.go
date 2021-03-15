@@ -6,9 +6,10 @@ import (
 	"time"
 
 	"github.com/morrocker/errors"
-	"github.com/morrocker/logger"
+	"github.com/morrocker/log"
 	tracker "github.com/morrocker/progress-tracker"
 	"github.com/morrocker/recoveryserver/config"
+	"github.com/morrocker/recoveryserver/pdf"
 	"github.com/morrocker/recoveryserver/recovery"
 	"github.com/morrocker/recoveryserver/remotes"
 	"github.com/morrocker/recoveryserver/utils"
@@ -29,7 +30,7 @@ type Director struct {
 // StartDirector starts the Director service and all subservices
 func (d *Director) StartDirector(c config.Config) error {
 	errPath := "director.StartDirector()"
-	logger.TaskV("Starting director services")
+	log.TaskV("Starting director services")
 	//LOAD CONFIG HERE
 	d.Clouds = make(map[string]*remotes.Cloud)
 	d.Recoveries = make(map[string]*recovery.Recovery)
@@ -39,19 +40,19 @@ func (d *Director) StartDirector(c config.Config) error {
 
 	if err := d.ReadRecoveryJSON(); err != nil {
 		err = errors.New(errPath, err)
-		logger.Error("%v", err)
+		log.Error("%v", err)
 	}
 
 	for _, r := range d.Recoveries {
 		if err := r.StartTracker(); err != nil {
-			logger.Alert("%s", errors.Extend(errPath, err))
+			log.Alert("%s", errors.Extend(errPath, err))
 		}
 	}
 
 	if d.AutoQueue {
 		for id := range d.Recoveries {
 			if err := d.QueueRecovery(id); err != nil {
-				logger.Alert("%s", errors.New(errPath, err))
+				log.Alert("%s", errors.New(errPath, err))
 			}
 		}
 	}
@@ -63,7 +64,7 @@ func (d *Director) StartDirector(c config.Config) error {
 
 // StartWorkers continually tries to start workers for each recovery added
 func (d *Director) StartWorkers() {
-	logger.TaskV("Starting recovery workers creator")
+	log.TaskV("Starting recovery workers creator")
 	for {
 		d.Lock.Lock()
 		for key, recover := range d.Recoveries {
@@ -78,7 +79,7 @@ func (d *Director) StartWorkers() {
 
 // AddRecovery adds the given recovery data to create a new entry on the Recoveries map
 func (d *Director) AddRecovery(data *recovery.Data) (string, error) {
-	logger.TaskV("Adding new recovery")
+	log.TaskV("Adding new recovery")
 	errPath := ("director.AddRecovery()")
 
 	// Sanitizing parameters
@@ -91,7 +92,7 @@ func (d *Director) AddRecovery(data *recovery.Data) (string, error) {
 	if data.Metafile == "" {
 		return "", errors.New(errPath, "Metafil parameter empty or missing")
 	}
-	if data.RootGroup == 0 {
+	if data.Org == "" {
 		return "", errors.New(errPath, "Organization parameter empty or missing")
 	}
 	if data.Repository == "" {
@@ -105,7 +106,7 @@ func (d *Director) AddRecovery(data *recovery.Data) (string, error) {
 	d.Recoveries[id] = recovery.New(id, data)
 	if d.AutoQueue {
 		if err := d.QueueRecovery(id); err != nil {
-			logger.Alert("%s", errors.New(errPath, err))
+			log.Alert("%s", errors.New(errPath, err))
 		}
 	}
 	if err := d.WriteRecoveryJSON(); err != nil {
@@ -116,44 +117,44 @@ func (d *Director) AddRecovery(data *recovery.Data) (string, error) {
 
 // Stop sets Run to false
 func (d *Director) Stop() {
-	logger.TaskV("Setting Director.Run to false")
+	log.TaskV("Setting Director.Run to false")
 	d.Run = false
 }
 
 // Start sets Run to true
 func (d *Director) Start() {
-	logger.TaskV("Setting Director.Run to true")
+	log.TaskV("Setting Director.Run to true")
 	d.Run = true
 }
 
 // PickRecovery decides what recovery must be executed next. It prefers higher priority over lower. Will skip if a recovery is running. Has a low latency by design.
 func (d *Director) PickRecovery() {
-	logger.TaskV("Starting recovery picker")
+	log.TaskV("Starting recovery picker")
 	for {
 	Start:
 		if !d.Run {
-			logger.InfoV("Director set Run to false. Sleeping")
+			log.InfoV("Director set Run to false. Sleeping")
 			time.Sleep(30 * time.Second)
 			continue
 		}
-		logger.InfoV("Trying to decide new recovery to run")
+		log.InfoV("Trying to decide new recovery to run")
 		var nextRecovery *recovery.Recovery = &recovery.Recovery{Priority: -1}
 		var nextRecoveryHash string
 		for hash, Recovery := range d.Recoveries {
 			if Recovery.Status == recovery.Start {
-				logger.InfoV("A recovery is already running. Sleeping for a while")
+				log.InfoV("A recovery is already running. Sleeping for a while")
 				time.Sleep(30 * time.Second)
 				goto Start
 			}
 
 			if Recovery.Status == recovery.Stop && nextRecovery.Priority < Recovery.Priority && Recovery.Destination != "" {
-				logger.Info("Found possible recovery %s", nextRecoveryHash)
+				log.Info("Found possible recovery %s", nextRecoveryHash)
 				nextRecovery = Recovery
 				nextRecoveryHash = hash
 			}
 		}
 		if nextRecoveryHash == "" {
-			logger.InfoV("No recovery found. Starting again.")
+			log.InfoV("No recovery found. Starting again.")
 			time.Sleep(30 * time.Second)
 			continue
 		}
@@ -166,7 +167,7 @@ func (d *Director) PickRecovery() {
 
 // ChangePriority changes a given recovery priority to a specific value
 func (d *Director) ChangePriority(id string, value int) error {
-	logger.TaskV("Changing recovery %s Priority to %d", id, value)
+	log.TaskV("Changing recovery %s Priority to %d", id, value)
 	errPath := "director.ChangePriority"
 	d.Lock.Lock()
 	defer d.Lock.Unlock()
@@ -180,7 +181,7 @@ func (d *Director) ChangePriority(id string, value int) error {
 
 // PausePicker stops the PickRecovery so that it does not continue launching recoveries
 func (d *Director) PausePicker() {
-	logger.TaskV("Pausing recovery picker")
+	log.TaskV("Pausing recovery picker")
 	d.Lock.Lock()
 	defer d.Lock.Unlock()
 	d.Run = false
@@ -188,7 +189,7 @@ func (d *Director) PausePicker() {
 
 // RunPicker starts or resumes the PickRecovery function
 func (d *Director) RunPicker() {
-	logger.TaskV("Resuming recovery picker")
+	log.TaskV("Resuming recovery picker")
 	d.Lock.Lock()
 	defer d.Lock.Unlock()
 	d.Run = true
@@ -196,7 +197,7 @@ func (d *Director) RunPicker() {
 
 // PauseRecovery sets a given recover status to Pause
 func (d *Director) PauseRecovery(id string) error {
-	logger.TaskD("Pausing recovery %s", id)
+	log.TaskD("Pausing recovery %s", id)
 	errPath := "director.PauseRecovery()"
 	r, err := d.findRecovery(id)
 	if err != nil {
@@ -208,7 +209,7 @@ func (d *Director) PauseRecovery(id string) error {
 
 // StartRecovery sets a given recovery status to Start // TODO: See how resuming works
 func (d *Director) StartRecovery(id string) error {
-	logger.TaskD("Starting/Resuming recovery %s", id)
+	log.TaskD("Starting/Resuming recovery %s", id)
 	errPath := "director.StartRecovery()"
 	r, err := d.findRecovery(id)
 	if err != nil {
@@ -220,7 +221,7 @@ func (d *Director) StartRecovery(id string) error {
 
 // QueueRecovery sets a recovery status to Queue. Needed when autoqueue is off.
 func (d *Director) QueueRecovery(id string) error {
-	logger.TaskV("Queueing recovery %s", id)
+	log.TaskV("Queueing recovery %s", id)
 	errPath := "director.QueueRecovery()"
 	r, err := d.findRecovery(id)
 	if err != nil {
@@ -270,4 +271,12 @@ func (d *Director) findRecovery(id string) (*recovery.Recovery, error) {
 	}
 	return Recovery, nil
 
+}
+
+func (d *Director) WriteDelivery(p *pdf.Delivery) (string, error) {
+	out, err := p.CreateDeliveryPDF(config.Data.DeliveryDir)
+	if err != nil {
+		return "", err
+	}
+	return out, nil
 }

@@ -9,7 +9,7 @@ import (
 
 	"github.com/clonercl/reposerver"
 	"github.com/morrocker/errors"
-	"github.com/morrocker/logger"
+	"github.com/morrocker/log"
 	"github.com/morrocker/recoveryserver/config"
 	"golang.org/x/text/unicode/norm"
 )
@@ -32,13 +32,13 @@ func (r *Recovery) getFiles(mt *MetaTree) error {
 	fc := make(chan *MetaTree)
 	wg := sync.WaitGroup{}
 
-	logger.Notice("Starting File workers")
+	log.Notice("Starting File workers")
 	for i := 0; i < config.Data.FileWorkers; i++ {
 		go r.fileWorker(fc, &wg)
 	}
 
 	startingTime := time.Now()
-	logger.Notice("Creating root directory %s", r.Destination)
+	log.Notice("Creating root directory %s", r.Destination)
 	if err := os.MkdirAll(r.Destination, 0700); err != nil {
 		fmt.Printf("could not create output path: %v\n", err)
 		return errors.New(errPath, err)
@@ -56,7 +56,7 @@ func (r *Recovery) getFiles(mt *MetaTree) error {
 
 	totalTime := time.Duration(int64(time.Since(startingTime)) / int64(time.Second) * int64(time.Second))
 	// CHANGE THIS
-	logger.Info("Total time %s", totalTime)
+	log.Info("Total time %s", totalTime)
 	return nil
 }
 
@@ -85,7 +85,7 @@ func (r *Recovery) fileWorker(fc chan *MetaTree, wg *sync.WaitGroup) {
 	for mt := range fc {
 		wg.Add(1)
 		if err := r.recoverFile(mt.path, mt.mf.Hash, uint64(mt.mf.Size)); err != nil {
-			logger.Error("%s", errors.Extend(errPath, err))
+			log.Error("%s", errors.Extend(errPath, err))
 		}
 		wg.Done()
 	}
@@ -93,11 +93,11 @@ func (r *Recovery) fileWorker(fc chan *MetaTree, wg *sync.WaitGroup) {
 
 func (r *Recovery) recoverFile(p, hash string, size uint64) error {
 	errPath := "recovery.recoverFile()"
-	// logger.Info("Recovering file %s [%s]", p, utils.B2H(size))
+	// log.Info("Recovering file %s [%s]", p, utils.B2H(size))
 	if fi, err := os.Stat(p); err == nil {
 		if fi.Size() == int64(size) {
 			r.updateTrackerCurrent(int64(size))
-			logger.Notice("skipping file '%s'", p)
+			log.Notice("skipping file '%s'", p)
 			return nil
 		}
 	}

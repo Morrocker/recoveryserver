@@ -9,18 +9,19 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/morrocker/errors"
-	"github.com/morrocker/logger"
+	"github.com/morrocker/log"
+	"github.com/morrocker/recoveryserver/pdf"
 	"github.com/morrocker/recoveryserver/recovery"
 )
 
 func (s *Service) addRecovery(c *gin.Context) {
-	logger.TaskV("Adding new recovery")
+	log.TaskV("Adding new recovery")
 	errPath := "service.addRecovery()"
 	bodyBytes, err := ioutil.ReadAll(c.Request.Body)
 	if err != nil {
 		err = errors.New(errPath, err)
 		c.Data(http.StatusInternalServerError, "text", []byte(err.Error()))
-		logger.Error("Error while adding recovery: %s", err)
+		log.Error("Error while adding recovery: %s", err)
 		return
 	}
 
@@ -28,7 +29,7 @@ func (s *Service) addRecovery(c *gin.Context) {
 	if err := json.Unmarshal(bodyBytes, &recoveryData); err != nil {
 		err = errors.New(errPath, err)
 		c.Data(http.StatusInternalServerError, "text", []byte(err.Error()))
-		logger.Error("Error while adding recovery: %s", err)
+		log.Error("Error while adding recovery: %s", err)
 		return
 	}
 
@@ -36,20 +37,20 @@ func (s *Service) addRecovery(c *gin.Context) {
 	if err != nil {
 		err := errors.New(errPath, err)
 		c.Data(http.StatusInternalServerError, "text", []byte(err.Error()))
-		logger.Error("%s", err)
+		log.Error("%s", err)
 		return
 	}
 	c.Data(http.StatusOK, "text", []byte(fmt.Sprintf("Recovery %v added with Id:%s", recoveryData, hash)))
 }
 
 func (s *Service) addRecoveries(c *gin.Context) {
-	logger.TaskV("Adding new set of recovery")
+	log.TaskV("Adding new set of recovery")
 	errPath := "service.addRecoveries()"
 	bodyBytes, err := ioutil.ReadAll(c.Request.Body)
 	if err != nil {
 		err = errors.New(errPath, err)
 		c.Data(http.StatusInternalServerError, "text", []byte(err.Error()))
-		logger.Error("%s", err)
+		log.Error("%s", err)
 		return
 	}
 
@@ -57,7 +58,7 @@ func (s *Service) addRecoveries(c *gin.Context) {
 	if err := json.Unmarshal(bodyBytes, &data); err != nil {
 		err = errors.New(errPath, err)
 		c.Data(http.StatusInternalServerError, "text", []byte(err.Error()))
-		logger.Error("%s", err)
+		log.Error("%s", err)
 		return
 	}
 
@@ -67,7 +68,7 @@ func (s *Service) addRecoveries(c *gin.Context) {
 		if err != nil {
 			err = errors.Extend(errPath, err)
 			c.Data(http.StatusInternalServerError, "text", []byte(err.Error()))
-			logger.Error("%s", err)
+			log.Error("%s", err)
 			return
 		}
 		msg = fmt.Sprintf("Recovery %v added with id:%s.\n%s", recovery, hash, msg)
@@ -81,13 +82,13 @@ func (s *Service) startRecovery(c *gin.Context) {
 	if !ok {
 		err := errors.New(errPath, "Error starting recovery")
 		c.Data(http.StatusBadRequest, "text", []byte(err.Error()))
-		logger.Error("%s", err)
+		log.Error("%s", err)
 		return
 	}
 	if err := s.Director.StartRecovery(id); err != nil {
 		err := errors.New(errPath, "Error starting recovery")
 		c.Data(http.StatusBadRequest, "text", []byte(err.Error()))
-		logger.Error("%s", err)
+		log.Error("%s", err)
 		return
 	}
 	c.Data(http.StatusOK, "text", []byte(fmt.Sprintf("Starting Recovery with id:%s", id)))
@@ -170,7 +171,7 @@ func (s *Service) changePriority(c *gin.Context) {
 	if !ok {
 		err := errors.New(errPath, "Query missing recovery Id")
 		c.Data(http.StatusBadRequest, "text", []byte(err.Error()))
-		logger.Error("%s", err)
+		log.Error("%s", err)
 		return
 	}
 
@@ -178,21 +179,49 @@ func (s *Service) changePriority(c *gin.Context) {
 	if !ok {
 		err := errors.New(errPath, "Query missing priority")
 		c.Data(http.StatusBadRequest, "text", []byte(err.Error()))
-		logger.Error("%s", err)
+		log.Error("%s", err)
 		return
 	}
 	x, err := strconv.Atoi(n)
 	if err != nil {
 		err := errors.New(errPath, err)
 		c.Data(http.StatusInternalServerError, "text", []byte(err.Error()))
-		logger.Error("%s", err)
+		log.Error("%s", err)
 		return
 	}
 	if err := s.Director.ChangePriority(id, x); err != nil {
 		err := errors.New(errPath, err)
 		c.Data(http.StatusBadRequest, "text", []byte(err.Error()))
-		logger.Error("%s", err)
+		log.Error("%s", err)
 		return
 	}
 	c.Data(http.StatusOK, "text", []byte(fmt.Sprintf("Recovery %s set priority to %d:", id, x)))
+}
+
+func (s *Service) writeDelivery(c *gin.Context) {
+	errPath := "service.generateDelivery()"
+	bodyBytes, err := ioutil.ReadAll(c.Request.Body)
+	if err != nil {
+		err = errors.New(errPath, err)
+		c.Data(http.StatusInternalServerError, "text", []byte(err.Error()))
+		log.Error("error writting delivery: %s", err)
+		return
+	}
+	var deliveryData *pdf.Delivery
+	if err := json.Unmarshal(bodyBytes, &deliveryData); err != nil {
+		err = errors.New(errPath, err)
+		c.Data(http.StatusInternalServerError, "text", []byte(err.Error()))
+		log.Error("error writing delivery: %s", err)
+		return
+	}
+
+	out, err := s.Director.WriteDelivery(deliveryData)
+	if err != nil {
+		err := errors.New(errPath, err)
+		c.Data(http.StatusInternalServerError, "text", []byte(err.Error()))
+		log.Error("%s", err)
+		return
+	}
+
+	c.Data(http.StatusOK, "text", []byte(fmt.Sprintf("Delivery pdf wrote to %s", out)))
 }

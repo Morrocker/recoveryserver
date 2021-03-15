@@ -10,7 +10,7 @@ import (
 	"time"
 
 	"github.com/morrocker/errors"
-	"github.com/morrocker/logger"
+	"github.com/morrocker/log"
 	"github.com/morrocker/recoveryserver/config"
 	"github.com/morrocker/recoveryserver/utils"
 )
@@ -25,7 +25,7 @@ const (
 func (r *Recovery) Run(lock *sync.Mutex) {
 	errPath := "recovery.Run()"
 	r.Status = Stop
-	logger.Info("Recovery %s worker is waiting to start!", r.ID)
+	log.Info("Recovery %s worker is waiting to start!", r.ID)
 	r.stopGate()
 	go func() {
 		for {
@@ -34,9 +34,9 @@ func (r *Recovery) Run(lock *sync.Mutex) {
 			sc, st, _ := r.SuperTracker.GetValues("size")
 			erro, _, _ := r.SuperTracker.GetValues("errors")
 			if erro != 0 {
-				logger.Info("Files: %d/%d | Blocks: %d/%d | Size: %s/%s (Errors:%d)", fc, ft, bc, bt, utils.B2H(sc), utils.B2H(st), erro)
+				log.Info("Files: %d/%d | Blocks: %d/%d | Size: %s/%s (Errors:%d)", fc, ft, bc, bt, utils.B2H(sc), utils.B2H(st), erro)
 			} else {
-				logger.Info("Files: %d/%d | Blocks: %d/%d | Size: %s/%s", fc, ft, bc, bt, utils.B2H(sc), utils.B2H(st))
+				log.Info("Files: %d/%d | Blocks: %d/%d | Size: %s/%s", fc, ft, bc, bt, utils.B2H(sc), utils.B2H(st))
 			}
 			time.Sleep(time.Second)
 		}
@@ -45,20 +45,20 @@ func (r *Recovery) Run(lock *sync.Mutex) {
 	tree, err := r.GetRecoveryTree()
 	if err != nil {
 		err = errors.Extend(errPath, err)
-		logger.Error("%s", err)
+		log.Error("%s", err)
 	}
-	logger.Notice("Metafiles Done")
+	log.Notice("Metafiles Done")
 	r.stopGate()
 
 	if err := r.getFiles(tree); err != nil {
 		err = errors.Extend(errPath, err)
 	}
-	logger.Info("Recovery finished")
+	log.Info("Recovery finished")
 }
 
 // RemoveFiles removes any recovered file from the destination location
 func (r *Recovery) RemoveFiles() {
-	logger.Task("We are happily removing these files")
+	log.Task("We are happily removing these files")
 }
 
 // GetLogin finds the server that the users belongs to
@@ -78,7 +78,7 @@ func (r *Recovery) GetLogin() error {
 	}
 
 	if resp.StatusCode != http.StatusOK {
-		logger.Error("%s", *resp)
+		log.Error("%s", *resp)
 		return errors.New(errPath, "Response status not OK")
 	}
 

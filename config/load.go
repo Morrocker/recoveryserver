@@ -4,7 +4,7 @@ import (
 	"strings"
 
 	"github.com/morrocker/errors"
-	"github.com/morrocker/logger"
+	"github.com/morrocker/log"
 
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
@@ -14,7 +14,7 @@ import (
 func (c *Config) Load() error {
 	errPath := "config.Load()"
 	name := viper.GetString("config")
-	logger.TaskV("Loading Config file %s", name)
+	log.TaskV("Loading Config file %s", name)
 	name, cType := parseConfigName(name)
 	if name == "" || cType == "" {
 		return errors.New(errPath, "config fileType not supported. Exiting")

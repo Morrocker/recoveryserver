@@ -4,7 +4,7 @@ import (
 	"sync"
 
 	"github.com/morrocker/errors"
-	"github.com/morrocker/logger"
+	"github.com/morrocker/log"
 	"github.com/morrocker/recoveryserver/config"
 	"github.com/morrocker/recoveryserver/service"
 )
@@ -28,15 +28,15 @@ func (s *Server) StartServer() {
 	errPath := "server.StartServer()"
 	errc := make(chan error)
 	errc2 := make(chan error)
-	logger.InfoV("Creating service with address %s", config.Data.HostAddr)
+	log.InfoV("Creating service with address %s", config.Data.HostAddr)
 	srv, err := service.New(config.Data.HostAddr)
 	if err != nil {
-		logger.Error("%v", errors.Extend(errPath, err))
+		log.Error("%v", errors.Extend(errPath, err))
 	}
 	s.Service = srv
 
 	go func() {
-		logger.Info("Serving service on address %s", config.Data.HostAddr)
+		log.Info("Serving service on address %s", config.Data.HostAddr)
 		errc <- s.Service.Serve()
 	}()
 	e := s.Service.StartDirector(config.Data)
@@ -45,7 +45,7 @@ func (s *Server) StartServer() {
 	defer close(s.cancel)
 	select {
 	case err := <-errc:
-		logger.Error("Server error: %v", err)
+		log.Error("Server error: %v", err)
 		errc2 <- err
 	}
 }

@@ -4,6 +4,8 @@ package config
 type Config struct {
 	AutoQueueRecoveries bool
 	AutoRunRecoveries   bool
+	DeliveryDir         string
+	LogDir              string
 	LoginAddr           string
 	HostAddr            string
 	RecoveriesJSON      string

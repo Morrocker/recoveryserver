@@ -10,7 +10,7 @@ import (
 
 	"github.com/clonercl/reposerver"
 	"github.com/morrocker/errors"
-	"github.com/morrocker/logger"
+	"github.com/morrocker/log"
 	"github.com/morrocker/recoveryserver/config"
 )
 
@@ -40,14 +40,14 @@ func NewMetaTree(mf *reposerver.Metafile) *MetaTree {
 // GetRecoveryTree takes in a recovery data and returns a metafileTree
 func (r *Recovery) GetRecoveryTree() (*MetaTree, error) {
 	errPath := "recovery.GetRecoveryTree()"
-	logger.Notice("Starting metafile tree retrieval")
+	log.Notice("Starting metafile tree retrieval")
 
 	var wg sync.WaitGroup
 	tc := make(chan *MetaTree)
 	if len(r.Data.Exclusions) > 0 {
-		logger.Info("List of metafiles (and their children) that will be excluded")
+		log.Info("List of metafiles (and their children) that will be excluded")
 		for hash := range r.Data.Exclusions {
-			logger.Info("ID: %s", hash)
+			log.Info("ID: %s", hash)
 		}
 	}
 
@@ -55,7 +55,7 @@ func (r *Recovery) GetRecoveryTree() (*MetaTree, error) {
 		go r.getChildMetaTree(tc, &wg)
 	}
 
-	logger.Task("Getting root metafile")
+	log.Task("Getting root metafile")
 	mf, err := r.getRootMetafile()
 	if err != nil {
 		err := errors.New(errPath, err)
@@ -96,7 +96,7 @@ func (r *Recovery) getChildMetaTree(tc chan *MetaTree, wg *sync.WaitGroup) {
 			children, err := r.getChildren(mt.mf.ID)
 			if err != nil {
 				err = errors.Extend(errPath, err)
-				logger.Error("Couldnt retrieve metafile: %s", err)
+				log.Error("Couldnt retrieve metafile: %s", err)
 			}
 
 			for _, child := range children {

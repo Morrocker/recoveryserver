@@ -1,16 +1,20 @@
 package main
 
 import (
-	"github.com/morrocker/logger"
+	"github.com/morrocker/log"
 	"github.com/morrocker/recoveryserver/config"
 	"github.com/morrocker/recoveryserver/server"
 	"github.com/spf13/viper"
 )
 
 func init() {
-	logger.ToggleTimestamp()
+	log.ToggleTimestamp()
 	config.SetFlags()
-	logger.SetModes(viper.GetBool("verbose"), viper.GetBool("debug"), viper.GetBool("benchmar"))
+	if viper.GetBool("debug") {
+		log.SetMode("verbose")
+	} else if viper.GetBool("verbose") {
+		log.SetMode("debug")
+	}
 	config.Data.Load()
 }
 

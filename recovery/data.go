@@ -2,7 +2,7 @@ package recovery
 
 import (
 	"github.com/morrocker/errors"
-	"github.com/morrocker/logger"
+	"github.com/morrocker/log"
 	tracker "github.com/morrocker/progress-tracker"
 	"github.com/morrocker/recoveryserver/remotes"
 )
@@ -57,7 +57,7 @@ type Data struct {
 	Metafile   string
 	Repository string
 	Disk       string
-	RootGroup  int
+	Org        string
 	Deleted    bool
 	Date       string
 	Version    int
@@ -76,7 +76,7 @@ func New(id string, data *Data) *Recovery {
 	errPath := "recovery.New()"
 	newRecovery := &Recovery{Data: data, ID: id, Priority: MediumPr}
 	if err := newRecovery.StartTracker(); err != nil {
-		logger.Alert("%s", errors.Extend(errPath, err))
+		log.Alert("%s", errors.Extend(errPath, err))
 	}
 	return newRecovery
 }
@@ -113,7 +113,7 @@ func (r *Recovery) StartTracker() error {
 	r.SuperTracker = st
 	if err != nil {
 		err = errors.New(errPath, err)
-		logger.Error("%v", err)
+		log.Error("%v", err)
 		return err
 	}
 	r.SuperTracker.AddGauge("files", "Files", 0)

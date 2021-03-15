@@ -45,7 +45,7 @@ func Trimmer(hash string) string {
 func B2H(n int64) string {
 	idx := 0
 	b := float64(n)
-	byteUnits := []string{"b", "MB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB"}
+	byteUnits := []string{"b", "KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB"}
 	for b > 1024 {
 		b /= 1024
 		idx++
