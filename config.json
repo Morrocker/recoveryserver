@@ -33,8 +33,9 @@
     },
     "RecoveriesJSON":"recoveries.json",
     "DeliveryDir":"./",
+    "RootLogDir":"./",
     "MetafileWorkers":30,
-    "FileWorkers":50,
+    "FileWorkers":70,
     "SlackToken":"notworkingyet",
     "SlackChannel":"sandbox"
 }

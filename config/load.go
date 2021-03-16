@@ -1,7 +1,10 @@
 package config
 
 import (
+	"os"
+	"path"
 	"strings"
+	"time"
 
 	"github.com/morrocker/errors"
 	"github.com/morrocker/log"
@@ -56,4 +59,32 @@ func parseConfigName(filename string) (name, extension string) {
 		return
 	}
 	return
+}
+
+func SetLogger() {
+	errPath := "config.SetLogger()"
+	if viper.GetBool("debug") {
+		log.SetMode("debug")
+	} else if viper.GetBool("verbose") {
+		log.SetMode("verbose")
+	}
+	srvLogPath := path.Join(Data.RootLogDir, "logs", "server")
+	Data.SrvLogDir = srvLogPath
+	if err := os.MkdirAll(srvLogPath, 0700); err != nil {
+		log.Error(errPath, err)
+		os.Exit(1)
+	}
+	rcvrLogPath := path.Join(Data.RootLogDir, "logs", "recoveries")
+	Data.RcvrLogDir = rcvrLogPath
+	if err := os.MkdirAll(rcvrLogPath, 0700); err != nil {
+		log.Error(errPath, err)
+		os.Exit(1)
+	}
+	now := time.Now().Format("2006-01-02T15h04m")
+	// log.ToggleTimestamp()
+	log.SetScope(true, true, false)
+	log.Info("Setting logfile to %s", path.Join(srvLogPath, "recoveryServer-"+now+".log"))
+	log.OutputFile(path.Join(srvLogPath, "recoveryServer-"+now+".log"))
+	log.StartWriter()
+	log.ToggleDualMode()
 }

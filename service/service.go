@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/morrocker/log"
 	"github.com/morrocker/recoveryserver/config"
 	"github.com/morrocker/recoveryserver/director"
 )
@@ -128,6 +129,7 @@ func (ln tcpKeepAliveListener) Accept() (c net.Conn, err error) {
 
 // StartDirector starts the recovery Director processes
 func (s *Service) StartDirector(c config.Config) error {
+	log.Task("Starting Director service")
 	if err := s.Director.StartDirector(c); err != nil {
 		return err
 	}

@@ -9,7 +9,6 @@ import (
 	legacy "github.com/clonercl/kaon/blocks"
 	legacyremote "github.com/clonercl/kaon/blocks/master/remote"
 	"github.com/morrocker/errors"
-	"github.com/morrocker/log"
 	"github.com/morrocker/recoveryserver/config"
 )
 
@@ -46,24 +45,25 @@ func NewCloud(c config.Cloud) *Cloud {
 }
 
 // GetBlockslist
-func (c *Cloud) GetBlocksList(hash, user string) *BlocksList {
+func (c *Cloud) GetBlocksList(hash, user string) (*BlocksList, error) {
 	errPath := "remotes.GetBlockList()"
 	block, err := c.GetBlock(hash, user)
 	if err != nil {
-		log.Error("%s", errors.Extend(errPath, err))
-		return nil
+		err = errors.Extend(errPath, err)
+		return nil, err
 	}
 
 	ret := &BlocksList{}
 	if err := json.Unmarshal(block, ret); err != nil {
-		log.Error("%s", errors.Extend(errPath, err))
-		return nil
+		err = errors.Extend(errPath, err)
+		return nil, err
 	}
-	return ret
+	return ret, nil
 }
 
 // GetBlocks
 func (c *Cloud) GetBlock(hash, user string) ([]byte, error) {
+	errPath := "remotes.GetBlock()"
 	for retries := 0; retries < 5; retries++ { // we still have opaque errors
 		if c.Legacy {
 			for _, bs := range c.LegacyStores {
@@ -81,5 +81,6 @@ func (c *Cloud) GetBlock(hash, user string) ([]byte, error) {
 			}
 		}
 	}
-	return nil, fmt.Errorf("block %q is ungettable", hash)
+	msg := fmt.Sprintf("block %q is ungettable", hash)
+	return nil, errors.New(errPath, msg)
 }

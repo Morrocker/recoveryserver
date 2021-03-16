@@ -7,7 +7,6 @@ import (
 func (r *Recovery) stopGate() {
 Loop:
 	for {
-		// log.Notice("Status is %v", r.Status)
 		switch r.Status {
 		case Start:
 			break Loop

@@ -5,7 +5,9 @@ type Config struct {
 	AutoQueueRecoveries bool
 	AutoRunRecoveries   bool
 	DeliveryDir         string
-	LogDir              string
+	RootLogDir          string
+	SrvLogDir           string
+	RcvrLogDir          string
 	LoginAddr           string
 	HostAddr            string
 	RecoveriesJSON      string

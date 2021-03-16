@@ -1,9 +1,16 @@
 package recovery
 
 import (
+	"fmt"
+	"os"
+	"path"
+	"time"
+
+	"github.com/morrocker/benchmark"
 	"github.com/morrocker/errors"
 	"github.com/morrocker/log"
 	tracker "github.com/morrocker/progress-tracker"
+	"github.com/morrocker/recoveryserver/config"
 	"github.com/morrocker/recoveryserver/remotes"
 )
 
@@ -48,6 +55,8 @@ type Recovery struct {
 	Priority     int
 	Cloud        *remotes.Cloud
 	SuperTracker *tracker.SuperTracker
+	Log          *log.Logger
+	DownloadSpd  *benchmark.SRate
 }
 
 // Data stores the data needed to execute a recovery
@@ -113,7 +122,7 @@ func (r *Recovery) StartTracker() error {
 	r.SuperTracker = st
 	if err != nil {
 		err = errors.New(errPath, err)
-		log.Error("%v", err)
+		r.Log.Error("%v", err)
 		return err
 	}
 	r.SuperTracker.AddGauge("files", "Files", 0)
@@ -167,4 +176,27 @@ func (r *Recovery) updateTrackerCurrent(size int64) {
 
 func (r *Recovery) increaseErrors() {
 	r.SuperTracker.IncreaseCurr("errors")
+}
+
+func (r *Recovery) initLogger() {
+	errPath := "recovery.initLogger()"
+	Log := log.New()
+	now := time.Now().Format("2006-01-02T15h04m")
+	logName := fmt.Sprintf("%s.%s.%s.%s.log", r.Data.User, r.Data.Machine, r.Data.Disk, now)
+	logPath := path.Join(config.Data.RcvrLogDir, r.Data.Org, logName)
+	if err := os.MkdirAll(path.Join(config.Data.RcvrLogDir, r.Data.Org), 0700); err != nil {
+		log.Error(errPath, err)
+		os.Exit(1)
+	}
+	log.Info("Setting output file (for recovery) to %s", logPath)
+	Log.OutputFile(logPath)
+	Log.ToggleSilent()
+	Log.StartWriter()
+	Log.SetScope(true, true, true)
+	Log.SetMode("verbose")
+	r.Log = Log
+}
+
+func (r *Recovery) initSpdTrack() {
+	r.DownloadSpd = benchmark.NewSRate(40)
 }

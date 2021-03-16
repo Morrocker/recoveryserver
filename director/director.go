@@ -30,7 +30,7 @@ type Director struct {
 // StartDirector starts the Director service and all subservices
 func (d *Director) StartDirector(c config.Config) error {
 	errPath := "director.StartDirector()"
-	log.TaskV("Starting director services")
+	log.Task("Starting director services")
 	//LOAD CONFIG HERE
 	d.Clouds = make(map[string]*remotes.Cloud)
 	d.Recoveries = make(map[string]*recovery.Recovery)
@@ -133,28 +133,28 @@ func (d *Director) PickRecovery() {
 	for {
 	Start:
 		if !d.Run {
-			log.InfoV("Director set Run to false. Sleeping")
+			log.InfoD("Director set Run to false. Sleeping")
 			time.Sleep(30 * time.Second)
 			continue
 		}
-		log.InfoV("Trying to decide new recovery to run")
+		log.InfoD("Trying to decide new recovery to run")
 		var nextRecovery *recovery.Recovery = &recovery.Recovery{Priority: -1}
 		var nextRecoveryHash string
 		for hash, Recovery := range d.Recoveries {
 			if Recovery.Status == recovery.Start {
-				log.InfoV("A recovery is already running. Sleeping for a while")
+				log.InfoD("A recovery is already running. Sleeping for a while")
 				time.Sleep(30 * time.Second)
 				goto Start
 			}
 
 			if Recovery.Status == recovery.Stop && nextRecovery.Priority < Recovery.Priority && Recovery.Destination != "" {
-				log.Info("Found possible recovery %s", nextRecoveryHash)
+				log.InfoD("Found possible recovery %s", nextRecoveryHash)
 				nextRecovery = Recovery
 				nextRecoveryHash = hash
 			}
 		}
 		if nextRecoveryHash == "" {
-			log.InfoV("No recovery found. Starting again.")
+			log.InfoD("No recovery found. Starting again.")
 			time.Sleep(30 * time.Second)
 			continue
 		}
@@ -247,6 +247,7 @@ func (d *Director) QueueRecovery(id string) error {
 
 // InitClouds
 func (d *Director) InitClouds() {
+	log.TaskV("Initializing Remote Clouds")
 	for _, cloud := range config.Data.Clouds {
 		d.Clouds[cloud.FilesAddress] = remotes.NewCloud(cloud)
 	}

@@ -24,36 +24,38 @@ const (
 // Run starts a recovery execution
 func (r *Recovery) Run(lock *sync.Mutex) {
 	errPath := "recovery.Run()"
+	r.initLogger()
+	r.initSpdTrack()
 	r.Status = Stop
 	log.Info("Recovery %s worker is waiting to start!", r.ID)
 	r.stopGate()
-	go func() {
-		for {
-			fc, ft, _ := r.SuperTracker.GetValues("files")
-			bc, bt, _ := r.SuperTracker.GetValues("blocks")
-			sc, st, _ := r.SuperTracker.GetValues("size")
-			erro, _, _ := r.SuperTracker.GetValues("errors")
-			if erro != 0 {
-				log.Info("Files: %d/%d | Blocks: %d/%d | Size: %s/%s (Errors:%d)", fc, ft, bc, bt, utils.B2H(sc), utils.B2H(st), erro)
-			} else {
-				log.Info("Files: %d/%d | Blocks: %d/%d | Size: %s/%s", fc, ft, bc, bt, utils.B2H(sc), utils.B2H(st))
-			}
-			time.Sleep(time.Second)
-		}
-	}()
+	log.Info("Starting recovery %s", r.ID)
+	r.Log.Task("Starting recovery %s", r.ID)
+	start := time.Now()
+	r.SuperTracker.InitSpdRate("size", 40)
+	r.SuperTracker.SetEtaTracker("size")
+	r.SuperTracker.SetProgressFunction("size", utils.B2H)
 
+	r.SuperTracker.StartAutoPrint()
 	tree, err := r.GetRecoveryTree()
 	if err != nil {
 		err = errors.Extend(errPath, err)
 		log.Error("%s", err)
 	}
-	log.Notice("Metafiles Done")
 	r.stopGate()
 
+	r.SuperTracker.StartAutoMeasure("size", 5)
 	if err := r.getFiles(tree); err != nil {
 		err = errors.Extend(errPath, err)
 	}
-	log.Info("Recovery finished")
+	r.SuperTracker.StopAutoMeasure("size")
+	r.SuperTracker.StopAutoPrint()
+	finish := time.Since(start).Truncate(time.Second)
+	rate, err := r.SuperTracker.GetTrueProgressRate("size")
+	if err != nil {
+		log.Alert("%s", errors.Extend(errPath, err))
+	}
+	log.Info("Recovery finished in %s with an average download rate of %sps", finish, rate)
 }
 
 // RemoveFiles removes any recovered file from the destination location

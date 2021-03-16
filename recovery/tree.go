@@ -10,7 +10,6 @@ import (
 
 	"github.com/clonercl/reposerver"
 	"github.com/morrocker/errors"
-	"github.com/morrocker/log"
 	"github.com/morrocker/recoveryserver/config"
 )
 
@@ -40,14 +39,14 @@ func NewMetaTree(mf *reposerver.Metafile) *MetaTree {
 // GetRecoveryTree takes in a recovery data and returns a metafileTree
 func (r *Recovery) GetRecoveryTree() (*MetaTree, error) {
 	errPath := "recovery.GetRecoveryTree()"
-	log.Notice("Starting metafile tree retrieval")
+	r.Log.Task("Starting metafile tree retrieval")
 
 	var wg sync.WaitGroup
 	tc := make(chan *MetaTree)
 	if len(r.Data.Exclusions) > 0 {
-		log.Info("List of metafiles (and their children) that will be excluded")
+		r.Log.InfoV("List of metafiles (and their children) that will be excluded")
 		for hash := range r.Data.Exclusions {
-			log.Info("ID: %s", hash)
+			r.Log.InfoV("ID: %s", hash)
 		}
 	}
 
@@ -55,7 +54,6 @@ func (r *Recovery) GetRecoveryTree() (*MetaTree, error) {
 		go r.getChildMetaTree(tc, &wg)
 	}
 
-	log.Task("Getting root metafile")
 	mf, err := r.getRootMetafile()
 	if err != nil {
 		err := errors.New(errPath, err)
@@ -87,7 +85,7 @@ func (r *Recovery) getChildMetaTree(tc chan *MetaTree, wg *sync.WaitGroup) {
 		wg.Add(1)
 
 		if r.Data.Exclusions[mt.mf.ID] {
-			fmt.Printf("%s excluded\n", mt.mf.Name)
+			r.Log.Info("%s excluded", mt.mf.Name)
 			wg.Done()
 			continue
 		}
@@ -96,7 +94,7 @@ func (r *Recovery) getChildMetaTree(tc chan *MetaTree, wg *sync.WaitGroup) {
 			children, err := r.getChildren(mt.mf.ID)
 			if err != nil {
 				err = errors.Extend(errPath, err)
-				log.Error("Couldnt retrieve metafile: %s", err)
+				r.Log.Error("Couldnt retrieve metafile: %s", err)
 			}
 
 			for _, child := range children {
@@ -114,6 +112,7 @@ func (r *Recovery) getChildMetaTree(tc chan *MetaTree, wg *sync.WaitGroup) {
 
 func (r *Recovery) getChildren(id string) ([]*reposerver.Metafile, error) {
 	errPath := "getLatestChildren()"
+	r.Log.Task("Getting children from %s", id)
 	var errOut error
 	for retries := 0; retries < 5; retries++ {
 		errOut = nil
@@ -170,6 +169,7 @@ func (r *Recovery) getChildren(id string) ([]*reposerver.Metafile, error) {
 
 func (r *Recovery) getRootMetafile() (*reposerver.Metafile, error) {
 	errPath := "recovery.getMetafile()"
+	r.Log.Task("Getting root metafile")
 	var errOut error
 	for retries := 0; retries < 5; retries++ {
 		newQuery := fmt.Sprintf("%sapi/metafile?id=%s&repo_id=%s", r.Data.Server, r.Data.Metafile, r.Data.Repository)

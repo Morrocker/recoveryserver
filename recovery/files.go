@@ -5,12 +5,12 @@ import (
 	"os"
 	"path"
 	"sync"
-	"time"
 
 	"github.com/clonercl/reposerver"
 	"github.com/morrocker/errors"
 	"github.com/morrocker/log"
 	"github.com/morrocker/recoveryserver/config"
+	"github.com/morrocker/recoveryserver/utils"
 	"golang.org/x/text/unicode/norm"
 )
 
@@ -32,19 +32,20 @@ func (r *Recovery) getFiles(mt *MetaTree) error {
 	fc := make(chan *MetaTree)
 	wg := sync.WaitGroup{}
 
-	log.Notice("Starting File workers")
+	r.Log.Notice("Starting %d File workers", config.Data.FileWorkers)
 	for i := 0; i < config.Data.FileWorkers; i++ {
 		go r.fileWorker(fc, &wg)
 	}
 
-	startingTime := time.Now()
-	log.Notice("Creating root directory %s", r.Destination)
+	// startingTime := time.Now()
+	r.Log.Notice("Creating root directory %s", r.Destination)
 	if err := os.MkdirAll(r.Destination, 0700); err != nil {
-		fmt.Printf("could not create output path: %v\n", err)
+		r.Log.Error("could not create output path: %v", err)
 		return errors.New(errPath, err)
 	}
-
-	r.createFileQueue(r.Destination, mt)
+	dst := path.Join(r.Destination, r.Data.Org, r.Data.User, r.Data.Machine, r.Data.Disk)
+	log.Info("Writting files to %s", dst)
+	r.createFileQueue(dst, mt)
 
 	for _, tree := range fq.ToDo {
 		r.stopGate()
@@ -53,10 +54,6 @@ func (r *Recovery) getFiles(mt *MetaTree) error {
 
 	wg.Wait()
 	close(fc)
-
-	totalTime := time.Duration(int64(time.Since(startingTime)) / int64(time.Second) * int64(time.Second))
-	// CHANGE THIS
-	log.Info("Total time %s", totalTime)
 	return nil
 }
 
@@ -85,7 +82,7 @@ func (r *Recovery) fileWorker(fc chan *MetaTree, wg *sync.WaitGroup) {
 	for mt := range fc {
 		wg.Add(1)
 		if err := r.recoverFile(mt.path, mt.mf.Hash, uint64(mt.mf.Size)); err != nil {
-			log.Error("%s", errors.Extend(errPath, err))
+			r.Log.Error("%s", errors.Extend(errPath, err))
 		}
 		wg.Done()
 	}
@@ -93,20 +90,22 @@ func (r *Recovery) fileWorker(fc chan *MetaTree, wg *sync.WaitGroup) {
 
 func (r *Recovery) recoverFile(p, hash string, size uint64) error {
 	errPath := "recovery.recoverFile()"
-	// log.Info("Recovering file %s [%s]", p, utils.B2H(size))
 	if fi, err := os.Stat(p); err == nil {
 		if fi.Size() == int64(size) {
 			r.updateTrackerCurrent(int64(size))
-			log.Notice("skipping file '%s'", p)
+			r.Log.NoticeV("skipping file '%s'", p)
 			return nil
 		}
 	}
 
-	blist := r.Cloud.GetBlocksList(hash, r.Data.User)
-	if blist == nil {
+	r.Log.Info("Recovering file %s [%s]", p, utils.B2H(int64(size)))
+	blist, err := r.Cloud.GetBlocksList(hash, r.Data.User)
+	if err != nil {
 		r.increaseErrors()
-		return errors.New(errPath, fmt.Sprintf("error could not create file '%s' because fileblock is unavailable.\n", p))
+		r.Log.ErrorV(errPath, "error could not create file '%s' because fileblock is unavailable")
+		return errors.New(errPath, err)
 	}
+	r.SuperTracker.IncreaseCurr("blocks")
 
 	f, err := os.Create(norm.NFC.String(p))
 	if err != nil {
@@ -129,12 +128,12 @@ func (r *Recovery) recoverFile(p, hash string, size uint64) error {
 				r.increaseErrors()
 				return errors.New(errPath, fmt.Sprintf("error could not write content for block '%s' for file '%s': %v\n", hash, p, err2))
 			}
-			// atomic.AddUint64(&totalBytes, uint64(len(b)))
 		}
+		r.SuperTracker.ChangeCurr("size", len(b))
+		r.SuperTracker.IncreaseCurr("blocks")
 	}
 	f.Close()
-	r.updateTrackerCurrent(int64(size))
-	// atomic.AddUint64(&nFiles, 1)
+	r.SuperTracker.IncreaseCurr("files")
 	return nil
 }
 
