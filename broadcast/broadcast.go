@@ -1,30 +1,68 @@
 package broadcast
 
-import "sync"
+import (
+	"sync"
+
+	"github.com/morrocker/recoveryserver/utils"
+)
 
 type Broadcaster struct {
 	lock      sync.Mutex
-	listeners []chan interface{}
+	listeners map[string]*Listener
+}
+
+type Listener struct {
+	id string
+	b  *Broadcaster
+	C  chan interface{}
 }
 
 func New() *Broadcaster {
-	return &Broadcaster{}
+	return &Broadcaster{
+		listeners: make(map[string]*Listener),
+	}
 }
 
-func (b *Broadcaster) Listen() chan interface{} {
-	c := make(chan interface{})
-	b.listeners = append(b.listeners, c)
-	return c
+func (b *Broadcaster) Listen() *Listener {
+	b.lock.Lock()
+	defer b.lock.Unlock()
+	newId := utils.RandString(8)
+	l := &Listener{
+		id: newId,
+		C:  make(chan interface{}),
+		b:  b,
+	}
+	b.listeners[newId] = l
+
+	return l
+}
+
+func (b *Broadcaster) Close(id string) {
+	b.lock.Lock()
+	defer b.lock.Lock()
+	l, ok := b.listeners[id]
+	if ok {
+		close(l.C)
+		delete(b.listeners, id)
+	}
 }
 
 func (b *Broadcaster) Broadcast() {
-	for _, c := range b.listeners {
-		c <- ""
+	b.lock.Lock()
+	defer b.lock.Lock()
+	for _, l := range b.listeners {
+		l.C <- ""
 	}
 }
 
-func (b *Broadcaster) Close() {
-	for _, c := range b.listeners {
-		close(c)
+func (b *Broadcaster) CloseAll() {
+	b.lock.Lock()
+	defer b.lock.Lock()
+	for _, l := range b.listeners {
+		close(l.C)
 	}
+}
+
+func (l *Listener) Close() {
+	l.b.Close(l.id)
 }
