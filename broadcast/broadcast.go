@@ -39,7 +39,7 @@ func (b *Broadcaster) Listen() *Listener {
 
 func (b *Broadcaster) Close(id string) {
 	b.lock.Lock()
-	defer b.lock.Lock()
+	defer b.lock.Unlock()
 	l, ok := b.listeners[id]
 	if ok {
 		close(l.C)
@@ -49,7 +49,7 @@ func (b *Broadcaster) Close(id string) {
 
 func (b *Broadcaster) Broadcast() {
 	b.lock.Lock()
-	defer b.lock.Lock()
+	defer b.lock.Unlock()
 	for _, l := range b.listeners {
 		l.C <- ""
 	}
@@ -57,7 +57,7 @@ func (b *Broadcaster) Broadcast() {
 
 func (b *Broadcaster) CloseAll() {
 	b.lock.Lock()
-	defer b.lock.Lock()
+	defer b.lock.Unlock()
 	for _, l := range b.listeners {
 		close(l.C)
 	}
