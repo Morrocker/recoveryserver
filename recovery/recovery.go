@@ -16,21 +16,25 @@ import (
 // Run starts a recovery execution
 func (r *Recovery) Run(lock *sync.Mutex) {
 	op := "recovery.Run()"
-	r.Status = Paused
-	log.Info("Recovery %d worker is waiting to start!", r.Data.ID)
-
+	r.initLogger()
 	r.startTracker()
+	// CHECK THIS POINT OR THE END. IT IS IMPORTANT TO CONSIDER DATA DUPLICATION IF RECOVEEY IS STOPPED > STARTED
+
+	// r.Status = Paused
+	// log.Info("Recovery %d worker is waiting to start!", r.Data.ID)
+
 	r.step = Metafiles
 	if r.flowGate() {
 		return
 	}
+	r.autoTrack()
 	start := time.Now()
-	r.initLogger()
 	log.Info("Starting recovery %d", r.Data.ID)
 	r.log.Task("Starting recovery %d", r.Data.ID)
 	tree, err := r.GetRecoveryTree()
 	if err != nil {
 		log.Errorln(errors.Extend(op, err))
+		return
 	}
 	r.step = Files
 	if r.flowGate() {
@@ -39,6 +43,7 @@ func (r *Recovery) Run(lock *sync.Mutex) {
 
 	if err := r.getFiles(tree); err != nil {
 		log.Errorln(errors.Extend(op, err))
+		return
 	}
 	if r.flowGate() {
 		return

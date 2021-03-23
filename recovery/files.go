@@ -10,7 +10,6 @@ import (
 	"github.com/morrocker/errors"
 	"github.com/morrocker/log"
 	"github.com/morrocker/recoveryserver/config"
-	"github.com/morrocker/recoveryserver/recovery/remotes"
 	"github.com/morrocker/recoveryserver/utils"
 	"golang.org/x/text/unicode/norm"
 )
@@ -34,8 +33,7 @@ func (r *Recovery) getFiles(mt *MetaTree) error {
 
 	r.log.Notice("Creating root directory " + r.outputTo)
 	if err := os.MkdirAll(r.outputTo, 0700); err != nil {
-		r.log.Error("could not create output path: %v", err)
-		return errors.New(op, err)
+		return errors.New(op, errors.Extend(op, err))
 	}
 	dst := path.Join(r.outputTo, r.Data.Org, r.Data.User, r.Data.Machine, r.Data.Disk)
 	log.Info("Writting files to " + dst)
@@ -85,7 +83,7 @@ func (f *fileQueue) addFile(mt *MetaTree) {
 
 func (r *Recovery) fileWorker(fc chan *MetaTree, wg *sync.WaitGroup) {
 	op := "recovery.fileWorker()"
-	RBS := remotes.NewRBS(r.cloud)
+	RBS := NewRBS(r.cloud)
 	for mt := range fc {
 		if r.flowGate() {
 			break
@@ -98,7 +96,7 @@ func (r *Recovery) fileWorker(fc chan *MetaTree, wg *sync.WaitGroup) {
 	}
 }
 
-func (r *Recovery) recoverFile(p, hash string, size uint64, RBS *remotes.RBS) error {
+func (r *Recovery) recoverFile(p, hash string, size uint64, RBS *RBS) error {
 	op := "recovery.recoverFile()"
 	if r.flowGate() {
 		return nil

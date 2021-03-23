@@ -69,7 +69,7 @@ func (d *Director) AddRecovery(data *recovery.Data) error {
 		return errors.New(op, "Machine parameter empty or missing")
 	}
 	if data.Metafile == "" {
-		return errors.New(op, "Metafil parameter empty or missing")
+		return errors.New(op, "Metafile parameter empty or missing")
 	}
 	if data.Org == "" {
 		return errors.New(op, "Organization parameter empty or missing")
@@ -83,7 +83,7 @@ func (d *Director) AddRecovery(data *recovery.Data) error {
 
 	d.Recoveries[data.ID] = recovery.New(data.ID, data, d.statusMonitor)
 	if err := d.QueueRecovery(data.ID); err != nil {
-		log.Alertln(errors.Extend(op, err))
+		return errors.Extend(op, err)
 	}
 	return nil
 }
@@ -91,10 +91,9 @@ func (d *Director) AddRecovery(data *recovery.Data) error {
 // PauseRecovery sets a given recover status to Pause
 func (d *Director) PauseRecovery(id int) error {
 	log.TaskD("Pausing recovery %s", id)
-	op := "director.PauseRecovery()"
 	r, err := d.findRecovery(id)
 	if err != nil {
-		return errors.Extend(op, err)
+		return errors.Extend("director.PauseRecovery()", err)
 	}
 	r.Pause()
 	return nil
