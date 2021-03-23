@@ -3,7 +3,7 @@ package recovery
 import (
 	"github.com/morrocker/log"
 	tracker "github.com/morrocker/progress-tracker"
-	"github.com/morrocker/recoveryserver/remotes"
+	"github.com/morrocker/recoveryserver/config"
 )
 
 // Recovery stores a single recovery data
@@ -12,11 +12,12 @@ type Recovery struct {
 	Status   int
 	Priority int
 
-	destination string
-	step        int
-	cloud       *remotes.Cloud
-	tracker     *tracker.SuperTracker
-	log         *log.Logger
+	outputTo      string
+	step          int
+	statusMonitor chan interface{}
+	cloud         config.Cloud
+	tracker       *tracker.SuperTracker
+	log           *log.Logger
 }
 
 // Data stores the data needed to execute a recovery
@@ -36,18 +37,11 @@ type Data struct {
 	ClonerKey  string
 }
 
-// Multiple stores multiple recoveries
-type Multiple struct {
-	Recoveries []*Data
-}
-
 const (
 	// Entry default entry status for a recovery
 	Entry = iota
 	// Queue recovery in queue to initilize recovery worker
 	Queued
-	// Stop recovery queued and waiting to start running
-	Stopped
 	// Start Recovery running currently
 	Running
 	// Pause Recovery temporarily stopped

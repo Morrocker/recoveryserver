@@ -48,7 +48,7 @@ func (r *Recovery) GetRecoveryTree() (*MetaTree, error) {
 		go r.getChildMetaTree(tc, &wg)
 	}
 
-	mf, err := r.getRootMetafile()
+	mf, err := r.getMetafile()
 	if err != nil {
 		return nil, errors.New(op, err)
 	}
@@ -66,7 +66,7 @@ func (r *Recovery) GetRecoveryTree() (*MetaTree, error) {
 func (r *Recovery) getChildMetaTree(tc chan *MetaTree, wg *sync.WaitGroup) {
 	op := "recoveries.getChildMetaTree()"
 	for mt := range tc {
-		if exit := r.stopGate(); exit != 0 {
+		if r.flowGate() {
 			wg.Done()
 			return
 		}
@@ -79,7 +79,7 @@ func (r *Recovery) getChildMetaTree(tc chan *MetaTree, wg *sync.WaitGroup) {
 			}
 
 			for _, child := range children {
-				if exit := r.stopGate(); exit != 0 {
+				if r.flowGate() {
 					wg.Done()
 					return
 				}
@@ -96,18 +96,17 @@ func (r *Recovery) getChildMetaTree(tc chan *MetaTree, wg *sync.WaitGroup) {
 }
 
 func (r *Recovery) getChildren(id string) ([]*reposerver.Metafile, error) {
-	op := "getLatestChildren()"
 	r.log.Task("Getting children from " + id)
-	var errOut error
+	var err error
 	for retries := 0; retries < 5; retries++ {
-		errOut = nil
+		err = nil
 		var newQuery string
 		if r.Data.Deleted {
 			newQuery = fmt.Sprintf("%sapi/latestsChilden?id=%s&repo_id=%s", r.Data.Server, id, r.Data.Repository)
 		} else {
 			var version int
 			if r.Data.Version == 0 {
-				version = 999999999
+				version = 999999999999
 			} else {
 				version = r.Data.Version
 			}
@@ -115,86 +114,74 @@ func (r *Recovery) getChildren(id string) ([]*reposerver.Metafile, error) {
 		}
 		req, err := http.NewRequest("GET", newQuery, nil)
 		if err != nil {
-			spPath := fmt.Sprintf("%s Failed to obtain metafile %s", op, id)
-			errOut = errors.New(spPath, err)
 			continue
 		}
 
 		req.Header.Add("Cloner_key", r.Data.ClonerKey)
 		resp, err := http.DefaultClient.Do(req)
 		if err != nil {
-			spPath := fmt.Sprintf("%s Failed to obtain metafile %s", op, id)
-			errOut = errors.New(spPath, err)
 			continue
 		}
 
 		if resp.StatusCode != http.StatusOK {
-			errOut = errors.New(op+"Failed to obtain root metafile", "Response status code not OK")
+			err = errors.NewSimple("Status not ok")
 			continue
 		}
 
 		body, err := ioutil.ReadAll(resp.Body)
 		if err != nil {
-			spPath := fmt.Sprintf("%s Failed to obtain metafile %s", op, id)
-			errOut = errors.New(spPath, err)
 			continue
 		}
 		resp.Body.Close()
 
 		var children []*reposerver.Metafile
 		if err := json.Unmarshal(body, &children); err != nil {
-			spPath := fmt.Sprintf("%s Failed to obtain metafile %s", op, id)
-			errOut = errors.New(spPath, err)
 			continue
 		}
 		return children, nil
 	}
-	return nil, errOut
+	err = errors.New("recovery.getLatestChildren()", fmt.Sprintf("Failed to obtain metafile %s", err))
+	return nil, err
 }
 
-func (r *Recovery) getRootMetafile() (*reposerver.Metafile, error) {
-	op := "recovery.getMetafile()"
+func (r *Recovery) getMetafile() (*reposerver.Metafile, error) {
 	r.log.Task("Getting root metafile")
-	var errOut error
+	var err error
 	for retries := 0; retries < 5; retries++ {
+		err = nil
 		newQuery := fmt.Sprintf("%sapi/metafile?id=%s&repo_id=%s", r.Data.Server, r.Data.Metafile, r.Data.Repository)
 		req, err := http.NewRequest("GET", newQuery, nil)
 		if err != nil {
-			errOut = errors.New(op+"Failed to obtain root metafile", err)
 			continue
 		}
 
 		req.Header.Add("Cloner_key", r.Data.ClonerKey)
 		resp, err := http.DefaultClient.Do(req)
 		if err != nil {
-			errOut = errors.New(op+"Failed to obtain root metafile", err)
 			continue
 		}
 
 		if resp.StatusCode != http.StatusOK {
-			errOut = errors.New(op+"Failed to obtain root metafile", "Response status code not OK")
+			err = errors.NewSimple("Status not ok")
 			continue
 		}
 
 		body, err := ioutil.ReadAll(resp.Body)
 		if err != nil {
-			errOut = errors.New(op+"Failed to obtain root metafile", err)
 			continue
 		}
 		resp.Body.Close()
 
 		var ret reposerver.Metafile
 		if err := json.Unmarshal(body, &ret); err != nil {
-			errOut = errors.New(op+"Failed to obtain root metafile", err)
 			continue
 		}
 		return &ret, nil
 	}
-
-	return nil, errOut
+	err = errors.New("recovery.getMetafile()", fmt.Sprintf("Failed to obtain metafile %s", err))
+	return nil, err
 }
 
-// AddChildren adfa fa
 func (m *MetaTree) addChildren(mt *MetaTree) {
 	m.lock.Lock()
 	defer m.lock.Unlock()

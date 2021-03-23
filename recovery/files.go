@@ -10,6 +10,7 @@ import (
 	"github.com/morrocker/errors"
 	"github.com/morrocker/log"
 	"github.com/morrocker/recoveryserver/config"
+	"github.com/morrocker/recoveryserver/recovery/remotes"
 	"github.com/morrocker/recoveryserver/utils"
 	"golang.org/x/text/unicode/norm"
 )
@@ -31,17 +32,17 @@ func (r *Recovery) getFiles(mt *MetaTree) error {
 		go r.fileWorker(fc, &wg)
 	}
 
-	r.log.Notice("Creating root directory " + r.destination)
-	if err := os.MkdirAll(r.destination, 0700); err != nil {
+	r.log.Notice("Creating root directory " + r.outputTo)
+	if err := os.MkdirAll(r.outputTo, 0700); err != nil {
 		r.log.Error("could not create output path: %v", err)
 		return errors.New(op, err)
 	}
-	dst := path.Join(r.destination, r.Data.Org, r.Data.User, r.Data.Machine, r.Data.Disk)
+	dst := path.Join(r.outputTo, r.Data.Org, r.Data.User, r.Data.Machine, r.Data.Disk)
 	log.Info("Writting files to " + dst)
 	r.createFileQueue(dst, mt)
 
 	for _, tree := range fq.ToDo {
-		if exit := r.stopGate(); exit != 0 {
+		if r.flowGate() {
 			break
 		}
 		fc <- tree
@@ -65,7 +66,7 @@ func (r *Recovery) createFileQueue(filepath string, mt *MetaTree) {
 			}
 		}
 		for _, child := range mt.children {
-			if exit := r.stopGate(); exit != 0 {
+			if r.flowGate() {
 				break
 			}
 			r.createFileQueue(p, child)
@@ -76,23 +77,30 @@ func (r *Recovery) createFileQueue(filepath string, mt *MetaTree) {
 	fq.addFile(mt)
 }
 
+func (f *fileQueue) addFile(mt *MetaTree) {
+	f.lock.Lock()
+	defer f.lock.Unlock()
+	f.ToDo = append(f.ToDo, mt)
+}
+
 func (r *Recovery) fileWorker(fc chan *MetaTree, wg *sync.WaitGroup) {
 	op := "recovery.fileWorker()"
+	RBS := remotes.NewRBS(r.cloud)
 	for mt := range fc {
-		if exit := r.stopGate(); exit != 0 {
+		if r.flowGate() {
 			break
 		}
 		wg.Add(1)
-		if err := r.recoverFile(mt.path, mt.mf.Hash, uint64(mt.mf.Size)); err != nil {
+		if err := r.recoverFile(mt.path, mt.mf.Hash, uint64(mt.mf.Size), RBS); err != nil {
 			r.log.Errorln(errors.Extend(op, err))
 		}
 		wg.Done()
 	}
 }
 
-func (r *Recovery) recoverFile(p, hash string, size uint64) error {
+func (r *Recovery) recoverFile(p, hash string, size uint64, RBS *remotes.RBS) error {
 	op := "recovery.recoverFile()"
-	if exit := r.stopGate(); exit != 0 {
+	if r.flowGate() {
 		return nil
 	}
 	if fi, err := os.Stat(p); err == nil {
@@ -104,7 +112,7 @@ func (r *Recovery) recoverFile(p, hash string, size uint64) error {
 	}
 
 	r.log.Info("Recovering file %s [%s]", p, utils.B2H(int64(size)))
-	blist, err := r.cloud.GetBlocksList(hash, r.Data.User)
+	blist, err := RBS.GetBlocksList(hash, r.Data.User)
 	if err != nil {
 		r.increaseErrors()
 		r.log.ErrorlnV(errors.New(op, "error could not create file '%s' because fileblock is unavailable"))
@@ -121,10 +129,10 @@ func (r *Recovery) recoverFile(p, hash string, size uint64) error {
 
 	var zeroedBuffer = make([]byte, 1024*1000)
 	for _, hash := range blist.Blocks {
-		if exit := r.stopGate(); exit != 0 {
+		if r.flowGate() {
 			break
 		}
-		b, err := r.cloud.GetBlock(hash, r.Data.User)
+		b, err := RBS.GetBlock(hash, r.Data.User)
 
 		if err != nil {
 			if _, err2 := f.Write(zeroedBuffer); err2 != nil {
@@ -144,10 +152,4 @@ func (r *Recovery) recoverFile(p, hash string, size uint64) error {
 
 	r.tracker.IncreaseCurr("files")
 	return nil
-}
-
-func (f *fileQueue) addFile(mt *MetaTree) {
-	f.lock.Lock()
-	defer f.lock.Unlock()
-	f.ToDo = append(f.ToDo, mt)
 }

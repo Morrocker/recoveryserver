@@ -72,15 +72,6 @@ func (s *Service) cancelRecovery(c *gin.Context) {
 	c.Data(http.StatusOK, "text", []byte("ok"))
 }
 
-func (s *Service) pauseDirector(c *gin.Context) {
-	s.Director.PausePicker()
-	c.Data(http.StatusOK, "text", []byte("ok"))
-}
-func (s *Service) runDirector(c *gin.Context) {
-	s.Director.RunPicker()
-	c.Data(http.StatusOK, "text", []byte("ok"))
-}
-
 func (s *Service) queueRecovery(c *gin.Context) {
 	// op := "service.queueRecovery()"
 	// id, err := getQueryInt(c, "id")

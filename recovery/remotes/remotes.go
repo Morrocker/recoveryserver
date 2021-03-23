@@ -12,10 +12,10 @@ import (
 	"github.com/morrocker/recoveryserver/config"
 )
 
-// Cloud stores the info to set-up and query remote Files and Blocksmaster
-type Cloud struct {
-	ClonerKey     string
-	FilesAddress  string
+// RBS stores the info to set-up and query remote Files and Blocksmaster
+type RBS struct {
+	// ClonerKey     string
+	// FilesAddress  string
 	LegacyStores  []legacy.MasterStore
 	CurrentStores []blocks.MasterStore
 	Legacy        bool
@@ -26,26 +26,24 @@ type BlocksList struct {
 	Blocks []string `json:"blocks"`
 }
 
-// NewCloud Returns a new cloud object
-func NewCloud(c config.Cloud) *Cloud {
-	newCloud := &Cloud{}
-	newCloud.ClonerKey = c.ClonerKey
-	newCloud.FilesAddress = c.FilesAddress
-	newCloud.Legacy = c.Legacy
-	if newCloud.Legacy {
+// NewRBS Returns a new cloud object
+func NewRBS(c config.Cloud) *RBS {
+	newRemote := &RBS{}
+	newRemote.Legacy = c.Legacy
+	if newRemote.Legacy {
 		for _, bm := range c.Stores {
-			newCloud.LegacyStores = append(newCloud.LegacyStores, legacyremote.New(bm.Address, bm.Magic))
+			newRemote.LegacyStores = append(newRemote.LegacyStores, legacyremote.New(bm.Address, bm.Magic))
 		}
 	} else {
 		for _, bm := range c.Stores {
-			newCloud.CurrentStores = append(newCloud.CurrentStores, blocksremote.New(bm.Address, bm.Magic))
+			newRemote.CurrentStores = append(newRemote.CurrentStores, blocksremote.New(bm.Address, bm.Magic))
 		}
 	}
-	return newCloud
+	return newRemote
 }
 
 // GetBlockslist
-func (c *Cloud) GetBlocksList(hash, user string) (*BlocksList, error) {
+func (c *RBS) GetBlocksList(hash, user string) (*BlocksList, error) {
 	op := "remotes.GetBlockList()"
 	block, err := c.GetBlock(hash, user)
 	if err != nil {
@@ -60,10 +58,10 @@ func (c *Cloud) GetBlocksList(hash, user string) (*BlocksList, error) {
 }
 
 // GetBlocks
-func (c *Cloud) GetBlock(hash, user string) ([]byte, error) {
+func (c *RBS) GetBlock(hash, user string) ([]byte, error) {
 	op := "remotes.GetBlock()"
 
-	for retries := 0; retries < 5; retries++ { // we still have opaque errors
+	for retries := 0; retries < 5; retries++ {
 		if c.Legacy {
 			for _, bs := range c.LegacyStores {
 				content, err := bs.Retrieve(hash)
@@ -81,5 +79,5 @@ func (c *Cloud) GetBlock(hash, user string) ([]byte, error) {
 		}
 	}
 
-	return nil, errors.New(op, fmt.Sprintf("block %q is ungettable\n", hash))
+	return nil, errors.New(op, fmt.Sprintf("block %q is ungettable", hash))
 }

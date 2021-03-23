@@ -8,14 +8,12 @@ import (
 
 	"github.com/morrocker/errors"
 	"github.com/morrocker/log"
-	tracker "github.com/morrocker/progress-tracker"
 	"github.com/morrocker/recoveryserver/config"
-	"github.com/morrocker/recoveryserver/remotes"
 )
 
 // New returns a new Recovery object from the given recovery data
-func New(id int, data *Data) *Recovery {
-	newRecovery := &Recovery{Data: data, Priority: MediumPr}
+func New(id int, data *Data, st chan interface{}) *Recovery {
+	newRecovery := &Recovery{Data: data, Priority: MediumPr, statusMonitor: st}
 	return newRecovery
 }
 
@@ -23,27 +21,26 @@ func New(id int, data *Data) *Recovery {
 func (r *Recovery) Pause() {
 	log.Task("Pausing recovery %d", r.Data.ID)
 	r.Status = Paused
+	r.notify()
 }
 
 // Start starts (or resumes) a recovery execution
 func (r *Recovery) Start() {
 	log.Task("Running recovery %d", r.Data.ID)
 	r.Status = Running
+	r.notify()
 }
 
 // Done sets a recovery status as Done
 func (r *Recovery) Done(finish time.Duration) error {
-	// op := "recovery.Done()"
-	// if err := r.tracker.StopAutoMeasure("size"); err != nil {
-	// 	log.Errorln(errors.New(op, err))
-	// }
-	// r.tracker.StopAutoPrint()
-	// rate, err := r.tracker.GetTrueProgressRate("size")
-	// if err != nil {
-	// 	return errors.Extend(op, err)
-	// }
-	// log.Info("Recovery finished in %s with an average download rate of %sps", finish, rate)
-	// r.Status = Done
+	op := "recovery.Done()"
+	rate, err := r.tracker.TrueProgressRate("size")
+	if err != nil {
+		return errors.Extend(op, err)
+	}
+	log.Info("Recovery finished in %s with an average download rate of %sps", finish, rate)
+	r.Status = Done
+	r.notify()
 	return nil
 }
 
@@ -68,48 +65,34 @@ func (r *Recovery) PreDone() error {
 func (r *Recovery) Cancel() {
 	log.Task("Canceling recovery %d", r.Data.ID)
 	r.Status = Canceled
+	r.notify()
 }
 
 // Queue sets a recovery status as Done
 func (r *Recovery) Queue() {
 	log.Task("Queueing recovery %d", r.Data.ID)
 	r.Status = Queued
+	r.notify()
 }
 
 // Queue sets a recovery status as Done
 func (r *Recovery) Unqueue() {
 	log.Task("Unqueueing recovery %d", r.Data.ID)
 	r.Status = Entry
+	r.notify()
 }
 
-// StartTracker starts a new tracker for a Recovery
-func (r *Recovery) startTracker() error {
-	st := tracker.New()
-	r.tracker = st
-	r.tracker.AddGauge("files", "Files", 0)
-	r.tracker.Reset("files")
-	r.tracker.AddGauge("blocks", "Blocks", 0)
-	r.tracker.Reset("blocks")
-	r.tracker.AddGauge("size", "Size", 0)
-	r.tracker.Reset("size")
-	r.tracker.AddGauge("errors", "Errors", 0)
-	r.tracker.Reset("errors")
-	r.tracker.InitSpdRate("size", 40)
-	// r.tracker.SetEtaTracker("size")
-	// r.tracker.SetProgressFunction("size", utils.B2H)
-	return nil
-}
-
-func (r *Recovery) SetCloud(rc *remotes.Cloud) {
+func (r *Recovery) SetCloud(rc config.Cloud) {
 	r.cloud = rc
 	r.Data.ClonerKey = rc.ClonerKey
 }
 
-func (r *Recovery) SetDstn(dst string) {
-	r.destination = dst
+func (r *Recovery) SetOutput(dst string) {
+	r.outputTo = dst
+	r.notify()
 }
-func (r *Recovery) GetDstn() string {
-	return r.destination
+func (r *Recovery) GetOutput() string {
+	return r.outputTo
 }
 
 func (r *Recovery) SetPriority(p int) error {
@@ -149,6 +132,7 @@ func (r *Recovery) increaseErrors() {
 }
 
 func (r *Recovery) initLogger() {
+	// GIVEN CHANGES TO THE TRACKER & LOGGER MAYBE CHANGES ARE NEEDED
 	op := "recovery.initLogger()"
 	Log := log.New()
 	now := time.Now().Format("2006-01-02T15h04m")

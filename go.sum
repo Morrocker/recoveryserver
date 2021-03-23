@@ -134,6 +134,8 @@ github.com/morrocker/benchmark v0.0.0-20210323032400-58c2a037853a h1:DCEHJXR/XK3
 github.com/morrocker/benchmark v0.0.0-20210323032400-58c2a037853a/go.mod h1:7ugHkj5e9ur+NmG+qMIzOFZHwJBfa1u1lyt8MED2aJ4=
 github.com/morrocker/errors v0.0.0-20210306160329-8873785d27fb h1:JF/LHqvJT3TCx+deWeM8ZQnOQBlfwLwLaZpoB4dbsTA=
 github.com/morrocker/errors v0.0.0-20210306160329-8873785d27fb/go.mod h1:MaVAsvgPemd2kMO+0xRrt0yeflz4aaWX1it59qu3/gU=
+github.com/morrocker/errors v0.0.0-20210323144609-d8629b6d420a h1:5eM0pV4lXVkRyiRUvR9Vw7eb2/dTCPYFylyoGsr4KrA=
+github.com/morrocker/errors v0.0.0-20210323144609-d8629b6d420a/go.mod h1:MaVAsvgPemd2kMO+0xRrt0yeflz4aaWX1it59qu3/gU=
 github.com/morrocker/log v0.0.0-20210322121956-1387843cccea h1:fLjwXu0lWACOUynv76uBAyS035ym1jTiMhhJGvoqZ+Y=
 github.com/morrocker/log v0.0.0-20210322121956-1387843cccea/go.mod h1:MjIRLB46zjJ4ECw3IGjLMlXBSz2+d9D/GIbZqie1Tl0=
 github.com/morrocker/progress-tracker v0.0.0-20210323032411-311198e5cf58 h1:0zOudxXnD2BeNblSvHQSTkoWDA+fsVrgX01YiGM2xEE=
