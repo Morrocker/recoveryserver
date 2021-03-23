@@ -10,29 +10,29 @@ import (
 )
 
 // WriteRecoveryJSON writes the recoveries data into a JSON
-func (d *Director) WriteRecoveryJSON() error {
+func (d *Director) writeRecoveryJSON() error {
 	log.Task("Writing Recovery JSON")
-	errPath := "director.WriteRecoveryJSON()"
+	op := "director.WriteRecoveryJSON()"
 	json, err := json.MarshalIndent(d.Recoveries, "", "  ")
 	if err != nil {
-		return errors.New(errPath, err)
+		return errors.New(op, err)
 	}
 	if err := ioutil.WriteFile(config.Data.RecoveriesJSON, json, 0644); err != nil {
-		return errors.New(errPath, err)
+		return errors.New(op, err)
 	}
 	return nil
 }
 
 // ReadRecoveryJSON reads in the recoveries data JSON file
-func (d *Director) ReadRecoveryJSON() error {
+func (d *Director) readRecoveryJSON() error {
 	log.Task("Reading Recovery JSON")
-	errPath := "director.ReadRecoveryJSON()"
+	op := "director.ReadRecoveryJSON()"
 	jsonBytes, err := ioutil.ReadFile(config.Data.RecoveriesJSON)
 	if err != nil {
-		return errors.New(errPath, err)
+		return errors.New(op, err)
 	}
-	if errb := json.Unmarshal(jsonBytes, &d.Recoveries); errb != nil {
-		return errors.New(errPath, err)
+	if err := json.Unmarshal(jsonBytes, &d.Recoveries); err != nil {
+		return errors.New(op, err)
 	}
 	return nil
 }

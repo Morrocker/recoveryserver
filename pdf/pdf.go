@@ -17,7 +17,7 @@ import (
 
 // Report asdf
 func (d *Delivery) CreateDeliveryPDF(outputDir string) (string, error) {
-	errPath := "pdf.CreateReport()"
+	op := "pdf.CreateReport()"
 	now := time.Time.Format(time.Now(), "2006-01-02")
 	pdfName := fmt.Sprintf("%s_%s.pdf", now, slugify.Marshal(d.OrgName))
 	filename := filepath.Join(outputDir, pdfName)
@@ -41,7 +41,7 @@ func (d *Delivery) CreateDeliveryPDF(outputDir string) (string, error) {
 	makeContent("Cloner", d, pdf)
 	makeContent("Cliente", d, pdf)
 	if err := pdf.OutputFileAndClose(filename); err != nil {
-		log.Error("%s", errors.New(errPath, err))
+		log.Error("%s", errors.New(op, err))
 	}
 	log.Task("Wrote delivery PDF to: %s", filename)
 	return filename, nil

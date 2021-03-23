@@ -19,6 +19,6 @@
     "Destination": "/Users/morocco/Documents/TestRecovery",
     "Status": 0,
     "Priority": 2,
-    "SuperTracker": null
+    "tracker": null
   }
 }

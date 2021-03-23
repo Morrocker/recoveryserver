@@ -14,12 +14,6 @@ import (
 	"golang.org/x/text/unicode/norm"
 )
 
-type fileDescriptor struct {
-	path string
-	hash string
-	size uint64
-}
-
 type fileQueue struct {
 	ToDo []*MetaTree
 	lock sync.Mutex
@@ -28,32 +22,34 @@ type fileQueue struct {
 var fq fileQueue = fileQueue{}
 
 func (r *Recovery) getFiles(mt *MetaTree) error {
-	errPath := "recovery.getFiles()"
+	op := "recovery.getFiles()"
 	fc := make(chan *MetaTree)
 	wg := sync.WaitGroup{}
 
-	r.Log.Notice("Starting %d File workers", config.Data.FileWorkers)
+	r.log.Notice("Starting %d File workers", config.Data.FileWorkers)
 	for i := 0; i < config.Data.FileWorkers; i++ {
 		go r.fileWorker(fc, &wg)
 	}
 
-	// startingTime := time.Now()
-	r.Log.Notice("Creating root directory %s", r.Destination)
-	if err := os.MkdirAll(r.Destination, 0700); err != nil {
-		r.Log.Error("could not create output path: %v", err)
-		return errors.New(errPath, err)
+	r.log.Notice("Creating root directory " + r.destination)
+	if err := os.MkdirAll(r.destination, 0700); err != nil {
+		r.log.Error("could not create output path: %v", err)
+		return errors.New(op, err)
 	}
-	dst := path.Join(r.Destination, r.Data.Org, r.Data.User, r.Data.Machine, r.Data.Disk)
-	log.Info("Writting files to %s", dst)
+	dst := path.Join(r.destination, r.Data.Org, r.Data.User, r.Data.Machine, r.Data.Disk)
+	log.Info("Writting files to " + dst)
 	r.createFileQueue(dst, mt)
 
 	for _, tree := range fq.ToDo {
-		r.stopGate()
+		if exit := r.stopGate(); exit != 0 {
+			break
+		}
 		fc <- tree
 	}
 
 	wg.Wait()
 	close(fc)
+	fq = fileQueue{}
 	return nil
 }
 
@@ -69,6 +65,9 @@ func (r *Recovery) createFileQueue(filepath string, mt *MetaTree) {
 			}
 		}
 		for _, child := range mt.children {
+			if exit := r.stopGate(); exit != 0 {
+				break
+			}
 			r.createFileQueue(p, child)
 		}
 		return
@@ -78,67 +77,73 @@ func (r *Recovery) createFileQueue(filepath string, mt *MetaTree) {
 }
 
 func (r *Recovery) fileWorker(fc chan *MetaTree, wg *sync.WaitGroup) {
-	errPath := "recovery.fileWorker()"
+	op := "recovery.fileWorker()"
 	for mt := range fc {
+		if exit := r.stopGate(); exit != 0 {
+			break
+		}
 		wg.Add(1)
 		if err := r.recoverFile(mt.path, mt.mf.Hash, uint64(mt.mf.Size)); err != nil {
-			r.Log.Error("%s", errors.Extend(errPath, err))
+			r.log.Errorln(errors.Extend(op, err))
 		}
 		wg.Done()
 	}
 }
 
 func (r *Recovery) recoverFile(p, hash string, size uint64) error {
-	errPath := "recovery.recoverFile()"
+	op := "recovery.recoverFile()"
+	if exit := r.stopGate(); exit != 0 {
+		return nil
+	}
 	if fi, err := os.Stat(p); err == nil {
 		if fi.Size() == int64(size) {
 			r.updateTrackerCurrent(int64(size))
-			r.Log.NoticeV("skipping file '%s'", p)
+			r.log.NoticeV("skipping file '%s'", p)
 			return nil
 		}
 	}
 
-	r.Log.Info("Recovering file %s [%s]", p, utils.B2H(int64(size)))
-	blist, err := r.Cloud.GetBlocksList(hash, r.Data.User)
+	r.log.Info("Recovering file %s [%s]", p, utils.B2H(int64(size)))
+	blist, err := r.cloud.GetBlocksList(hash, r.Data.User)
 	if err != nil {
 		r.increaseErrors()
-		r.Log.ErrorV(errPath, "error could not create file '%s' because fileblock is unavailable")
-		return errors.New(errPath, err)
+		r.log.ErrorlnV(errors.New(op, "error could not create file '%s' because fileblock is unavailable"))
+		return errors.New(op, err)
 	}
-	r.SuperTracker.IncreaseCurr("blocks")
+	r.tracker.IncreaseCurr("blocks")
 
 	f, err := os.Create(norm.NFC.String(p))
 	if err != nil {
 		r.increaseErrors()
-		return errors.New(errPath, fmt.Sprintf("error could not create file '%s' : %v\n", p, err))
+		return errors.New(op, fmt.Sprintf("error could not create file '%s' : %v\n", p, err))
 	}
+	defer f.Close()
 
 	var zeroedBuffer = make([]byte, 1024*1000)
 	for _, hash := range blist.Blocks {
-		r.stopGate()
-		b, err := r.Cloud.GetBlock(hash, r.Data.User)
+		if exit := r.stopGate(); exit != 0 {
+			break
+		}
+		b, err := r.cloud.GetBlock(hash, r.Data.User)
 
 		if err != nil {
 			if _, err2 := f.Write(zeroedBuffer); err2 != nil {
 				r.increaseErrors()
-				return errors.New(errPath, fmt.Sprintf("error could not write zeroed content for block '%s' for file '%s': %v\n", hash, p, err))
+				return errors.New(op, fmt.Sprintf("error could not write zeroed content for block '%s' for file '%s': %v\n", hash, p, err))
 			}
 		} else {
 			if _, err2 := f.Write(b); err2 != nil {
 				r.increaseErrors()
-				return errors.New(errPath, fmt.Sprintf("error could not write content for block '%s' for file '%s': %v\n", hash, p, err2))
+				return errors.New(op, fmt.Sprintf("error could not write content for block '%s' for file '%s': %v\n", hash, p, err2))
 			}
 		}
-		r.SuperTracker.ChangeCurr("size", len(b))
-		r.SuperTracker.IncreaseCurr("blocks")
-	}
-	f.Close()
-	r.SuperTracker.IncreaseCurr("files")
-	return nil
-}
 
-type blocksList struct { // TODO(br): deprecate
-	Blocks []string `json:"blocks"`
+		r.tracker.ChangeCurr("size", len(b))
+		r.tracker.IncreaseCurr("blocks")
+	}
+
+	r.tracker.IncreaseCurr("files")
+	return nil
 }
 
 func (f *fileQueue) addFile(mt *MetaTree) {

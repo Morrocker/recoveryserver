@@ -32,10 +32,12 @@
         }
     },
     "RecoveriesJSON":"recoveries.json",
-    "DeliveryDir":"./",
+    "DeliveryDir":"Data",
     "RootLogDir":"./",
+    "MountRoot":"/mnt/disco",
     "MetafileWorkers":30,
     "FileWorkers":70,
+    "MetafilesBuffSize":10000000,
     "SlackToken":"notworkingyet",
     "SlackChannel":"sandbox"
 }

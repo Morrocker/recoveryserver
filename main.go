@@ -7,14 +7,13 @@ import (
 )
 
 func init() {
-	config.SetFlags()
 	config.Data.Load()
 	config.SetLogger()
+	config.CreatePDFDir()
 }
 
 func main() {
 	server := server.New()
 	log.Task("Starting Server")
 	server.StartServer()
-	return
 }

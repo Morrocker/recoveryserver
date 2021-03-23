@@ -7,15 +7,13 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/morrocker/errors"
 	"github.com/morrocker/log"
-	"github.com/morrocker/recoveryserver/config"
 	"github.com/morrocker/recoveryserver/director"
 )
 
 // Service contains all the information used to run a successful service.
 type Service struct {
-	addr     string
-	magic    string
 	Director director.Director
 	listener net.Listener
 
@@ -23,8 +21,16 @@ type Service struct {
 	s  *http.Server
 }
 
+// tcpKeepAliveListener sets TCP keep-alive timeouts on accepted
+// connections. It's used by RunTLS so dead TCP connections
+// (e.g. closing laptop mid-download) eventually go away.
+type tcpKeepAliveListener struct {
+	*net.TCPListener
+}
+
 // New returns an instance of a service.
 func New(addr string) (*Service, error) {
+	log.Info("Serving service on address %s", addr)
 	ln, err := net.Listen("tcp", addr)
 	if err != nil {
 		return nil, err
@@ -50,15 +56,29 @@ func (s *Service) Handler() http.Handler {
 	// mux.Use(s.monitorHandler())
 
 	mux.POST("/add", s.addRecovery)
-	mux.POST("/add_multiple", s.addRecoveries)
 	mux.POST("/change_priority", s.changePriority)
+	mux.POST("/set_destination", s.setDestination)
 	mux.GET("/run_recoveries", s.runDirector)
 	mux.GET("/stop_recoveries", s.pauseDirector)
+	// Recoveries run manipulation
 	mux.GET("/queue_recovery", s.queueRecovery)
 	mux.GET("/start_recovery", s.startRecovery)
 	mux.GET("/pause_recovery", s.pauseRecovery)
-	mux.GET("/set_destination", s.setDestination)
+	mux.GET("/cancel_recovery", s.cancelRecovery)
+	// PDF generation
 	mux.GET("/generate_delivery", s.writeDelivery)
+	// Disk operations
+	mux.GET("/devices", s.getDevices)
+	mux.GET("/mount", s.mountDevice)
+	mux.GET("/unmount", s.unmountDevice)
+	// Requests
+	mux.GET("/recoveries", s.getDevices)    // TODO
+	mux.GET("/recovery_size", s.getDevices) // TODO
+	mux.GET("/precalculate", s.getDevices)  // TODO
+
+	mux.GET("/shutdown", s.shutdown)
+
+	// mux.GET("/test", s.test)
 
 	return mux
 }
@@ -110,13 +130,6 @@ func (s *Service) ServeTLS(certFile, keyFile string) error {
 	return s.server().ServeTLS(s.listener, certFile, keyFile)
 }
 
-// tcpKeepAliveListener sets TCP keep-alive timeouts on accepted
-// connections. It's used by RunTLS so dead TCP connections
-// (e.g. closing laptop mid-download) eventually go away.
-type tcpKeepAliveListener struct {
-	*net.TCPListener
-}
-
 func (ln tcpKeepAliveListener) Accept() (c net.Conn, err error) {
 	tc, err := ln.AcceptTCP()
 	if err != nil {
@@ -128,10 +141,10 @@ func (ln tcpKeepAliveListener) Accept() (c net.Conn, err error) {
 }
 
 // StartDirector starts the recovery Director processes
-func (s *Service) StartDirector(c config.Config) error {
+func (s *Service) StartDirector() error {
 	log.Task("Starting Director service")
-	if err := s.Director.StartDirector(c); err != nil {
-		return err
+	if err := s.Director.StartDirector(); err != nil {
+		return errors.Extend("service.StartDirector()", err)
 	}
 	return nil
 }

@@ -46,24 +46,23 @@ func NewCloud(c config.Cloud) *Cloud {
 
 // GetBlockslist
 func (c *Cloud) GetBlocksList(hash, user string) (*BlocksList, error) {
-	errPath := "remotes.GetBlockList()"
+	op := "remotes.GetBlockList()"
 	block, err := c.GetBlock(hash, user)
 	if err != nil {
-		err = errors.Extend(errPath, err)
-		return nil, err
+		return nil, errors.Extend(op, err)
 	}
 
 	ret := &BlocksList{}
 	if err := json.Unmarshal(block, ret); err != nil {
-		err = errors.Extend(errPath, err)
-		return nil, err
+		return nil, errors.Extend(op, err)
 	}
 	return ret, nil
 }
 
 // GetBlocks
 func (c *Cloud) GetBlock(hash, user string) ([]byte, error) {
-	errPath := "remotes.GetBlock()"
+	op := "remotes.GetBlock()"
+
 	for retries := 0; retries < 5; retries++ { // we still have opaque errors
 		if c.Legacy {
 			for _, bs := range c.LegacyStores {
@@ -81,6 +80,6 @@ func (c *Cloud) GetBlock(hash, user string) ([]byte, error) {
 			}
 		}
 	}
-	msg := fmt.Sprintf("block %q is ungettable", hash)
-	return nil, errors.New(errPath, msg)
+
+	return nil, errors.New(op, fmt.Sprintf("block %q is ungettable\n", hash))
 }

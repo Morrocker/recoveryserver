@@ -16,212 +16,233 @@ import (
 
 func (s *Service) addRecovery(c *gin.Context) {
 	log.TaskV("Adding new recovery")
-	errPath := "service.addRecovery()"
+	op := "service.addRecovery()"
 	bodyBytes, err := ioutil.ReadAll(c.Request.Body)
 	if err != nil {
-		err = errors.New(errPath, err)
-		c.Data(http.StatusInternalServerError, "text", []byte(err.Error()))
-		log.Error("Error while adding recovery: %s", err)
+		badRequest(c, op, err)
 		return
 	}
 
 	var recoveryData *recovery.Data
 	if err := json.Unmarshal(bodyBytes, &recoveryData); err != nil {
-		err = errors.New(errPath, err)
-		c.Data(http.StatusInternalServerError, "text", []byte(err.Error()))
-		log.Error("Error while adding recovery: %s", err)
+		badRequest(c, op, err)
 		return
 	}
 
-	hash, err := s.Director.AddRecovery(recoveryData)
-	if err != nil {
-		err := errors.New(errPath, err)
-		c.Data(http.StatusInternalServerError, "text", []byte(err.Error()))
-		log.Error("%s", err)
+	if err := s.Director.AddRecovery(recoveryData); err != nil {
+		badRequest(c, op, err)
 		return
 	}
-	c.Data(http.StatusOK, "text", []byte(fmt.Sprintf("Recovery %v added with Id:%s", recoveryData, hash)))
-}
-
-func (s *Service) addRecoveries(c *gin.Context) {
-	log.TaskV("Adding new set of recovery")
-	errPath := "service.addRecoveries()"
-	bodyBytes, err := ioutil.ReadAll(c.Request.Body)
-	if err != nil {
-		err = errors.New(errPath, err)
-		c.Data(http.StatusInternalServerError, "text", []byte(err.Error()))
-		log.Error("%s", err)
-		return
-	}
-
-	var data recovery.Multiple
-	if err := json.Unmarshal(bodyBytes, &data); err != nil {
-		err = errors.New(errPath, err)
-		c.Data(http.StatusInternalServerError, "text", []byte(err.Error()))
-		log.Error("%s", err)
-		return
-	}
-
-	var msg string
-	for _, recovery := range data.Recoveries {
-		hash, err := s.Director.AddRecovery(recovery)
-		if err != nil {
-			err = errors.Extend(errPath, err)
-			c.Data(http.StatusInternalServerError, "text", []byte(err.Error()))
-			log.Error("%s", err)
-			return
-		}
-		msg = fmt.Sprintf("Recovery %v added with id:%s.\n%s", recovery, hash, msg)
-	}
-	c.Data(http.StatusOK, "text", []byte(msg))
+	c.Data(http.StatusOK, "text", []byte("ok"))
 }
 
 func (s *Service) startRecovery(c *gin.Context) {
-	errPath := "service.startRecovery()"
-	id, ok := c.GetQuery("Id")
-	if !ok {
-		err := errors.New(errPath, "Error starting recovery")
-		c.Data(http.StatusBadRequest, "text", []byte(err.Error()))
-		log.Error("%s", err)
+	op := "service.startRecovery()"
+	id, err := getQueryInt(c, "id")
+	if err != nil {
+		badRequest(c, op, err)
 		return
 	}
 	if err := s.Director.StartRecovery(id); err != nil {
-		err := errors.New(errPath, "Error starting recovery")
-		c.Data(http.StatusBadRequest, "text", []byte(err.Error()))
-		log.Error("%s", err)
+		badRequest(c, op, err)
 		return
 	}
-	c.Data(http.StatusOK, "text", []byte(fmt.Sprintf("Starting Recovery with id:%s", id)))
-}
-
-func (s *Service) startRecoveryGroup(c *gin.Context) {
-
+	c.Data(http.StatusOK, "text", []byte("ok"))
 }
 
 func (s *Service) pauseRecovery(c *gin.Context) {
-	errPath := "service.pauseRecovery()"
-	id, ok := c.GetQuery("Id")
-	if !ok {
-		err := errors.New(errPath, "Query missing recovery Id")
-		c.Data(http.StatusBadRequest, "text", []byte(err.Error()))
+	op := "service.pauseRecovery()"
+	id, err := getQueryInt(c, "id")
+	if err != nil {
+		badRequest(c, op, err)
 		return
 	}
 	s.Director.PauseRecovery(id)
-	c.Data(http.StatusOK, "text", []byte(fmt.Sprintf("Pausing Recovery with id:%s", id)))
+	c.Data(http.StatusOK, "text", []byte("ok"))
 }
 
-func (s *Service) pauseRecoveryGroup(c *gin.Context) {
-
-}
-
-func (s *Service) deleteRecovery(c *gin.Context) {
-
+func (s *Service) cancelRecovery(c *gin.Context) {
+	op := "service.cancelRecovery()"
+	id, err := getQueryInt(c, "id")
+	if err != nil {
+		badRequest(c, op, err)
+		return
+	}
+	s.Director.CancelRecovery(id)
+	c.Data(http.StatusOK, "text", []byte("ok"))
 }
 
 func (s *Service) pauseDirector(c *gin.Context) {
 	s.Director.PausePicker()
-	c.Data(http.StatusOK, "text", []byte("Director set to Pause"))
+	c.Data(http.StatusOK, "text", []byte("ok"))
 }
 func (s *Service) runDirector(c *gin.Context) {
 	s.Director.RunPicker()
-	c.Data(http.StatusOK, "text", []byte("Director set to Run"))
+	c.Data(http.StatusOK, "text", []byte("ok"))
 }
 
 func (s *Service) queueRecovery(c *gin.Context) {
-	errPath := "service.queueRecovery()"
-	id, ok := c.GetQuery("Id")
-	if !ok {
-		err := errors.New(errPath, "Query missing recovery Id")
-		c.Data(http.StatusBadRequest, "text", []byte(err.Error()))
+	op := "service.queueRecovery()"
+	id, err := getQueryInt(c, "id")
+	if err != nil {
+		badRequest(c, op, err)
 		return
 	}
 	if err := s.Director.QueueRecovery(id); err != nil {
-		err := errors.New(errPath, err)
-		c.Data(http.StatusBadRequest, "text", []byte(err.Error()))
+		badRequest(c, op, err)
 		return
 	}
-	c.Data(http.StatusOK, "text", []byte(fmt.Sprintf("Recovery %s queued", id)))
+	c.Data(http.StatusOK, "text", []byte("ok"))
 }
 
 func (s *Service) setDestination(c *gin.Context) {
-	errPath := "service.setDestination"
-	id, ok := c.GetQuery("Id")
-	if !ok {
-		err := errors.New(errPath, "Query missing recovery Id")
-		c.Data(http.StatusBadRequest, "text", []byte(err.Error()))
+	op := "service.setDestination"
+	id, err := getQueryInt(c, "id")
+	if err != nil {
+		badRequest(c, op, err)
 		return
 	}
-	destination, ok := c.GetQuery("Destination")
-	if !ok {
-		err := errors.New(errPath, "Query missing recovery destination")
-		c.Data(http.StatusBadRequest, "text", []byte(err.Error()))
+	destination, err := getQuery(c, "Destination")
+	if err != nil {
+		badRequest(c, op, err)
 		return
 	}
 	if err := s.Director.SetDestination(id, destination); err != nil {
-		err := errors.New(errPath, err)
-		c.Data(http.StatusBadRequest, "text", []byte(err.Error()))
+		badRequest(c, op, err)
 		return
 	}
 
 }
 
 func (s *Service) changePriority(c *gin.Context) {
-	errPath := "service.changePriority()"
-	id, ok := c.GetQuery("Id")
-	if !ok {
-		err := errors.New(errPath, "Query missing recovery Id")
-		c.Data(http.StatusBadRequest, "text", []byte(err.Error()))
-		log.Error("%s", err)
+	op := "service.changePriority()"
+	id, err := getQueryInt(c, "id")
+	if err != nil {
+		badRequest(c, op, err)
 		return
 	}
 
-	n, ok := c.GetQuery("Priority")
-	if !ok {
-		err := errors.New(errPath, "Query missing priority")
-		c.Data(http.StatusBadRequest, "text", []byte(err.Error()))
-		log.Error("%s", err)
-		return
-	}
-	x, err := strconv.Atoi(n)
+	n, err := getQueryInt(c, "priority")
 	if err != nil {
-		err := errors.New(errPath, err)
-		c.Data(http.StatusInternalServerError, "text", []byte(err.Error()))
-		log.Error("%s", err)
+		badRequest(c, op, err)
 		return
 	}
-	if err := s.Director.ChangePriority(id, x); err != nil {
-		err := errors.New(errPath, err)
-		c.Data(http.StatusBadRequest, "text", []byte(err.Error()))
-		log.Error("%s", err)
+	if err := s.Director.ChangePriority(id, n); err != nil {
+		badRequest(c, op, err)
 		return
 	}
-	c.Data(http.StatusOK, "text", []byte(fmt.Sprintf("Recovery %s set priority to %d:", id, x)))
+	c.Data(http.StatusOK, "text", []byte("ok"))
 }
 
 func (s *Service) writeDelivery(c *gin.Context) {
-	errPath := "service.generateDelivery()"
+	op := "service.generateDelivery()"
 	bodyBytes, err := ioutil.ReadAll(c.Request.Body)
 	if err != nil {
-		err = errors.New(errPath, err)
-		c.Data(http.StatusInternalServerError, "text", []byte(err.Error()))
-		log.Error("error writting delivery: %s", err)
+		badRequest(c, op, err)
 		return
 	}
 	var deliveryData *pdf.Delivery
 	if err := json.Unmarshal(bodyBytes, &deliveryData); err != nil {
-		err = errors.New(errPath, err)
-		c.Data(http.StatusInternalServerError, "text", []byte(err.Error()))
-		log.Error("error writing delivery: %s", err)
+		badRequest(c, op, err)
 		return
 	}
 
 	out, err := s.Director.WriteDelivery(deliveryData)
 	if err != nil {
-		err := errors.New(errPath, err)
-		c.Data(http.StatusInternalServerError, "text", []byte(err.Error()))
-		log.Error("%s", err)
+		badRequest(c, op, err)
 		return
 	}
 
 	c.Data(http.StatusOK, "text", []byte(fmt.Sprintf("Delivery pdf wrote to %s", out)))
 }
+
+func (s *Service) shutdown(c *gin.Context) {
+	log.Info("Shutting down server")
+	s.Close()
+}
+
+func (s *Service) getDevices(c *gin.Context) {
+	op := "service.getDevices()"
+	devs, err := s.Director.Devices()
+	if err != nil {
+		badRequest(c, op, err)
+		return
+	}
+
+	bytes, err := json.Marshal(devs)
+	if err != nil {
+		badRequest(c, op, err)
+		return
+	}
+	c.Data(http.StatusOK, "json", bytes)
+}
+
+func (s *Service) mountDevice(c *gin.Context) {
+	op := "service.mountDevice()"
+	serial, err := getQuery(c, "serial")
+	if err != nil {
+		badRequest(c, op, err)
+		return
+	}
+	if err := s.Director.MountDisk(serial); err != nil {
+		badRequest(c, op, err)
+		return
+	}
+	c.Data(http.StatusOK, "text", []byte("ok"))
+}
+
+func (s *Service) unmountDevice(c *gin.Context) {
+	op := "service.unmountDevice()"
+	serial, err := getQuery(c, "serial")
+	if err != nil {
+		badRequest(c, op, err)
+		return
+	}
+	if err := s.Director.UnmountDisk(serial); err != nil {
+		badRequest(c, op, err)
+		return
+	}
+	c.Data(http.StatusOK, "text", []byte("ok"))
+}
+
+func badRequest(c *gin.Context, op string, err error) {
+	err = errors.Extend(op, err)
+	c.Data(http.StatusInternalServerError, "text", []byte(err.Error()))
+	log.Errorln(err)
+}
+
+func getQuery(c *gin.Context, key string) (string, error) {
+	value, ok := c.GetQuery(key)
+	if !ok {
+		return "", errors.New("service.getQueryInt()", "key value '"+key+"' missing from query")
+	}
+	return value, nil
+}
+
+func getQueryInt(c *gin.Context, key string) (int, error) {
+	value, ok := c.GetQuery(key)
+	if !ok {
+		return 0, errors.New("service.getQueryInt()", "key value '"+key+"' missing from query")
+	}
+	v, err := strconv.Atoi(value)
+	if err != nil {
+		return 0, errors.New("service.getQueryInt()", err)
+	}
+	return v, nil
+}
+
+// func (s *Service) test(c *gin.Context) {
+// 	op := "test.test"
+// 	id, err := getQueryInt(c, "Id")
+// 	if err != nil {
+// 		badRequest(c, op, err)
+// 		return
+// 	}
+
+// 	serial, err := getQuery(c, "Serial")
+// 	if err != nil {
+// 		badRequest(c, op, err)
+// 		return
+// 	}
+// 	// d.Director.SetDiskID(serial, id)
+// }

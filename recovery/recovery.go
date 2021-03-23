@@ -12,86 +12,101 @@ import (
 	"github.com/morrocker/errors"
 	"github.com/morrocker/log"
 	"github.com/morrocker/recoveryserver/config"
-	"github.com/morrocker/recoveryserver/utils"
-)
-
-const (
-	exitNoCode = iota
-	exitAlone
-	exitDelete
 )
 
 // Run starts a recovery execution
 func (r *Recovery) Run(lock *sync.Mutex) {
-	errPath := "recovery.Run()"
-	r.initLogger()
-	r.initSpdTrack()
-	r.Status = Stop
-	log.Info("Recovery %s worker is waiting to start!", r.ID)
-	r.stopGate()
-	log.Info("Starting recovery %s", r.ID)
-	r.Log.Task("Starting recovery %s", r.ID)
-	start := time.Now()
-	r.SuperTracker.InitSpdRate("size", 40)
-	r.SuperTracker.SetEtaTracker("size")
-	r.SuperTracker.SetProgressFunction("size", utils.B2H)
+	op := "recovery.Run()"
+	r.Status = Paused
+	log.Info("Recovery %d worker is waiting to start!", r.Data.ID)
 
-	r.SuperTracker.StartAutoPrint()
+	r.startTracker()
+	r.step = Metafiles
+	if exit := r.stopGate(); exit != 0 {
+		return
+	}
+	start := time.Now()
+	r.initLogger()
+	log.Info("Starting recovery %d", r.Data.ID)
+	r.log.Task("Starting recovery %d", r.Data.ID)
 	tree, err := r.GetRecoveryTree()
 	if err != nil {
-		err = errors.Extend(errPath, err)
-		log.Error("%s", err)
+		err = errors.Extend(op, err)
+		log.Errorln(err)
 	}
-	r.stopGate()
+	r.step = Files
+	if exit := r.stopGate(); exit != 0 {
+		return
+	}
 
-	r.SuperTracker.StartAutoMeasure("size", 5)
 	if err := r.getFiles(tree); err != nil {
-		err = errors.Extend(errPath, err)
+		err = errors.Extend(op, err)
+		log.Error(op, err)
 	}
-	r.SuperTracker.StopAutoMeasure("size")
-	r.SuperTracker.StopAutoPrint()
-	finish := time.Since(start).Truncate(time.Second)
-	rate, err := r.SuperTracker.GetTrueProgressRate("size")
-	if err != nil {
-		log.Alert("%s", errors.Extend(errPath, err))
+	if exit := r.stopGate(); exit != 0 {
+		return
 	}
-	log.Info("Recovery finished in %s with an average download rate of %sps", finish, rate)
+	if err := r.Done(time.Since(start).Truncate(time.Second)); err != nil {
+		log.Error(op, err)
+	}
 }
 
-// RemoveFiles removes any recovered file from the destination location
-func (r *Recovery) RemoveFiles() {
-	log.Task("We are happily removing these files")
-}
+// func (r *Recovery) PreCalculate() {
+// 	op := "recovery.PreCalculate()"
+// 	r.Status = Paused
+// 	log.Info("Recovery %d precalculation worker is waiting to start!", r.Data.ID)
+
+// 	r.startTracker()
+// 	r.step = Metafiles
+// 	if exit := r.stopGate(); exit != 0 {
+// 		return
+// 	}
+// 	r.initLogger()
+// 	log.Info("Starting precalculation %d", r.Data.ID)
+// 	r.log.Task("Starting precalculation %d", r.Data.ID)
+// 	tree, err := r.GetRecoveryTree()
+// 	if err != nil {
+// 		err = errors.Extend(op, err)
+// 		log.Errorln(err)
+// 	}
+// 	if exit := r.stopGate(); exit != 0 {
+// 		return
+// 	}
+
+// 	if err := r.Done(time.Since(start).Truncate(time.Second)); err != nil {
+// 		log.Error(op, err)
+// 	}
+
+// }
 
 // GetLogin finds the server that the users belongs to
-func (r *Recovery) GetLogin() error {
-	errPath := "recovery.GetLogin()"
+func GetLogin(login string) (string, error) {
+	op := "recovery.GetLogin()"
 
-	user := url.QueryEscape(r.Data.User)
-	query := fmt.Sprintf("%s?login=%s", config.Data.LoginAddr, user)
+	uLogin := url.QueryEscape(login)
+	query := fmt.Sprintf("%s?login=%s", config.Data.LoginAddr, uLogin)
 	req, err := http.NewRequest("GET", query, nil)
 	if err != nil {
-		return errors.New(errPath, err)
+		return "", errors.New(op, err)
 	}
 
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
-		return errors.New(errPath, err)
+		return "", errors.New(op, err)
 	}
 
 	if resp.StatusCode != http.StatusOK {
-		log.Error("%s", *resp)
-		return errors.New(errPath, "Response status not OK")
+		log.Errorln(*resp)
+		return "", errors.New(op, "Response status not OK")
 	}
 
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		return errors.New(errPath, err)
+		return "", errors.New(op, err)
 	}
 	resp.Body.Close()
 
 	s := string(body)
 	out := strings.Trim(s, "\"")
-	r.Data.Server = out
-	return nil
+	return out, nil
 }

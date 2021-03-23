@@ -11,8 +11,10 @@ type Config struct {
 	LoginAddr           string
 	HostAddr            string
 	RecoveriesJSON      string
+	MountRoot           string
 	MetafileWorkers     int
 	FileWorkers         int
+	MetafilesBuffSize   int
 	Clouds              map[string]Cloud
 	SlackToken          string
 	SlackChannel        string

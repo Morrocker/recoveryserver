@@ -33,12 +33,3 @@ const (
 	lineheight float64 = 7
 	cellheight float64 = 7
 )
-
-// func (d *Delivery) AddRecovery(user, machine, disk string, size int64) {
-// 	d.Recoveries = append(d.Recoveries, Recovery{user, machine, disk, size})
-// 	d.TotalSize = d.TotalSize + size
-// }
-
-// func (d *Delivery) AddDisk(name, brand, serial, size string, value int) {
-// 	d.Disks = append(d.Disks, Disk{name, brand, serial, size, value})
-// }

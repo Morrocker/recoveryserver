@@ -25,27 +25,30 @@ func New() *Server {
 
 // StartServer starts the recovry server and listens for requests
 func (s *Server) StartServer() {
-	errPath := "server.StartServer()"
+	op := "server.StartServer()"
 	errc := make(chan error)
-	errc2 := make(chan error)
+	done := make(chan interface{})
+
 	log.Task("Creating Service with address %s", config.Data.HostAddr)
-	srv, err := service.New(config.Data.HostAddr)
+	srvc, err := service.New(config.Data.HostAddr)
 	if err != nil {
-		log.Error("%v", errors.Extend(errPath, err))
+		log.Errorln(errors.Extend(op, err))
 	}
-	s.Service = srv
+	s.Service = srvc
 
 	go func() {
-		log.Info("Serving service on address %s", config.Data.HostAddr)
 		errc <- s.Service.Serve()
 	}()
-	e := s.Service.StartDirector(config.Data)
-	errc <- e
+	go func() {
+		errc <- s.Service.StartDirector()
+	}()
 
 	defer close(s.cancel)
 	select {
 	case err := <-errc:
-		log.Error("Server error: %v", err)
-		errc2 <- err
+		log.Errorln(err)
+	case <-done:
+		log.Task("Shutting down server")
+
 	}
 }
