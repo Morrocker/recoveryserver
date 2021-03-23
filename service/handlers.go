@@ -82,16 +82,16 @@ func (s *Service) runDirector(c *gin.Context) {
 }
 
 func (s *Service) queueRecovery(c *gin.Context) {
-	op := "service.queueRecovery()"
-	id, err := getQueryInt(c, "id")
-	if err != nil {
-		badRequest(c, op, err)
-		return
-	}
-	if err := s.Director.QueueRecovery(id); err != nil {
-		badRequest(c, op, err)
-		return
-	}
+	// op := "service.queueRecovery()"
+	// id, err := getQueryInt(c, "id")
+	// if err != nil {
+	// 	badRequest(c, op, err)
+	// 	return
+	// }
+	// if err := s.Director.QueueRecovery(id); err != nil {
+	// 	badRequest(c, op, err)
+	// 	return
+	// }
 	c.Data(http.StatusOK, "text", []byte("ok"))
 }
 

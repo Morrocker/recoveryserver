@@ -17,7 +17,7 @@ func (r *Recovery) stopGate() int {
 					log.Errorln(errors.New(op, err))
 				}
 			}
-			r.tracker.StartAutoPrint()
+			// r.tracker.StartAutoPrint()
 			return 0
 		case Paused, Canceled:
 			if r.step == Files {

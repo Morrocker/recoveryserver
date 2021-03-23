@@ -31,7 +31,7 @@ func (d *Director) StartDirector() error {
 	log.Task("Starting director services")
 	ec := make(chan error)
 
-	d.init()
+	// d.init()
 	go d.devicesScanner()
 	go d.startWorkers()
 	go d.recoveryPicker()
@@ -40,24 +40,24 @@ func (d *Director) StartDirector() error {
 	return nil
 }
 
-func (d *Director) init() {
-	op := "director.init()"
-	d.Clouds = make(map[string]*remotes.Cloud)
-	d.devices = make(map[string]disks.Device)
-	d.initClouds()
-	d.Recoveries = make(map[int]*recovery.Recovery)
-	if err := d.readRecoveryJSON(); err != nil {
-		log.Errorln(errors.New(op, err))
-	}
-	d.Run = config.Data.AutoRunRecoveries
-	if config.Data.AutoQueueRecoveries {
-		for _, r := range d.Recoveries {
-			if err := d.QueueRecovery(r.Data.ID); err != nil {
-				log.Alertln(errors.Extend(op, err))
-			}
-		}
-	}
-}
+// func (d *Director) init() {
+// 	op := "director.init()"
+// 	d.Clouds = make(map[string]*remotes.Cloud)
+// 	d.devices = make(map[string]disks.Device)
+// 	d.initClouds()
+// 	d.Recoveries = make(map[int]*recovery.Recovery)
+// 	if err := d.readRecoveryJSON(); err != nil {
+// 		log.Errorln(errors.New(op, err))
+// 	}
+// 	d.Run = config.Data.AutoRunRecoveries
+// 	if config.Data.AutoQueueRecoveries {
+// 		for _, r := range d.Recoveries {
+// 			if err := d.QueueRecovery(r.Data.ID); err != nil {
+// 				log.Alertln(errors.Extend(op, err))
+// 			}
+// 		}
+// 	}
+// }
 
 func (d *Director) startWorkers() {
 	log.TaskV("Starting recovery workers creator")
@@ -105,14 +105,14 @@ func (d *Director) AddRecovery(data *recovery.Data) error {
 	}
 
 	d.Recoveries[data.ID] = recovery.New(data.ID, data)
-	if d.AutoQueue {
-		if err := d.QueueRecovery(data.ID); err != nil {
-			log.Alertln(errors.Extend(op, err))
-		}
-	}
-	if err := d.writeRecoveryJSON(); err != nil {
-		return errors.Extend(op, err)
-	}
+	// if d.AutoQueue {
+	// 	if err := d.QueueRecovery(data.ID); err != nil {
+	// 		log.Alertln(errors.Extend(op, err))
+	// 	}
+	// }
+	// if err := d.writeRecoveryJSON(); err != nil {
+	// 	return errors.Extend(op, err)
+	// }
 	return nil
 }
 
@@ -212,32 +212,32 @@ func (d *Director) StartRecovery(id int) error {
 	return nil
 }
 
-// QueueRecovery sets a recovery status to Queue. Needed when autoqueue is off.
-func (d *Director) QueueRecovery(id int) error {
-	log.TaskV("Queueing recovery %s", id)
-	op := "director.QueueRecovery()"
+// // QueueRecovery sets a recovery status to Queue. Needed when autoqueue is off.
+// func (d *Director) QueueRecovery(id int) error {
+// 	log.TaskV("Queueing recovery %s", id)
+// 	op := "director.QueueRecovery()"
 
-	r, err := d.findRecovery(id)
-	if err != nil {
-		return errors.Extend(op, err)
-	}
-	if err := r.GetLogin(); err != nil {
-		return errors.Extend(op, err)
-	}
-	found := false
-	for _, cloud := range d.Clouds {
-		if cloud.FilesAddress == r.Data.Server {
-			r.SetCloud(cloud)
-			found = true
-			break
-		}
-	}
-	if !found {
-		return errors.New(op, "Failed to find match recovery with any existing Cloud")
-	}
-	r.Queue()
-	return nil
-}
+// 	r, err := d.findRecovery(id)
+// 	if err != nil {
+// 		return errors.Extend(op, err)
+// 	}
+// 	if err := r.GetLogin(); err != nil {
+// 		return errors.Extend(op, err)
+// 	}
+// 	found := false
+// 	for _, cloud := range d.Clouds {
+// 		if cloud.FilesAddress == r.Data.Server {
+// 			r.SetCloud(cloud)
+// 			found = true
+// 			break
+// 		}
+// 	}
+// 	if !found {
+// 		return errors.New(op, "Failed to find match recovery with any existing Cloud")
+// 	}
+// 	r.Queue()
+// 	return nil
+// }
 
 func (d *Director) initClouds() {
 	log.TaskV("Initializing Remote Clouds")

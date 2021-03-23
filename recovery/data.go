@@ -11,7 +11,6 @@ import (
 	tracker "github.com/morrocker/progress-tracker"
 	"github.com/morrocker/recoveryserver/config"
 	"github.com/morrocker/recoveryserver/remotes"
-	"github.com/morrocker/recoveryserver/utils"
 )
 
 // New returns a new Recovery object from the given recovery data
@@ -34,34 +33,34 @@ func (r *Recovery) Start() {
 
 // Done sets a recovery status as Done
 func (r *Recovery) Done(finish time.Duration) error {
-	op := "recovery.Done()"
-	if err := r.tracker.StopAutoMeasure("size"); err != nil {
-		log.Errorln(errors.New(op, err))
-	}
-	r.tracker.StopAutoPrint()
-	rate, err := r.tracker.GetTrueProgressRate("size")
-	if err != nil {
-		return errors.Extend(op, err)
-	}
-	log.Info("Recovery finished in %s with an average download rate of %sps", finish, rate)
-	r.Status = Done
+	// op := "recovery.Done()"
+	// if err := r.tracker.StopAutoMeasure("size"); err != nil {
+	// 	log.Errorln(errors.New(op, err))
+	// }
+	// r.tracker.StopAutoPrint()
+	// rate, err := r.tracker.GetTrueProgressRate("size")
+	// if err != nil {
+	// 	return errors.Extend(op, err)
+	// }
+	// log.Info("Recovery finished in %s with an average download rate of %sps", finish, rate)
+	// r.Status = Done
 	return nil
 }
 
 // Done sets a recovery status as Done
 func (r *Recovery) PreDone() error {
-	op := "recovery.Done()"
-	if err := r.tracker.StopAutoMeasure("size"); err != nil {
-		log.Errorln(errors.New(op, err))
-	}
-	r.tracker.StopAutoPrint()
-	_, st, err := r.tracker.GetRawValues("size")
-	if err != nil {
-		return errors.Extend(op, err)
-	}
-	r.Data.TotalSize = st
-	log.Info("Recovery precalculation finished. Total size %s", st)
-	r.Status = Queued // FIX THIS
+	// op := "recovery.Done()"
+	// if err := r.tracker.StopAutoMeasure("size"); err != nil {
+	// 	log.Errorln(errors.New(op, err))
+	// }
+	// r.tracker.StopAutoPrint()
+	// _, st, err := r.tracker.GetRawValues("size")
+	// if err != nil {
+	// 	return errors.Extend(op, err)
+	// }
+	// r.Data.TotalSize = st
+	// log.Info("Recovery precalculation finished. Total size %s", st)
+	// r.Status = Queued // FIX THIS
 	return nil
 }
 
@@ -85,11 +84,8 @@ func (r *Recovery) Unqueue() {
 
 // StartTracker starts a new tracker for a Recovery
 func (r *Recovery) startTracker() error {
-	st, err := tracker.New()
+	st := tracker.New()
 	r.tracker = st
-	if err != nil {
-		return errors.New("recovery.StartTracker()", err)
-	}
 	r.tracker.AddGauge("files", "Files", 0)
 	r.tracker.Reset("files")
 	r.tracker.AddGauge("blocks", "Blocks", 0)
@@ -99,8 +95,8 @@ func (r *Recovery) startTracker() error {
 	r.tracker.AddGauge("errors", "Errors", 0)
 	r.tracker.Reset("errors")
 	r.tracker.InitSpdRate("size", 40)
-	r.tracker.SetEtaTracker("size")
-	r.tracker.SetProgressFunction("size", utils.B2H)
+	// r.tracker.SetEtaTracker("size")
+	// r.tracker.SetProgressFunction("size", utils.B2H)
 	return nil
 }
 
