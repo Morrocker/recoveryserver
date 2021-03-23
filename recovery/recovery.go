@@ -11,7 +11,6 @@ import (
 
 	"github.com/morrocker/errors"
 	"github.com/morrocker/log"
-	"github.com/morrocker/recoveryserver/config"
 )
 
 // Run starts a recovery execution
@@ -80,11 +79,11 @@ func (r *Recovery) Run(lock *sync.Mutex) {
 // }
 
 // GetLogin finds the server that the users belongs to
-func GetLogin(login string) (string, error) {
+func GetLogin(addr, login string) (string, error) {
 	op := "recovery.GetLogin()"
 
 	uLogin := url.QueryEscape(login)
-	query := fmt.Sprintf("%s?login=%s", config.Data.LoginAddr, uLogin)
+	query := fmt.Sprintf("%s?login=%s", addr, uLogin)
 	req, err := http.NewRequest("GET", query, nil)
 	if err != nil {
 		return "", errors.New(op, err)
