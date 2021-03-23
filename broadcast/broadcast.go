@@ -22,3 +22,9 @@ func (b *Broadcaster) Broadcast() {
 		c <- ""
 	}
 }
+
+func (b *Broadcaster) Close() {
+	for _, c := range b.listeners {
+		close(c)
+	}
+}
