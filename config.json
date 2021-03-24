@@ -32,7 +32,7 @@
         }
     },
     "RecoveriesJSON":"recoveries.json",
-    "DeliveryDir":"Data",
+    "DeliveryDir":"pdfs",
     "RootLogDir":"./",
     "MountRoot":"/mnt/disco",
     "MetafileWorkers":30,

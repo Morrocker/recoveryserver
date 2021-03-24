@@ -24,7 +24,7 @@ type Director struct {
 
 // StartDirector starts the Director service and all subservices
 func (d *Director) StartDirector() error {
-	log.Task("Starting director services")
+	log.Task("Starting Director Services")
 	ec := make(chan error)
 
 	d.init()

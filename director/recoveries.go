@@ -12,7 +12,7 @@ import (
 // PickRecovery decides what recovery must be executed next. It prefers higher priority over lower.
 // Will skip if a recovery is running. Has a low latency by design.
 func (d *Director) recoveryPicker() {
-	log.TaskV("Starting recovery picker")
+	log.TaskV("Starting Recovery Picker")
 	for {
 		<-d.statusMonitor
 		log.Alertln("Status change! Running picker")

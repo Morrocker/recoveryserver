@@ -1,23 +1,22 @@
 package recovery
 
-import (
-	"time"
-)
-
 func (r *Recovery) flowGate() bool {
+	l := r.broadcaster.Listen()
 	for {
 		switch r.Status {
 		case Running:
+			l.Close()
 			return false
 		case Paused, Canceled:
 			if r.Status == Canceled {
+				l.Close()
 				return true
 			}
 		}
-		time.Sleep(500 * time.Millisecond)
+		<-l.C
 	}
 }
 
 func (r *Recovery) notify() {
-	r.statusMonitor <- ""
+	r.broadcaster.Broadcast()
 }

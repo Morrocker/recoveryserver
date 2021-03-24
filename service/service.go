@@ -30,7 +30,7 @@ type tcpKeepAliveListener struct {
 
 // New returns an instance of a service.
 func New(addr string) (*Service, error) {
-	log.Info("Serving service on address %s", addr)
+	log.Info("Serving Service on address %s", addr)
 	ln, err := net.Listen("tcp", addr)
 	if err != nil {
 		return nil, err
@@ -59,7 +59,7 @@ func (s *Service) Handler() http.Handler {
 	mux.POST("/change_priority", s.changePriority)
 	mux.POST("/set_destination", s.setDestination)
 	// Recoveries run manipulation
-	mux.GET("/queue_recovery", s.queueRecovery)
+	// mux.GET("/queue_recovery", s.queueRecovery)
 	mux.GET("/start_recovery", s.startRecovery)
 	mux.GET("/pause_recovery", s.pauseRecovery)
 	mux.GET("/cancel_recovery", s.cancelRecovery)
@@ -140,7 +140,6 @@ func (ln tcpKeepAliveListener) Accept() (c net.Conn, err error) {
 
 // StartDirector starts the recovery Director processes
 func (s *Service) StartDirector() error {
-	log.Task("Starting Director service")
 	if err := s.Director.StartDirector(); err != nil {
 		return errors.Extend("service.StartDirector()", err)
 	}

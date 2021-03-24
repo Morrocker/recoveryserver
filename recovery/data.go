@@ -8,12 +8,17 @@ import (
 
 	"github.com/morrocker/errors"
 	"github.com/morrocker/log"
+	"github.com/morrocker/recoveryserver/broadcast"
 	"github.com/morrocker/recoveryserver/config"
 )
 
 // New returns a new Recovery object from the given recovery data
 func New(id int, data *Data, st chan interface{}) *Recovery {
-	newRecovery := &Recovery{Data: data, Priority: MediumPr, statusMonitor: st}
+	newRecovery := &Recovery{
+		Data:        data,
+		Priority:    MediumPr,
+		broadcaster: broadcast.New(),
+	}
 	return newRecovery
 }
 

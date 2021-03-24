@@ -1,6 +1,7 @@
 package director
 
 import (
+	"reflect"
 	"time"
 
 	"github.com/morrocker/errors"
@@ -15,16 +16,20 @@ func (d *Director) Devices() (map[string]disks.Device, error) {
 func (d *Director) devicesScanner() {
 	log.TaskV("Starting Devices Scanner")
 	for {
+		var previous map[string]disks.Device
 		devs, err := disks.FindDevices()
 		if err != nil {
 			log.Alertln(errors.Extend("director.Devices()", err))
 		}
-		for key, dev := range devs {
-			if oldDev, ok := d.devices[key]; ok {
-				dev.Status = oldDev.Status
+		if !reflect.DeepEqual(previous, devs) {
+			for key, dev := range devs {
+				if oldDev, ok := d.devices[key]; ok {
+					dev.Status = oldDev.Status
+				}
 			}
 		}
 		d.devices = devs
+		previous = devs
 		time.Sleep(time.Second)
 	}
 }

@@ -3,6 +3,7 @@ package recovery
 import (
 	"github.com/morrocker/log"
 	tracker "github.com/morrocker/progress-tracker"
+	"github.com/morrocker/recoveryserver/broadcast"
 	"github.com/morrocker/recoveryserver/config"
 )
 
@@ -16,6 +17,7 @@ type Recovery struct {
 	step          int
 	statusMonitor chan interface{}
 	cloud         config.Cloud
+	broadcaster   *broadcast.Broadcaster
 	tracker       *tracker.SuperTracker
 	log           *log.Logger
 }

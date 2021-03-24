@@ -29,7 +29,6 @@ func (s *Server) StartServer() {
 	errc := make(chan error)
 	done := make(chan interface{})
 
-	log.Task("Creating Service with address %s", config.Data.HostAddr)
 	srvc, err := service.New(config.Data.HostAddr)
 	if err != nil {
 		log.Errorln(errors.Extend(op, err))

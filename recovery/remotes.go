@@ -14,8 +14,6 @@ import (
 
 // RBS stores the info to set-up and query remote Files and Blocksmaster
 type RBS struct {
-	// ClonerKey     string
-	// FilesAddress  string
 	LegacyStores  []legacy.MasterStore
 	CurrentStores []blocks.MasterStore
 	Legacy        bool

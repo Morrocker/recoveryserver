@@ -72,19 +72,19 @@ func (s *Service) cancelRecovery(c *gin.Context) {
 	c.Data(http.StatusOK, "text", []byte("ok"))
 }
 
-func (s *Service) queueRecovery(c *gin.Context) {
-	// op := "service.queueRecovery()"
-	// id, err := getQueryInt(c, "id")
-	// if err != nil {
-	// 	badRequest(c, op, err)
-	// 	return
-	// }
-	// if err := s.Director.QueueRecovery(id); err != nil {
-	// 	badRequest(c, op, err)
-	// 	return
-	// }
-	c.Data(http.StatusOK, "text", []byte("ok"))
-}
+// func (s *Service) queueRecovery(c *gin.Context) {
+// 	// op := "service.queueRecovery()"
+// 	// id, err := getQueryInt(c, "id")
+// 	// if err != nil {
+// 	// 	badRequest(c, op, err)
+// 	// 	return
+// 	// }
+// 	// if err := s.Director.QueueRecovery(id); err != nil {
+// 	// 	badRequest(c, op, err)
+// 	// 	return
+// 	// }
+// 	c.Data(http.StatusOK, "text", []byte("ok"))
+// }
 
 func (s *Service) setDestination(c *gin.Context) {
 	op := "service.setDestination"
