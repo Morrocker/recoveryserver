@@ -5,6 +5,7 @@ import (
 
 	"github.com/morrocker/errors"
 	"github.com/morrocker/log"
+	"github.com/morrocker/recoveryserver/broadcast"
 	"github.com/morrocker/recoveryserver/config"
 	"github.com/morrocker/recoveryserver/disks"
 	"github.com/morrocker/recoveryserver/pdf"
@@ -13,13 +14,13 @@ import (
 
 // Director orders and decides which recoveries should be executed next
 type Director struct {
-	Run bool
+	run bool
 
-	statusMonitor chan interface{}
-	Recoveries    map[int]*recovery.Recovery
-	devices       map[string]disks.Device
-	RunLock       sync.Mutex
-	Lock          sync.Mutex
+	broadcaster *broadcast.Broadcaster
+	Recoveries  map[int]*recovery.Recovery
+	devices     map[string]disks.Device
+	// RunLock     sync.Mutex
+	Lock sync.Mutex
 }
 
 // StartDirector starts the Director service and all subservices
@@ -28,7 +29,7 @@ func (d *Director) StartDirector() error {
 	ec := make(chan error)
 
 	d.init()
-	go d.devicesScanner()
+	// go d.devicesScanner()
 	go d.recoveryPicker()
 	<-ec
 	log.Info("Shutting down director")
@@ -36,21 +37,22 @@ func (d *Director) StartDirector() error {
 }
 
 func (d *Director) init() {
+	d.run = config.Data.AutoRunRecoveries
 	d.devices = make(map[string]disks.Device)
 	d.Recoveries = make(map[int]*recovery.Recovery)
-	d.statusMonitor = make(chan interface{})
+	d.broadcaster = broadcast.New()
 }
 
 // Stop sets Run to false
 func (d *Director) Stop() {
 	log.TaskV("Setting Director.Run to false")
-	d.Run = false
+	d.run = false
 }
 
 // Start sets Run to true
 func (d *Director) Start() {
 	log.TaskV("Setting Director.Run to true")
-	d.Run = true
+	d.run = true
 }
 
 // RETHINKG THE PLACE OF THIS

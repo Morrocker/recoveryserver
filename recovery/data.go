@@ -13,11 +13,11 @@ import (
 )
 
 // New returns a new Recovery object from the given recovery data
-func New(id int, data *Data, st chan interface{}) *Recovery {
+func New(id int, data *Data, bc *broadcast.Broadcaster) *Recovery {
 	newRecovery := &Recovery{
 		Data:        data,
 		Priority:    MediumPr,
-		broadcaster: broadcast.New(),
+		broadcaster: bc,
 	}
 	return newRecovery
 }

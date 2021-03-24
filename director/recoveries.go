@@ -13,10 +13,11 @@ import (
 // Will skip if a recovery is running. Has a low latency by design.
 func (d *Director) recoveryPicker() {
 	log.TaskV("Starting Recovery Picker")
+	l := d.broadcaster.Listen()
 	for {
-		<-d.statusMonitor
+		<-l.C
 		log.Alertln("Status change! Running picker")
-		if !d.Run {
+		if !d.run {
 			log.InfoD("Director set Run to false")
 			continue
 		}
@@ -81,7 +82,7 @@ func (d *Director) AddRecovery(data *recovery.Data) error {
 		return errors.New(op, "Disk parameter empty or missing")
 	}
 
-	d.Recoveries[data.ID] = recovery.New(data.ID, data, d.statusMonitor)
+	d.Recoveries[data.ID] = recovery.New(data.ID, data, d.broadcaster)
 	if err := d.QueueRecovery(data.ID); err != nil {
 		return errors.Extend(op, err)
 	}
@@ -116,14 +117,13 @@ func (d *Director) StartRecovery(id int) error {
 
 // QueueRecovery sets a recovery status to Queue. Needed when autoqueue is off.
 func (d *Director) QueueRecovery(id int) error {
-	log.TaskV("Queueing recovery %s", id)
 	op := "director.QueueRecovery()"
 
 	r, err := d.findRecovery(id)
 	if err != nil {
 		return errors.Extend(op, err)
 	}
-	login, err := recovery.GetLogin(config.Data.SrvLogDir, r.Data.User)
+	login, err := recovery.GetLogin(config.Data.LoginAddr, r.Data.User)
 	if err != nil {
 		return errors.Extend(op, err)
 	}

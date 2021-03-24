@@ -15,7 +15,6 @@ import (
 )
 
 func (s *Service) addRecovery(c *gin.Context) {
-	log.TaskV("Adding new recovery")
 	op := "service.addRecovery()"
 	bodyBytes, err := ioutil.ReadAll(c.Request.Body)
 	if err != nil {
@@ -86,19 +85,19 @@ func (s *Service) cancelRecovery(c *gin.Context) {
 // 	c.Data(http.StatusOK, "text", []byte("ok"))
 // }
 
-func (s *Service) setDestination(c *gin.Context) {
-	op := "service.setDestination"
+func (s *Service) setOutput(c *gin.Context) {
+	op := "service.setOutput()"
 	id, err := getQueryInt(c, "id")
 	if err != nil {
 		badRequest(c, op, err)
 		return
 	}
-	destination, err := getQuery(c, "Destination")
+	output, err := getQuery(c, "output")
 	if err != nil {
 		badRequest(c, op, err)
 		return
 	}
-	if err := s.Director.SetDestination(id, destination); err != nil {
+	if err := s.Director.SetDestination(id, output); err != nil {
 		badRequest(c, op, err)
 		return
 	}

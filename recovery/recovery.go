@@ -20,9 +20,6 @@ func (r *Recovery) Run(lock *sync.Mutex) {
 	r.startTracker()
 	// CHECK THIS POINT OR THE END. IT IS IMPORTANT TO CONSIDER DATA DUPLICATION IF RECOVEEY IS STOPPED > STARTED
 
-	// r.Status = Paused
-	// log.Info("Recovery %d worker is waiting to start!", r.Data.ID)
-
 	r.step = Metafiles
 	if r.flowGate() {
 		return

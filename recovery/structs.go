@@ -13,13 +13,12 @@ type Recovery struct {
 	Status   int
 	Priority int
 
-	outputTo      string
-	step          int
-	statusMonitor chan interface{}
-	cloud         config.Cloud
-	broadcaster   *broadcast.Broadcaster
-	tracker       *tracker.SuperTracker
-	log           *log.Logger
+	outputTo    string
+	step        int
+	cloud       config.Cloud
+	broadcaster *broadcast.Broadcaster
+	tracker     *tracker.SuperTracker
+	log         *log.Logger
 }
 
 // Data stores the data needed to execute a recovery

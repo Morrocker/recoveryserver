@@ -57,7 +57,7 @@ func (s *Service) Handler() http.Handler {
 
 	mux.POST("/add", s.addRecovery)
 	mux.POST("/change_priority", s.changePriority)
-	mux.POST("/set_destination", s.setDestination)
+	mux.POST("/set_output", s.setOutput)
 	// Recoveries run manipulation
 	// mux.GET("/queue_recovery", s.queueRecovery)
 	mux.GET("/start_recovery", s.startRecovery)
