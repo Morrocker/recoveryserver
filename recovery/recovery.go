@@ -76,7 +76,6 @@ func (r *Recovery) PreCalculate() {
 		return
 	}
 	r.tracker.StartAutoPrint(5 * time.Second)
-	r.tracker.Print()
 	r.PreDone()
 }
 

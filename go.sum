@@ -150,6 +150,8 @@ github.com/morrocker/benchmark v0.0.0-20210323032400-58c2a037853a h1:DCEHJXR/XK3
 github.com/morrocker/benchmark v0.0.0-20210323032400-58c2a037853a/go.mod h1:7ugHkj5e9ur+NmG+qMIzOFZHwJBfa1u1lyt8MED2aJ4=
 github.com/morrocker/benchmark v0.0.0-20210324131905-a0814d618da2 h1:zII2ZsV0OwXxraX0Y00NLzWl4a7PY5vf1xQVh80tvCE=
 github.com/morrocker/benchmark v0.0.0-20210324131905-a0814d618da2/go.mod h1:7ugHkj5e9ur+NmG+qMIzOFZHwJBfa1u1lyt8MED2aJ4=
+github.com/morrocker/benchmark v0.0.0-20210325143433-fc3961b7e30e h1:vrw70FArF/+3ID02v1TiM/l/9PVVRrTdWvP8LrJR4s0=
+github.com/morrocker/benchmark v0.0.0-20210325143433-fc3961b7e30e/go.mod h1:7ugHkj5e9ur+NmG+qMIzOFZHwJBfa1u1lyt8MED2aJ4=
 github.com/morrocker/errors v0.0.0-20210306160329-8873785d27fb h1:JF/LHqvJT3TCx+deWeM8ZQnOQBlfwLwLaZpoB4dbsTA=
 github.com/morrocker/errors v0.0.0-20210306160329-8873785d27fb/go.mod h1:MaVAsvgPemd2kMO+0xRrt0yeflz4aaWX1it59qu3/gU=
 github.com/morrocker/errors v0.0.0-20210323144609-d8629b6d420a h1:5eM0pV4lXVkRyiRUvR9Vw7eb2/dTCPYFylyoGsr4KrA=
@@ -164,6 +166,8 @@ github.com/morrocker/progress-tracker v0.0.0-20210324125038-99c0827b5b89 h1:h8yO
 github.com/morrocker/progress-tracker v0.0.0-20210324125038-99c0827b5b89/go.mod h1:xmaMk3YmP0MsbHaLXHi0W225GbXOrfSAY6RklkLe4Bo=
 github.com/morrocker/progress-tracker v0.0.0-20210324131958-b7c72999e945 h1:Q13EtZMKZZ4if6+SYHxGYX/bhyJ3AAE8Fa+NJ2+/Z2I=
 github.com/morrocker/progress-tracker v0.0.0-20210324131958-b7c72999e945/go.mod h1:xmaMk3YmP0MsbHaLXHi0W225GbXOrfSAY6RklkLe4Bo=
+github.com/morrocker/progress-tracker v0.0.0-20210325143638-ad470534c561 h1:a8W+JXADsNF/YwdTuT4EiMZ2skh4oHYQsGLqw/Rgiq0=
+github.com/morrocker/progress-tracker v0.0.0-20210325143638-ad470534c561/go.mod h1:xmaMk3YmP0MsbHaLXHi0W225GbXOrfSAY6RklkLe4Bo=
 github.com/mwitkow/go-conntrack v0.0.0-20161129095857-cc309e4a2223/go.mod h1:qRWi+5nqEBWmkhHvq77mSJWrCKwh8bxhgT7d/eI7P4U=
 github.com/nlopes/slack v0.2.0/go.mod h1:jVI4BBK3lSktibKahxBF74txcK2vyvkza1z/+rRnVAM=
 github.com/nlopes/slack v0.3.0/go.mod h1:jVI4BBK3lSktibKahxBF74txcK2vyvkza1z/+rRnVAM=

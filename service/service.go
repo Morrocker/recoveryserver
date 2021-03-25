@@ -58,8 +58,10 @@ func (s *Service) Handler() http.Handler {
 	mux.POST("/add", s.addRecovery)
 	mux.POST("/change_priority", s.changePriority)
 	mux.POST("/set_output", s.setOutput)
+	mux.GET("/precalculate", s.precalculateSize)
+	mux.GET("/recoveries", s.getRecoveries)
 	// Recoveries run manipulation
-	// mux.GET("/queue_recovery", s.queueRecovery)
+	mux.GET("/queue_recovery", s.queueRecovery)
 	mux.GET("/start_recovery", s.startRecovery)
 	mux.GET("/pause_recovery", s.pauseRecovery)
 	mux.GET("/cancel_recovery", s.cancelRecovery)
@@ -70,9 +72,7 @@ func (s *Service) Handler() http.Handler {
 	mux.GET("/mount", s.mountDevice)
 	mux.GET("/unmount", s.unmountDevice)
 	// Requests
-	mux.GET("/recoveries", s.getDevices)    // TODO
 	mux.GET("/recovery_size", s.getDevices) // TODO
-	mux.GET("/precalculate", s.getDevices)  // TODO
 
 	mux.GET("/shutdown", s.shutdown)
 

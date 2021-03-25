@@ -13,10 +13,10 @@ require (
 	github.com/jung-kurt/gofpdf v1.16.2
 	github.com/leodido/go-urn v1.2.1 // indirect
 	github.com/metal3d/go-slugify v0.0.0-20160607203414-7ac2014b2f23
-	github.com/morrocker/benchmark v0.0.0-20210324131905-a0814d618da2 // indirect
+	github.com/morrocker/benchmark v0.0.0-20210325143433-fc3961b7e30e // indirect
 	github.com/morrocker/errors v0.0.0-20210323144609-d8629b6d420a
 	github.com/morrocker/log v0.0.0-20210322121956-1387843cccea
-	github.com/morrocker/progress-tracker v0.0.0-20210324131958-b7c72999e945
+	github.com/morrocker/progress-tracker v0.0.0-20210325143638-ad470534c561
 	github.com/sirupsen/logrus v1.8.1 // indirect
 	github.com/spf13/pflag v1.0.5
 	github.com/ugorji/go v1.2.4 // indirect

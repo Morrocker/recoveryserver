@@ -35,6 +35,20 @@ func (s *Service) addRecovery(c *gin.Context) {
 	c.Data(http.StatusOK, "text", []byte("ok"))
 }
 
+func (s *Service) getRecoveries(c *gin.Context) {
+	op := "service.queueRecovery()"
+
+	r := s.Director.Recoveries
+
+	bytes, err := json.Marshal(r)
+	if err != nil {
+		badRequest(c, op, err)
+		return
+	}
+
+	c.Data(http.StatusOK, "json", bytes)
+}
+
 func (s *Service) startRecovery(c *gin.Context) {
 	op := "service.startRecovery()"
 	id, err := getQueryInt(c, "id")
@@ -71,19 +85,33 @@ func (s *Service) cancelRecovery(c *gin.Context) {
 	c.Data(http.StatusOK, "text", []byte("ok"))
 }
 
-// func (s *Service) queueRecovery(c *gin.Context) {
-// 	// op := "service.queueRecovery()"
-// 	// id, err := getQueryInt(c, "id")
-// 	// if err != nil {
-// 	// 	badRequest(c, op, err)
-// 	// 	return
-// 	// }
-// 	// if err := s.Director.QueueRecovery(id); err != nil {
-// 	// 	badRequest(c, op, err)
-// 	// 	return
-// 	// }
-// 	c.Data(http.StatusOK, "text", []byte("ok"))
-// }
+func (s *Service) queueRecovery(c *gin.Context) {
+	op := "service.queueRecovery()"
+	id, err := getQueryInt(c, "id")
+	if err != nil {
+		badRequest(c, op, err)
+		return
+	}
+	if err := s.Director.QueueRecovery(id); err != nil {
+		badRequest(c, op, err)
+		return
+	}
+	c.Data(http.StatusOK, "text", []byte("ok"))
+}
+
+func (s *Service) precalculateSize(c *gin.Context) {
+	op := "service.queueRecovery()"
+	id, err := getQueryInt(c, "id")
+	if err != nil {
+		badRequest(c, op, err)
+		return
+	}
+	if err := s.Director.PreCalculate(id); err != nil {
+		badRequest(c, op, err)
+		return
+	}
+	c.Data(http.StatusOK, "text", []byte("ok"))
+}
 
 func (s *Service) setOutput(c *gin.Context) {
 	op := "service.setOutput()"

@@ -93,14 +93,10 @@ func (d *Director) AddRecovery(data *recovery.Data) error {
 	for _, cloud := range config.Data.Clouds {
 		if cloud.FilesAddress == login {
 			r.SetCloud(cloud)
-			goto Found
-
+			return nil
 		}
 	}
 	return errors.New(op, "Failed to find match recovery with any existing Cloud")
-Found:
-	go d.Recoveries[data.ID].PreCalculate()
-	return nil
 }
 
 // PauseRecovery sets a given recover status to Pause
@@ -168,6 +164,17 @@ func (d *Director) SetDestination(id int, dst string) (err error) {
 	}
 	r.SetOutput(dst)
 	return
+}
+
+// PauseRecovery sets a given recover status to Pause
+func (d *Director) PreCalculate(id int) error {
+	log.TaskD("Pausing recovery %s", id)
+	r, err := d.findRecovery(id)
+	if err != nil {
+		return errors.Extend("director.PauseRecovery()", err)
+	}
+	r.PreCalculate()
+	return nil
 }
 
 // accesory functions

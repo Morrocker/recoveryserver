@@ -59,7 +59,7 @@ func (r *Recovery) PreDone() {
 	r.Data.TotalFiles = ft
 	r.Status = Entry
 	r.notify()
-	time.Sleep(5 * time.Second)
+	time.Sleep(6 * time.Second)
 	log.Info("Recovery #%d precalculation finished. Total size: %s, Total Files: %d", r.Data.ID, utils.B2H(st), ft)
 }
 
