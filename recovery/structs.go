@@ -4,18 +4,19 @@ import (
 	"github.com/morrocker/log"
 	tracker "github.com/morrocker/progress-tracker"
 	"github.com/morrocker/recoveryserver/broadcast"
-	"github.com/morrocker/recoveryserver/config"
 )
 
 // Recovery stores a single recovery data
 type Recovery struct {
-	Data     *Data
-	Status   int
-	Priority int
+	Data        *Data
+	LoginServer string
+	Status      int
+	Priority    int
 
-	outputTo    string
-	step        int
-	cloud       config.Cloud
+	outputTo string
+	step     int
+	// cloud       config.Cloud
+	RBS         *RBS
 	broadcaster *broadcast.Broadcaster
 	tracker     *tracker.SuperTracker
 	log         *log.Logger
@@ -34,7 +35,6 @@ type Data struct {
 	Deleted    bool
 	Version    int
 	Exclusions map[string]bool
-	Server     string
 	ClonerKey  string
 }
 

@@ -1,8 +1,6 @@
 package director
 
 import (
-	"sync"
-
 	"github.com/morrocker/errors"
 	"github.com/morrocker/log"
 	"github.com/morrocker/recoveryserver/broadcast"
@@ -20,7 +18,7 @@ type Director struct {
 	Recoveries  map[int]*recovery.Recovery
 	devices     map[string]disks.Device
 	// RunLock     sync.Mutex
-	Lock sync.Mutex
+	// Lock sync.Mutex
 }
 
 // StartDirector starts the Director service and all subservices

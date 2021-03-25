@@ -6,7 +6,6 @@ import (
 	"net/http"
 	"net/url"
 	"strings"
-	"sync"
 	"time"
 
 	"github.com/morrocker/errors"
@@ -14,34 +13,41 @@ import (
 )
 
 // Run starts a recovery execution
-func (r *Recovery) Run(lock *sync.Mutex) {
+func (r *Recovery) Run() {
 	op := "recovery.Run()"
+	log.Info("Starting recovery %d", r.Data.ID)
 	r.initLogger()
 	r.startTracker()
+	r.log.Task("Starting recovery %d", r.Data.ID)
+	go r.autoTrack()
+
 	// CHECK THIS POINT OR THE END. IT IS IMPORTANT TO CONSIDER DATA DUPLICATION IF RECOVEEY IS STOPPED > STARTED
 
-	r.step = Metafiles
+	r.Step(Metafiles)
+	r.Start()
 	if r.flowGate() {
 		return
 	}
-	r.autoTrack()
 	start := time.Now()
-	log.Info("Starting recovery %d", r.Data.ID)
-	r.log.Task("Starting recovery %d", r.Data.ID)
 	tree, err := r.GetRecoveryTree()
 	if err != nil {
 		log.Errorln(errors.Extend(op, err))
+		r.Cancel()
 		return
 	}
-	r.step = Files
+	r.tracker.StartAutoPrint(5 * time.Second)
+	r.tracker.Print()
+	r.Step(Files)
 	if r.flowGate() {
 		return
 	}
 
 	if err := r.getFiles(tree); err != nil {
 		log.Errorln(errors.Extend(op, err))
+		r.Cancel()
 		return
 	}
+	r.tracker.Print()
 	if r.flowGate() {
 		return
 	}

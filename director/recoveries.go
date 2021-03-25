@@ -16,7 +16,7 @@ func (d *Director) recoveryPicker() {
 	l := d.broadcaster.Listen()
 	for {
 		<-l.C
-		log.Alertln("Status change! Running picker")
+		// log.Alertln("Status change! Running picker")
 		if !d.run {
 			log.InfoD("Director set Run to false")
 			continue
@@ -36,7 +36,7 @@ func (d *Director) recoveryPicker() {
 			}
 		}
 		if nextRecovery != nil {
-			go nextRecovery.Start()
+			go nextRecovery.Run()
 		}
 	}
 }
@@ -44,8 +44,6 @@ func (d *Director) recoveryPicker() {
 // ChangePriority changes a given recovery priority to a specific value
 func (d *Director) ChangePriority(id int, value int) error {
 	log.TaskV("Changing recovery %s Priority to %d", id, value)
-	d.Lock.Lock()
-	defer d.Lock.Unlock()
 	r, err := d.findRecovery(id)
 	if err != nil {
 		return errors.Extend("director.ChangePriority", err)
@@ -80,6 +78,10 @@ func (d *Director) AddRecovery(data *recovery.Data) error {
 	}
 	if data.Disk == "" {
 		return errors.New(op, "Disk parameter empty or missing")
+	}
+
+	if _, ok := d.Recoveries[data.ID]; ok {
+		return errors.New(op, "Recovery already exists. Remove first")
 	}
 
 	d.Recoveries[data.ID] = recovery.New(data.ID, data, d.broadcaster)

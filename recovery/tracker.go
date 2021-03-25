@@ -10,8 +10,9 @@ import (
 )
 
 func (r *Recovery) autoTrack() {
-	tick := 5 * time.Second
+	l := r.broadcaster.Listen()
 	for {
+		tick := 5 * time.Second
 		if r.Status == Running {
 			r.tracker.StartAutoPrint(tick)
 			if r.step == Files {
@@ -24,6 +25,7 @@ func (r *Recovery) autoTrack() {
 				break
 			}
 		}
+		<-l.C
 	}
 }
 
@@ -40,7 +42,6 @@ func (r *Recovery) startTracker() error {
 	r.tracker.AddGauge("errors", "Errors", 0)
 	r.tracker.Reset("errors")
 	r.tracker.InitSpdRate("size", 40)
-	// r.tracker.EtaTracker("size")
 	r.tracker.UnitsFunc("size", utils.B2H)
 	r.tracker.PrintFunc(r.printFunction)
 	return nil
@@ -72,6 +73,11 @@ func (r *Recovery) printFunction() {
 	if err != nil {
 		log.Errorln(errors.New(op, err))
 	}
-	log.Notice("[ %s ] Files: %s / %s | Blocks: %s / %s | Size: %s / %s | Errors: %s [ %s | %s ]",
-		r.Status, fc, ft, bc, bt, sc, st, ec, rt, eta)
+	if r.step == Metafiles {
+		log.Notice("[ Building Filetree ] Files: %d | Blocks: %d | Size: %s",
+			ft, bt, st)
+	} else if r.step == Files {
+		log.Notice("[ Downloading Files ] Files: %d / %d | Blocks: %d / %d | Size: %s / %s | Errors: %d [ %sps | %s ]",
+			fc, ft, bc, bt, sc, st, ec, rt, eta)
+	}
 }

@@ -43,7 +43,7 @@ func (r *Recovery) Done(finish time.Duration) error {
 	if err != nil {
 		return errors.Extend(op, err)
 	}
-	log.Info("Recovery finished in %s with an average download rate of %sps", finish, rate)
+	log.Info("Recovery #%d finished in %s with an average download rate of %sps", r.Data.ID, finish, rate)
 	r.Status = Done
 	r.notify()
 	return nil
@@ -68,28 +68,29 @@ func (r *Recovery) PreDone() error {
 
 // Cancel sets a recovery status as Cancel
 func (r *Recovery) Cancel() {
-	log.Task("Canceling recovery %d", r.Data.ID)
+	log.TaskV("Canceling recovery #%d", r.Data.ID)
 	r.Status = Canceled
 	r.notify()
 }
 
 // Queue sets a recovery status as Done
 func (r *Recovery) Queue() {
-	log.Task("Queueing recovery %d", r.Data.ID)
+	log.TaskV("Queueing recovery #%d", r.Data.ID)
 	r.Status = Queued
 	r.notify()
 }
 
 // Queue sets a recovery status as Done
 func (r *Recovery) Unqueue() {
-	log.Task("Unqueueing recovery %d", r.Data.ID)
+	log.TaskV("Unqueueing recovery #%d", r.Data.ID)
 	r.Status = Entry
 	r.notify()
 }
 
 func (r *Recovery) SetCloud(rc config.Cloud) {
-	r.cloud = rc
+	r.LoginServer = rc.FilesAddress
 	r.Data.ClonerKey = rc.ClonerKey
+	r.RBS = NewRBS(rc)
 }
 
 func (r *Recovery) SetOutput(dst string) {
@@ -106,6 +107,11 @@ func (r *Recovery) SetPriority(p int) error {
 	}
 	r.Priority = p
 	return nil
+}
+
+func (r *Recovery) Step(s int) {
+	r.step = s
+	r.broadcaster.Broadcast()
 }
 
 func (r *Recovery) updateTrackerTotals(size int64) {
