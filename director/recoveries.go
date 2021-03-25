@@ -85,9 +85,21 @@ func (d *Director) AddRecovery(data *recovery.Data) error {
 	}
 
 	d.Recoveries[data.ID] = recovery.New(data.ID, data, d.broadcaster)
-	if err := d.QueueRecovery(data.ID); err != nil {
+	r := d.Recoveries[data.ID]
+	login, err := recovery.GetLogin(config.Data.LoginAddr, r.Data.User)
+	if err != nil {
 		return errors.Extend(op, err)
 	}
+	for _, cloud := range config.Data.Clouds {
+		if cloud.FilesAddress == login {
+			r.SetCloud(cloud)
+			goto Found
+
+		}
+	}
+	return errors.New(op, "Failed to find match recovery with any existing Cloud")
+Found:
+	go d.Recoveries[data.ID].PreCalculate()
 	return nil
 }
 
@@ -125,18 +137,6 @@ func (d *Director) QueueRecovery(id int) error {
 	if err != nil {
 		return errors.Extend(op, err)
 	}
-	login, err := recovery.GetLogin(config.Data.LoginAddr, r.Data.User)
-	if err != nil {
-		return errors.Extend(op, err)
-	}
-	for _, cloud := range config.Data.Clouds {
-		if cloud.FilesAddress == login {
-			r.SetCloud(cloud)
-			goto Found
-		}
-	}
-	return errors.New(op, "Failed to find match recovery with any existing Cloud")
-Found:
 	r.Queue()
 	return nil
 }

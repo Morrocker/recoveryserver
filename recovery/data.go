@@ -10,6 +10,7 @@ import (
 	"github.com/morrocker/log"
 	"github.com/morrocker/recoveryserver/broadcast"
 	"github.com/morrocker/recoveryserver/config"
+	"github.com/morrocker/recoveryserver/utils"
 )
 
 // New returns a new Recovery object from the given recovery data
@@ -31,7 +32,7 @@ func (r *Recovery) Pause() {
 
 // Start starts (or resumes) a recovery execution
 func (r *Recovery) Start() {
-	log.Task("Running recovery %d", r.Data.ID)
+	log.Task("Running recovery #%d", r.Data.ID)
 	r.Status = Running
 	r.notify()
 }
@@ -50,20 +51,16 @@ func (r *Recovery) Done(finish time.Duration) error {
 }
 
 // Done sets a recovery status as Done
-func (r *Recovery) PreDone() error {
+func (r *Recovery) PreDone() {
 	// op := "recovery.Done()"
-	// if err := r.tracker.StopAutoMeasure("size"); err != nil {
-	// 	log.Errorln(errors.New(op, err))
-	// }
-	// r.tracker.StopAutoPrint()
-	// _, st, err := r.tracker.GetRawValues("size")
-	// if err != nil {
-	// 	return errors.Extend(op, err)
-	// }
-	// r.Data.TotalSize = st
-	// log.Info("Recovery precalculation finished. Total size %s", st)
-	// r.Status = Queued // FIX THIS
-	return nil
+	_, st, _ := r.tracker.RawValues("size")
+	_, ft, _ := r.tracker.RawValues("files")
+	r.Data.TotalSize = st
+	r.Data.TotalFiles = ft
+	r.Status = Entry
+	r.notify()
+	time.Sleep(5 * time.Second)
+	log.Info("Recovery #%d precalculation finished. Total size: %s, Total Files: %d", r.Data.ID, utils.B2H(st), ft)
 }
 
 // Cancel sets a recovery status as Cancel

@@ -57,30 +57,27 @@ func (r *Recovery) Run() {
 }
 
 func (r *Recovery) PreCalculate() {
-	// op := "recovery.PreCalculate()"
-	// r.Status = Paused
-	// log.Info("Recovery %d precalculation worker is waiting to start!", r.Data.ID)
+	op := "recovery.Run()"
+	log.Info("Starting recovery %d size calculation", r.Data.ID)
+	r.initLogger()
+	r.startTracker()
+	r.log.Task("Starting recovery %d size calculation", r.Data.ID)
+	go r.autoTrack()
 
-	// r.startTracker()
-	// r.step = Metafiles
-	// if exit := r.stopGate(); exit != 0 {
-	// 	return
-	// }
-	// r.initLogger()
-	// log.Info("Starting precalculation %d", r.Data.ID)
-	// r.log.Task("Starting precalculation %d", r.Data.ID)
-	// tree, err := r.GetRecoveryTree()
-	// if err != nil {
-	// 	err = errors.Extend(op, err)
-	// 	log.Errorln(err)
-	// }
-	// if exit := r.stopGate(); exit != 0 {
-	// 	return
-	// }
-
-	// if err := r.Done(time.Since(start).Truncate(time.Second)); err != nil {
-	// 	log.Error(op, err)
-	// }
+	r.Step(Metafiles)
+	r.Start()
+	if r.flowGate() {
+		return
+	}
+	_, err := r.GetRecoveryTree()
+	if err != nil {
+		log.Errorln(errors.Extend(op, err))
+		r.Cancel()
+		return
+	}
+	r.tracker.StartAutoPrint(5 * time.Second)
+	r.tracker.Print()
+	r.PreDone()
 }
 
 // GetLogin finds the server that the users belongs to

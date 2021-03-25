@@ -166,25 +166,6 @@ func (d Device) MakeNTFS(p int) error {
 	return nil
 }
 
-// // MountPoints retrieves all available mount points in the basedir.
-// func MountPoints(basedir recover.Path) ([]recover.Path, error) {
-// 	fs, err := ioutil.ReadDir(string(basedir))
-// 	if err != nil {
-// 		return nil, errors.Extend("disks.MountPoints()", err)
-// 	}
-
-// 	points := make([]recover.Path, 0, len(fs))
-// 	for _, f := range fs {
-// 		if !f.IsDir() {
-// 			continue
-// 		}
-// 		p := filepath.Join(string(basedir), f.Name())
-// 		points = append(points, recover.Path(p))
-// 	}
-
-// 	return points, nil
-// }
-
 func makeMountPoint(path string) error {
 	log.Task("Creating mountpoint %s", path)
 	if err := os.MkdirAll(path, 0700); err != nil {

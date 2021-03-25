@@ -27,7 +27,7 @@ func (d *Director) StartDirector() error {
 	ec := make(chan error)
 
 	d.init()
-	// go d.devicesScanner()
+	go d.devicesScanner()
 	go d.recoveryPicker()
 	<-ec
 	log.Info("Shutting down director")

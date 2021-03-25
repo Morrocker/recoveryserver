@@ -26,6 +26,7 @@ type Recovery struct {
 type Data struct {
 	ID         int
 	TotalSize  int64
+	TotalFiles int64
 	User       string
 	Machine    string
 	Metafile   string
