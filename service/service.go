@@ -72,8 +72,6 @@ func (s *Service) Handler() http.Handler {
 	mux.GET("/mount", s.mountDevice)
 	mux.GET("/unmount", s.unmountDevice)
 	// Requests
-	mux.GET("/recovery_size", s.getDevices) // TODO
-
 	mux.GET("/shutdown", s.shutdown)
 
 	// mux.GET("/test", s.test)

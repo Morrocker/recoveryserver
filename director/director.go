@@ -1,9 +1,9 @@
 package director
 
 import (
+	"github.com/morrocker/broadcast"
 	"github.com/morrocker/errors"
 	"github.com/morrocker/log"
-	"github.com/morrocker/recoveryserver/broadcast"
 	"github.com/morrocker/recoveryserver/config"
 	"github.com/morrocker/recoveryserver/disks"
 	"github.com/morrocker/recoveryserver/pdf"

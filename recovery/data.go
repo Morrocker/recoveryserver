@@ -6,11 +6,11 @@ import (
 	"path"
 	"time"
 
+	"github.com/morrocker/broadcast"
 	"github.com/morrocker/errors"
 	"github.com/morrocker/log"
-	"github.com/morrocker/recoveryserver/broadcast"
 	"github.com/morrocker/recoveryserver/config"
-	"github.com/morrocker/recoveryserver/utils"
+	"github.com/morrocker/utils"
 )
 
 type Priority int

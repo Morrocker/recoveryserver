@@ -12,7 +12,7 @@ import (
 	"github.com/metal3d/go-slugify"
 	"github.com/morrocker/errors"
 	"github.com/morrocker/log"
-	"github.com/morrocker/recoveryserver/utils"
+	"github.com/morrocker/utils"
 )
 
 // Report asdf
