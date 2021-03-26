@@ -32,7 +32,7 @@ func (r *Recovery) getFiles(mt *MetaTree) error {
 		go r.fileWorker(fc, &wg)
 	}
 
-	dst := path.Join(r.outputTo, r.Data.Org, r.Data.User, r.Data.Machine, r.Data.Disk)
+	dst := path.Join(r.OutputTo, r.Data.Org, r.Data.User, r.Data.Machine, r.Data.Disk)
 	r.log.Notice("Creating root directory " + dst)
 	if err := os.MkdirAll(dst, 0700); err != nil {
 		return errors.New(op, errors.Extend(op, err))
@@ -88,12 +88,13 @@ func (f *fileQueue) addFile(mt *MetaTree) {
 
 func (r *Recovery) fileWorker(fc chan *MetaTree, wg *sync.WaitGroup) {
 	op := "recovery.fileWorker()"
+	RBS := NewRBS(r.cloud)
 	for mt := range fc {
 		if r.flowGate() {
 			break
 		}
 		wg.Add(1)
-		if err := r.recoverFile(mt.path, mt.mf.Hash, uint64(mt.mf.Size), r.RBS); err != nil {
+		if err := r.recoverFile(mt.path, mt.mf.Hash, uint64(mt.mf.Size), RBS); err != nil {
 			r.log.Errorln(errors.Extend(op, err))
 		}
 		wg.Done()

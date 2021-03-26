@@ -17,8 +17,6 @@ type Director struct {
 	broadcaster *broadcast.Broadcaster
 	Recoveries  map[int]*recovery.Recovery
 	devices     map[string]disks.Device
-	// RunLock     sync.Mutex
-	// Lock sync.Mutex
 }
 
 // StartDirector starts the Director service and all subservices
@@ -43,13 +41,13 @@ func (d *Director) init() {
 
 // Stop sets Run to false
 func (d *Director) Stop() {
-	log.TaskV("Setting Director.Run to false")
+	log.TaskV("Setting Director.run to false")
 	d.run = false
 }
 
 // Start sets Run to true
 func (d *Director) Start() {
-	log.TaskV("Setting Director.Run to true")
+	log.TaskV("Setting Director.run to true")
 	d.run = true
 }
 

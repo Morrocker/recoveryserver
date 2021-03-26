@@ -15,7 +15,7 @@ func (r *Recovery) autoTrack() {
 		tick := 5 * time.Second
 		if r.Status == Running {
 			r.tracker.StartAutoPrint(tick)
-			if r.step == Files {
+			if r.Step == Files {
 				r.tracker.StartAutoMeasure("size", tick)
 			}
 		} else {
@@ -73,10 +73,10 @@ func (r *Recovery) printFunction() {
 	if err != nil {
 		log.Errorln(errors.New(op, err))
 	}
-	if r.step == Metafiles {
+	if r.Step == Metafiles {
 		log.Notice("[ Building Filetree ] Files: %d | Blocks: %d | Size: %s",
 			ft, bt, st)
-	} else if r.step == Files {
+	} else if r.Step == Files {
 		log.Notice("[ Downloading Files ] Files: %d / %d | Blocks: %d / %d | Size: %s / %s | Errors: %d [ %sps | %s ]",
 			fc, ft, bc, bt, sc, st, ec, rt, eta)
 	}

@@ -17,6 +17,15 @@ func (r *Recovery) flowGate() bool {
 	}
 }
 
+func (r *Recovery) changeState(s State) {
+	r.Status = s
+	r.broadcaster.Broadcast()
+}
+func (r *Recovery) changeStep(s Step) {
+	r.Step = s
+	r.broadcaster.Broadcast()
+}
+
 func (r *Recovery) notify() {
 	r.broadcaster.Broadcast()
 }

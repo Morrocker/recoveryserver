@@ -59,7 +59,7 @@ func (c *RBS) GetBlocksList(hash, user string) (*BlocksList, error) {
 func (c *RBS) GetBlock(hash, user string) ([]byte, error) {
 	op := "remotes.GetBlock()"
 
-	for retries := 0; retries < 3; retries++ {
+	for retries := 0; retries < 2; retries++ {
 		if c.Legacy {
 			for _, bs := range c.LegacyStores {
 				content, err := bs.Retrieve(hash)
