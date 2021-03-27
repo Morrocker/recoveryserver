@@ -41,6 +41,8 @@ func (r *Recovery) startTracker() error {
 	r.tracker.Reset("size")
 	r.tracker.AddGauge("errors", "Errors", 0)
 	r.tracker.Reset("errors")
+	r.tracker.AddGauge("blocksBuffer", "", 2000)
+	r.tracker.Reset("errors")
 	r.tracker.InitSpdRate("size", 40)
 	r.tracker.UnitsFunc("size", utils.B2H)
 	r.tracker.PrintFunc(r.printFunction)

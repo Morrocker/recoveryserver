@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/clonercl/reposerver"
+	"github.com/morrocker/broadcast"
 	"github.com/morrocker/errors"
 	"github.com/morrocker/log"
 	"github.com/morrocker/recoveryserver/config"
@@ -20,16 +21,37 @@ type fileQueue struct {
 	lock sync.Mutex
 }
 
+type bData struct {
+	id   int
+	hash string
+	ret  chan returnBlock
+}
+
+type returnBlock struct {
+	id      int
+	content []byte
+}
+
 var fq fileQueue = fileQueue{}
 
 func (r *Recovery) getFiles(mt *MetaTree) error {
 	op := "recovery.getFiles()"
 	fc := make(chan *MetaTree)
+	bc := make(chan bData)
 	wg := sync.WaitGroup{}
+	wg2 := sync.WaitGroup{}
+	broadcaster := broadcast.New()
 
 	r.log.Notice("Starting %d File workers", config.Data.FileWorkers)
 	for i := 0; i < config.Data.FileWorkers; i++ {
-		go r.fileWorker(fc, &wg)
+		wg.Add(1)
+		go r.fileWorker(fc, &wg, broadcaster)
+	}
+
+	r.log.Notice("Starting %d File workers", config.Data.FileWorkers)
+	for i := 0; i < config.Data.BlockWorkers; i++ {
+		wg2.Add(1)
+		go r.blockWorker(bc, &wg)
 	}
 
 	dst := path.Join(r.OutputTo, r.Data.Org, r.Data.User, r.Data.Machine, r.Data.Disk)
@@ -86,22 +108,36 @@ func (f *fileQueue) addFile(mt *MetaTree) {
 	f.ToDo = append(f.ToDo, mt)
 }
 
-func (r *Recovery) fileWorker(fc chan *MetaTree, wg *sync.WaitGroup) {
+func (r *Recovery) fileWorker(fc chan *MetaTree, wg *sync.WaitGroup, b *broadcast.Broadcaster) {
 	op := "recovery.fileWorker()"
-	RBS := NewRBS(r.cloud)
 	for mt := range fc {
 		if r.flowGate() {
 			break
 		}
-		wg.Add(1)
-		if err := r.recoverFile(mt.path, mt.mf.Hash, uint64(mt.mf.Size), RBS); err != nil {
+		if err := r.recoverFile(mt.path, mt.mf.Hash, uint64(mt.mf.Size), b); err != nil {
 			r.log.Errorln(errors.Extend(op, err))
 		}
-		wg.Done()
 	}
+	wg.Done()
 }
 
-func (r *Recovery) recoverFile(p, hash string, size uint64, RBS *RBS) error {
+func (r *Recovery) blockWorker(dc chan bData, wg2 *sync.WaitGroup) {
+	for data := range dc {
+		if r.flowGate() {
+			break
+		}
+		b, err := r.RBS.GetBlock(data.hash, r.Data.User)
+		if err != nil {
+			var zeroedBuffer = make([]byte, 1024*1000)
+			log.Errorln(errors.Extend("recovery.fileWorker()", err))
+			data.ret <- returnBlock{data.id, zeroedBuffer}
+		}
+		data.ret <- returnBlock{data.id, b}
+	}
+	wg2.Done()
+}
+
+func (r *Recovery) recoverFile(p, hash string, size uint64, b *broadcast.Broadcaster) error {
 	op := "recovery.recoverFile()"
 	if r.flowGate() {
 		return nil
@@ -115,7 +151,7 @@ func (r *Recovery) recoverFile(p, hash string, size uint64, RBS *RBS) error {
 	}
 
 	r.log.Info("Recovering file %s [%s]", p, utils.B2H(int64(size)))
-	blist, err := RBS.GetBlocksList(hash, r.Data.User)
+	blist, err := r.RBS.GetBlocksList(hash, r.Data.User)
 	if err != nil {
 		r.increaseErrors()
 		r.log.ErrorlnV(errors.New(op, fmt.Sprintf("error could not create file '%s' because fileblock is unavailable", p)))
@@ -123,36 +159,69 @@ func (r *Recovery) recoverFile(p, hash string, size uint64, RBS *RBS) error {
 	}
 	r.tracker.IncreaseCurr("blocks")
 
-	f, err := os.Create(norm.NFC.String(p))
+	r.fileWriter(p, blist.Blocks, b)
+
+	return nil
+}
+
+func (r *Recovery) fileWriter(path string, blocks []string, b *broadcast.Broadcaster) {
+	op := "recovery.fileWriter()"
+	f, err := os.Create(norm.NFC.String(path))
 	if err != nil {
 		r.increaseErrors()
-		return errors.New(op, fmt.Sprintf("error could not create file '%s' : %v\n", p, err))
+		log.Errorln(errors.New(op, fmt.Sprintf("error could not create file '%s' : %v\n", path, err)))
 	}
 	defer f.Close()
 
-	var zeroedBuffer = make([]byte, 1024*1000)
-	for _, hash := range blist.Blocks {
-		if r.flowGate() {
+	bc := make(chan bData)
+	ret := make(chan returnBlock)
+	blocksBuffer := make(map[int][]byte)
+	n := len(blocks)
+	go func() {
+		for i, hash := range blocks {
+			bc <- bData{id: i, hash: hash, ret: ret}
+		}
+	}()
+
+	for x := 0; x < n; x++ {
+		content, ok := blocksBuffer[x]
+		if ok {
+			if _, err := f.Write(content); err != nil {
+				r.increaseErrors()
+				r.log.Errorln(errors.New(op, fmt.Sprintf("error could not write content for block '%s' for file '%s': %v\n", blocks[x], path, err)))
+			}
+			r.tracker.ChangeCurr("size", len(content))
+			r.tracker.IncreaseCurr("blocks")
+			delete(blocksBuffer, x)
+			b.Broadcast()
+			continue
+		}
+		for d := range ret {
+			if d.id == x {
+				if _, err := f.Write(d.content); err != nil {
+					r.increaseErrors()
+					r.log.Errorln(errors.New(op, fmt.Sprintf("error could not write content for block '%s' for file '%s': %v\n", blocks[x], path, err)))
+				}
+				r.tracker.ChangeCurr("size", len(d.content))
+				r.tracker.IncreaseCurr("blocks")
+				break
+			}
+			r.checkBuffer(b.Listen())
+			blocksBuffer[d.id] = d.content
+		}
+	}
+	r.tracker.IncreaseCurr("files")
+}
+
+func (r *Recovery) checkBuffer(l *broadcast.Listener) {
+	c, t, err := r.tracker.RawValues("blocksBuffer")
+	if err != nil {
+		log.Errorln(errors.New("recoveries.checkBuffer()", err))
+	}
+	for {
+		if c < t {
 			break
 		}
-		b, err := RBS.GetBlock(hash, r.Data.User)
-
-		if err != nil {
-			if _, err2 := f.Write(zeroedBuffer); err2 != nil {
-				r.increaseErrors()
-				return errors.New(op, fmt.Sprintf("error could not write zeroed content for block '%s' for file '%s': %v\n", hash, p, err))
-			}
-		} else {
-			if _, err2 := f.Write(b); err2 != nil {
-				r.increaseErrors()
-				return errors.New(op, fmt.Sprintf("error could not write content for block '%s' for file '%s': %v\n", hash, p, err2))
-			}
-		}
-
-		r.tracker.ChangeCurr("size", len(b))
-		r.tracker.IncreaseCurr("blocks")
+		<-l.C
 	}
-
-	r.tracker.IncreaseCurr("files")
-	return nil
 }
