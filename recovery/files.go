@@ -45,10 +45,10 @@ func (r *Recovery) getFiles(mt *MetaTree) error {
 	r.log.Notice("Starting %d File workers", config.Data.FileWorkers)
 	for i := 0; i < config.Data.FileWorkers; i++ {
 		wg.Add(1)
-		go r.fileWorker(fc, &wg, broadcaster)
+		go r.fileWorker(fc, &wg, broadcaster, bc)
 	}
 
-	r.log.Notice("Starting %d File workers", config.Data.FileWorkers)
+	r.log.Notice("Starting %d Block workers", config.Data.FileWorkers)
 	for i := 0; i < config.Data.BlockWorkers; i++ {
 		wg2.Add(1)
 		go r.blockWorker(bc, &wg)
@@ -72,8 +72,8 @@ func (r *Recovery) getFiles(mt *MetaTree) error {
 	}
 
 	time.Sleep(time.Second)
-	wg.Wait()
 	close(fc)
+	wg.Wait()
 	fq = fileQueue{}
 	r.log.Noticeln("Files retrieval completed")
 	return nil
@@ -108,13 +108,13 @@ func (f *fileQueue) addFile(mt *MetaTree) {
 	f.ToDo = append(f.ToDo, mt)
 }
 
-func (r *Recovery) fileWorker(fc chan *MetaTree, wg *sync.WaitGroup, b *broadcast.Broadcaster) {
+func (r *Recovery) fileWorker(fc chan *MetaTree, wg *sync.WaitGroup, b *broadcast.Broadcaster, bc chan bData) {
 	op := "recovery.fileWorker()"
 	for mt := range fc {
 		if r.flowGate() {
 			break
 		}
-		if err := r.recoverFile(mt.path, mt.mf.Hash, uint64(mt.mf.Size), b); err != nil {
+		if err := r.recoverFile(mt.path, mt.mf.Hash, uint64(mt.mf.Size), b, bc); err != nil {
 			r.log.Errorln(errors.Extend(op, err))
 		}
 	}
@@ -126,18 +126,20 @@ func (r *Recovery) blockWorker(dc chan bData, wg2 *sync.WaitGroup) {
 		if r.flowGate() {
 			break
 		}
+		// log.Info("Recovering Block %s", data.hash)
 		b, err := r.RBS.GetBlock(data.hash, r.Data.User)
 		if err != nil {
 			var zeroedBuffer = make([]byte, 1024*1000)
-			log.Errorln(errors.Extend("recovery.fileWorker()", err))
+			// log.Errorln(errors.Extend("recovery.fileWorker()", err))
 			data.ret <- returnBlock{data.id, zeroedBuffer}
 		}
+		// log.Info("Returning Block %s", data.hash)
 		data.ret <- returnBlock{data.id, b}
 	}
 	wg2.Done()
 }
 
-func (r *Recovery) recoverFile(p, hash string, size uint64, b *broadcast.Broadcaster) error {
+func (r *Recovery) recoverFile(p, hash string, size uint64, b *broadcast.Broadcaster, bc chan bData) error {
 	op := "recovery.recoverFile()"
 	if r.flowGate() {
 		return nil
@@ -159,12 +161,12 @@ func (r *Recovery) recoverFile(p, hash string, size uint64, b *broadcast.Broadca
 	}
 	r.tracker.IncreaseCurr("blocks")
 
-	r.fileWriter(p, blist.Blocks, b)
+	r.fileWriter(p, blist.Blocks, b, bc)
 
 	return nil
 }
 
-func (r *Recovery) fileWriter(path string, blocks []string, b *broadcast.Broadcaster) {
+func (r *Recovery) fileWriter(path string, blocks []string, b *broadcast.Broadcaster, bc chan bData) {
 	op := "recovery.fileWriter()"
 	f, err := os.Create(norm.NFC.String(path))
 	if err != nil {
@@ -173,31 +175,40 @@ func (r *Recovery) fileWriter(path string, blocks []string, b *broadcast.Broadca
 	}
 	defer f.Close()
 
-	bc := make(chan bData)
 	ret := make(chan returnBlock)
 	blocksBuffer := make(map[int][]byte)
 	n := len(blocks)
 	go func() {
 		for i, hash := range blocks {
+			// log.Info("Requesting Block %s", hash)
 			bc <- bData{id: i, hash: hash, ret: ret}
 		}
 	}()
 
 	for x := 0; x < n; x++ {
+		// log.Info("Writting block #%d", x)
 		content, ok := blocksBuffer[x]
 		if ok {
+			log.Info("Block #%d is being written from buffer", x)
 			if _, err := f.Write(content); err != nil {
 				r.increaseErrors()
 				r.log.Errorln(errors.New(op, fmt.Sprintf("error could not write content for block '%s' for file '%s': %v\n", blocks[x], path, err)))
+				// log.Error("Block #%d writting error", x)
 			}
+			// log.Info("Block #%d writting complete", x)
 			r.tracker.ChangeCurr("size", len(content))
 			r.tracker.IncreaseCurr("blocks")
+			r.tracker.ChangeCurr("blocksBuffer", -1)
 			delete(blocksBuffer, x)
+			// log.Info("Block #%d removed from buffer", x)
 			b.Broadcast()
+			// log.Infoln("Broadcasting")
 			continue
 		}
 		for d := range ret {
+			// log.Info("Got block #%d", d.id)
 			if d.id == x {
+				log.Info("Block #%d is being written directly", x)
 				if _, err := f.Write(d.content); err != nil {
 					r.increaseErrors()
 					r.log.Errorln(errors.New(op, fmt.Sprintf("error could not write content for block '%s' for file '%s': %v\n", blocks[x], path, err)))
@@ -206,8 +217,10 @@ func (r *Recovery) fileWriter(path string, blocks []string, b *broadcast.Broadca
 				r.tracker.IncreaseCurr("blocks")
 				break
 			}
+			// log.Info("Block #%d is being added to buffer", d.id)
 			r.checkBuffer(b.Listen())
 			blocksBuffer[d.id] = d.content
+			r.tracker.IncreaseCurr("blocksBuffer")
 		}
 	}
 	r.tracker.IncreaseCurr("files")
@@ -224,4 +237,5 @@ func (r *Recovery) checkBuffer(l *broadcast.Listener) {
 		}
 		<-l.C
 	}
+	l.Close()
 }

@@ -82,7 +82,7 @@ func (r *Recovery) Pause() error {
 func (r *Recovery) Start() error {
 	log.Task("Running recovery #%d", r.Data.ID)
 	switch r.Status {
-	case Paused, Running:
+	case Paused, Queued:
 		r.changeState(Running)
 		return nil
 	default:
