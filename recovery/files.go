@@ -180,35 +180,28 @@ func (r *Recovery) fileWriter(path string, blocks []string, b *broadcast.Broadca
 	n := len(blocks)
 	go func() {
 		for i, hash := range blocks {
-			// log.Info("Requesting Block %s", hash)
 			bc <- bData{id: i, hash: hash, ret: ret}
 		}
 	}()
 
 	for x := 0; x < n; x++ {
-		// log.Info("Writting block #%d", x)
 		content, ok := blocksBuffer[x]
 		if ok {
-			log.Info("Block #%d is being written from buffer", x)
+			// log.Info("Block #%d is being written from buffer", x)
 			if _, err := f.Write(content); err != nil {
 				r.increaseErrors()
 				r.log.Errorln(errors.New(op, fmt.Sprintf("error could not write content for block '%s' for file '%s': %v\n", blocks[x], path, err)))
-				// log.Error("Block #%d writting error", x)
 			}
-			// log.Info("Block #%d writting complete", x)
 			r.tracker.ChangeCurr("size", len(content))
 			r.tracker.IncreaseCurr("blocks")
 			r.tracker.ChangeCurr("blocksBuffer", -1)
 			delete(blocksBuffer, x)
-			// log.Info("Block #%d removed from buffer", x)
 			b.Broadcast()
-			// log.Infoln("Broadcasting")
 			continue
 		}
 		for d := range ret {
-			// log.Info("Got block #%d", d.id)
 			if d.id == x {
-				log.Info("Block #%d is being written directly", x)
+				// log.Info("Block #%d is being written directly", x)
 				if _, err := f.Write(d.content); err != nil {
 					r.increaseErrors()
 					r.log.Errorln(errors.New(op, fmt.Sprintf("error could not write content for block '%s' for file '%s': %v\n", blocks[x], path, err)))
@@ -217,7 +210,6 @@ func (r *Recovery) fileWriter(path string, blocks []string, b *broadcast.Broadca
 				r.tracker.IncreaseCurr("blocks")
 				break
 			}
-			// log.Info("Block #%d is being added to buffer", d.id)
 			r.checkBuffer(b.Listen())
 			blocksBuffer[d.id] = d.content
 			r.tracker.IncreaseCurr("blocksBuffer")
