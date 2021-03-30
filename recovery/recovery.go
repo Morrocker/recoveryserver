@@ -55,15 +55,21 @@ func (r *Recovery) Run() {
 }
 
 func (r *Recovery) PreCalculate() {
+	log.TaskV("Precalculating recovery #%d size", r.Data.ID)
 	op := "recovery.Run()"
+	if err := r.Queue(); err != nil {
+		log.Errorln(errors.Extend(op, err))
+		return
+	}
+
 	if err := r.Start(); err != nil {
 		log.Errorln(errors.Extend(op, err))
 		return
 	}
-	log.Info("Starting recovery %d size calculation", r.Data.ID)
+	log.Info("Starting recovery #%d size calculation", r.Data.ID)
 	r.initLogger()
 	r.startTracker()
-	r.log.Task("Starting recovery %d size calculation", r.Data.ID)
+	r.log.Task("Starting recovery #%d size calculation", r.Data.ID)
 	go r.autoTrack()
 
 	r.changeStep(Metafiles)
@@ -76,6 +82,9 @@ func (r *Recovery) PreCalculate() {
 		r.Cancel()
 		return
 	}
-	r.tracker.StartAutoPrint(5 * time.Second)
+	if r.flowGate() {
+		log.Infoln("Precalculations cancelled")
+		return
+	}
 	r.PreDone()
 }

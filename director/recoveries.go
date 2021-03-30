@@ -57,7 +57,7 @@ func (d *Director) ChangePriority(id int, value int) error {
 
 // AddRecovery adds the given recovery data to create a new entry on the Recoveries map
 func (d *Director) AddRecovery(data *recovery.Data) error {
-	log.TaskV("Adding new recovery")
+	log.TaskV("Adding new recovery #%d", data.ID)
 	op := ("director.AddRecovery()")
 
 	if err := checkEmptyData(data); err != nil {
@@ -143,10 +143,9 @@ func (d *Director) SetDestination(id int, dst string) error {
 
 // PauseRecovery sets a given recover status to Pause
 func (d *Director) PreCalculate(id int) error {
-	log.TaskV("Precalculating recovery #%d size", id)
 	r, err := d.findRecovery(id)
 	if err != nil {
-		return errors.Extend("director.PauseRecovery()", err)
+		return errors.Extend("director.PreCalculate()", err)
 	}
 	r.PreCalculate()
 	return nil

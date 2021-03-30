@@ -27,6 +27,7 @@ func (r *Recovery) autoTrack() {
 		}
 		<-l.C
 	}
+	l.Close()
 }
 
 // StartTracker starts a new tracker for a Recovery
@@ -34,15 +35,11 @@ func (r *Recovery) startTracker() error {
 	st := tracker.New()
 	r.tracker = st
 	r.tracker.AddGauge("files", "Files", 0)
-	r.tracker.Reset("files")
 	r.tracker.AddGauge("blocks", "Blocks", 0)
-	r.tracker.Reset("blocks")
 	r.tracker.AddGauge("size", "Size", 0)
-	r.tracker.Reset("size")
 	r.tracker.AddGauge("errors", "Errors", 0)
-	r.tracker.Reset("errors")
 	r.tracker.AddGauge("blocksBuffer", "", 2000)
-	r.tracker.Reset("errors")
+	r.tracker.AddGauge("metafiles", "Metafiles", 0)
 	r.tracker.InitSpdRate("size", 40)
 	r.tracker.UnitsFunc("size", utils.B2H)
 	r.tracker.PrintFunc(r.printFunction)

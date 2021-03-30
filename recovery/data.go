@@ -104,10 +104,9 @@ func (r *Recovery) done() error {
 
 // Done sets a recovery status as Done
 func (r *Recovery) doDone(finish time.Duration) error {
-	op := "recovery.Done()"
 	rate, err := r.tracker.TrueProgressRate("size")
 	if err != nil {
-		return errors.Extend(op, err)
+		return errors.Extend("recovery.doDone()", err)
 	}
 	log.Info("Recovery #%d finished in %s with an average download rate of %sps", r.Data.ID, finish, rate)
 	return r.done()
@@ -115,11 +114,11 @@ func (r *Recovery) doDone(finish time.Duration) error {
 
 // Done sets a recovery status as Done
 func (r *Recovery) PreDone() {
-	// op := "recovery.Done()"
 	_, st, _ := r.tracker.RawValues("size")
 	_, ft, _ := r.tracker.RawValues("files")
 	r.Data.TotalSize = st
 	r.Data.TotalFiles = ft
+	r.changeState(Done)
 	r.changeState(Entry)
 	time.Sleep(6 * time.Second)
 	log.Info("Recovery #%d precalculation finished. Total size: %s, Total Files: %d", r.Data.ID, utils.B2H(st), ft)
@@ -175,6 +174,7 @@ func (r *Recovery) SetCloud(rc config.Cloud) {
 }
 
 func (r *Recovery) SetOutput(dst string) {
+	log.InfoV("Recovery #%d output set to %s", r.Data.ID, dst)
 	r.OutputTo = dst
 	r.notify()
 }
@@ -188,6 +188,7 @@ func (r *Recovery) SetPriority(n int) error {
 		return errors.New("recovery.SetPriority()", "Priority value outside allowed parameters")
 	}
 	r.Priority = p
+	log.InfoV("Recovery #%d priority set to %d", r.Data.ID, p)
 	return nil
 }
 
@@ -230,7 +231,7 @@ func (r *Recovery) initLogger() {
 		log.Error(op, err)
 		os.Exit(1)
 	}
-	log.Info("Setting output file (for recovery) to %s", logPath)
+	log.Info("Setting output log file for recovery #%d to %s", r.Data.ID, logPath)
 	Log.OutputFile(logPath)
 	Log.ToggleSilent()
 	Log.StartWriter()

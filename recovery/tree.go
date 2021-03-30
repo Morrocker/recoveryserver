@@ -10,6 +10,7 @@ import (
 
 	"github.com/clonercl/reposerver"
 	"github.com/morrocker/errors"
+	"github.com/morrocker/log"
 	"github.com/morrocker/recoveryserver/config"
 )
 
@@ -29,7 +30,6 @@ func newMetaTree(mf *reposerver.Metafile) *MetaTree {
 
 // GetRecoveryTree takes in a recovery data and returns a metafileTree
 func (r *Recovery) GetRecoveryTree() (*MetaTree, error) {
-	op := "recovery.GetRecoveryTree()"
 	r.log.Task("Starting metafile tree retrieval")
 
 	var wg sync.WaitGroup
@@ -44,55 +44,61 @@ func (r *Recovery) GetRecoveryTree() (*MetaTree, error) {
 	r.log.TaskV("Opening workers channel with buffer %d", config.Data.MetafilesBuffSize)
 	tc := make(chan *MetaTree, config.Data.MetafilesBuffSize)
 	r.log.TaskV("Starting %d metafile workers", config.Data.MetafileWorkers)
+	wg.Add(config.Data.MetafileWorkers)
 	for x := 0; x < config.Data.MetafileWorkers; x++ {
 		go r.getChildMetaTree(tc, &wg)
 	}
 
 	mf, err := r.getMetafile()
 	if err != nil {
-		return nil, errors.New(op, err)
+		return nil, errors.New("recovery.GetRecoveryTree()", err)
 	}
 
 	recoveryTree := newMetaTree(mf)
 	tc <- recoveryTree
 
-	time.Sleep(5 * time.Second)
 	wg.Wait()
-	close(tc)
+	if _, ok := <-tc; ok {
+		log.Taskln("Shutting down lingering channel")
+		close(tc)
+	}
 
 	r.log.Task("Metafile tree completed")
 	return recoveryTree, nil
 }
 
 func (r *Recovery) getChildMetaTree(tc chan *MetaTree, wg *sync.WaitGroup) {
+Outer:
 	for mt := range tc {
 		if r.flowGate() {
-			wg.Done()
-			return
+			break
 		}
-		wg.Add(1)
 
 		if mt.mf.Type == reposerver.FolderType {
 			children, err := r.getChildren(mt.mf.ID)
 			if err != nil {
 				r.log.Error("Couldnt retrieve metafile: %s", errors.Extend("recoveries.getChildMetaTree()", err))
+				r.tracker.IncreaseCurr("metafiles")
+				continue
 			}
 
 			for _, child := range children {
 				if r.flowGate() {
-					wg.Done()
-					return
+					break Outer
 				}
 				childTree := newMetaTree(child)
 				mt.addChildren(childTree)
 				tc <- childTree
 			}
-			wg.Done()
+			r.tracker.IncreaseCurr("metafiles")
+			r.isDone(tc)
 			continue
 		}
 		r.updateTrackerTotals(mt.mf.Size)
-		wg.Done()
+		r.tracker.IncreaseCurr("metafiles")
+		r.isDone(tc)
 	}
+	wg.Done()
 }
 
 func (r *Recovery) getChildren(id string) ([]*reposerver.Metafile, error) {
@@ -143,6 +149,7 @@ func (r *Recovery) getChildren(id string) ([]*reposerver.Metafile, error) {
 			errOut = errors.Extend(op, err)
 			continue
 		}
+		r.tracker.ChangeTotal("metafiles", len(children))
 		return children, nil
 	}
 	errOut = errors.New(op, fmt.Sprintf("Failed to obtain metafile %s", errOut))
@@ -186,6 +193,7 @@ func (r *Recovery) getMetafile() (*reposerver.Metafile, error) {
 			errOut = errors.Extend(op, err)
 			continue
 		}
+		r.tracker.ChangeTotal("metafiles", 1)
 		return &ret, nil
 	}
 	errOut = errors.New(op, fmt.Sprintf("Failed to obtain metafile: %s", errOut))
@@ -196,4 +204,15 @@ func (m *MetaTree) addChildren(mt *MetaTree) {
 	m.lock.Lock()
 	defer m.lock.Unlock()
 	m.children = append(m.children, mt)
+}
+
+func (r *Recovery) isDone(tc chan *MetaTree) {
+	c, t, err := r.tracker.RawValues("metafiles")
+	if err != nil {
+		log.Errorln("ERROR while getting metafiles tracker values")
+	}
+	if c == t {
+		time.Sleep(5 * time.Second)
+		close(tc)
+	}
 }
