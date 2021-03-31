@@ -177,14 +177,13 @@ func (r *Recovery) fileWriter(path string, blocks []string, b *broadcast.Broadca
 
 	ret := make(chan returnBlock)
 	blocksBuffer := make(map[int][]byte)
-	n := len(blocks)
 	go func() {
 		for i, hash := range blocks {
 			bc <- bData{id: i, hash: hash, ret: ret}
 		}
 	}()
 
-	for x := 0; x < n; x++ {
+	for x := 0; x < len(blocks); x++ {
 		content, ok := blocksBuffer[x]
 		if ok {
 			// log.Info("Block #%d is being written from buffer", x)
@@ -219,11 +218,11 @@ func (r *Recovery) fileWriter(path string, blocks []string, b *broadcast.Broadca
 }
 
 func (r *Recovery) checkBuffer(l *broadcast.Listener) {
-	c, t, err := r.tracker.RawValues("blocksBuffer")
-	if err != nil {
-		log.Errorln(errors.New("recoveries.checkBuffer()", err))
-	}
 	for {
+		c, t, err := r.tracker.RawValues("blocksBuffer")
+		if err != nil {
+			log.Errorln(errors.New("recoveries.checkBuffer()", err))
+		}
 		if c < t {
 			break
 		}
