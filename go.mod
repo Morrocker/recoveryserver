@@ -8,21 +8,21 @@ require (
 	github.com/clonercl/reposerver v0.0.0-20190806151941-b7d532a8c047
 	github.com/gin-gonic/gin v1.6.3
 	github.com/go-playground/validator/v10 v10.4.1 // indirect
-	github.com/golang/protobuf v1.5.1 // indirect
+	github.com/golang/protobuf v1.5.2 // indirect
 	github.com/jung-kurt/gofpdf v1.16.2
 	github.com/leodido/go-urn v1.2.1 // indirect
 	github.com/metal3d/go-slugify v0.0.0-20160607203414-7ac2014b2f23
 	github.com/morrocker/benchmark v0.0.0-20210326150553-f72660cf55b3 // indirect
-	github.com/morrocker/broadcast v0.0.0-20210326152739-c65053f63528
+	github.com/morrocker/broadcast v0.0.0-20210331135116-1ac9e625145e
 	github.com/morrocker/errors v0.0.0-20210323144609-d8629b6d420a
 	github.com/morrocker/log v0.0.0-20210322121956-1387843cccea
 	github.com/morrocker/progress-tracker v0.0.0-20210325143638-ad470534c561
 	github.com/morrocker/utils v0.0.0-20210326152034-ee75a97c3c41
 	github.com/sirupsen/logrus v1.8.1 // indirect
 	github.com/spf13/pflag v1.0.5
-	github.com/ugorji/go v1.2.4 // indirect
+	github.com/ugorji/go v1.2.5 // indirect
 	golang.org/x/crypto v0.0.0-20210322153248-0c34fe9e7dc2 // indirect
-	golang.org/x/sys v0.0.0-20210324051608-47abb6519492 // indirect
+	golang.org/x/sys v0.0.0-20210330210617-4fbd30eecc44 // indirect
 	golang.org/x/text v0.3.5
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 )

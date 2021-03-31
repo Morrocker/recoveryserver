@@ -33,8 +33,6 @@ func (r *Recovery) Run() {
 		r.Cancel()
 		return
 	}
-	r.tracker.StartAutoPrint(5 * time.Second)
-	r.tracker.Print()
 	r.changeStep(Files)
 	if r.flowGate() {
 		return

@@ -78,5 +78,6 @@ func (r *Recovery) printFunction() {
 	} else if r.Step == Files {
 		log.Notice("[ Downloading Files ] Files: %d / %d | Blocks: %d / %d | Size: %s / %s | Errors: %d [ %sps | %s ]",
 			fc, ft, bc, bt, sc, st, ec, rt, eta)
+
 	}
 }

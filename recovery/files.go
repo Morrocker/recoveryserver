@@ -130,8 +130,10 @@ func (r *Recovery) blockWorker(dc chan bData, wg2 *sync.WaitGroup) {
 		b, err := r.RBS.GetBlock(data.hash, r.Data.User)
 		if err != nil {
 			var zeroedBuffer = make([]byte, 1024*1000)
-			// log.Errorln(errors.Extend("recovery.fileWorker()", err))
+			log.Errorln(errors.Extend("recovery.fileWorker()", err))
+			// log.Info("Returning Zeroed Block %s", data.hash)
 			data.ret <- returnBlock{data.id, zeroedBuffer}
+			continue
 		}
 		// log.Info("Returning Block %s", data.hash)
 		data.ret <- returnBlock{data.id, b}
@@ -147,16 +149,16 @@ func (r *Recovery) recoverFile(p, hash string, size uint64, b *broadcast.Broadca
 	if fi, err := os.Stat(p); err == nil {
 		if fi.Size() == int64(size) {
 			r.updateTrackerCurrent(int64(size))
-			r.log.NoticeV("skipping file '%s'", p)
+			r.log.NoticeV("skipping file '%s'", p[len(p)-20:])
 			return nil
 		}
 	}
 
-	r.log.Info("Recovering file %s [%s]", p, utils.B2H(int64(size)))
+	r.log.Info("Recovering file %s [%s]", p[len(p)-20:], utils.B2H(int64(size)))
 	blist, err := r.RBS.GetBlocksList(hash, r.Data.User)
 	if err != nil {
 		r.increaseErrors()
-		r.log.ErrorlnV(errors.New(op, fmt.Sprintf("error could not create file '%s' because fileblock is unavailable", p)))
+		r.log.ErrorlnV(errors.New(op, fmt.Sprintf("error could not create file '%s' because fileblock is unavailable", p[len(p)-20:])))
 		return errors.New(op, err)
 	}
 	r.tracker.IncreaseCurr("blocks")
@@ -168,10 +170,11 @@ func (r *Recovery) recoverFile(p, hash string, size uint64, b *broadcast.Broadca
 
 func (r *Recovery) fileWriter(path string, blocks []string, b *broadcast.Broadcaster, bc chan bData) {
 	op := "recovery.fileWriter()"
+	log.Info("Recovering file %s", path)
 	f, err := os.Create(norm.NFC.String(path))
 	if err != nil {
 		r.increaseErrors()
-		log.Errorln(errors.New(op, fmt.Sprintf("error could not create file '%s' : %v\n", path, err)))
+		log.Errorln(errors.New(op, fmt.Sprintf("error could not create file '%s' : %v\n", path[len(path)-20:], err)))
 	}
 	defer f.Close()
 
@@ -179,6 +182,7 @@ func (r *Recovery) fileWriter(path string, blocks []string, b *broadcast.Broadca
 	blocksBuffer := make(map[int][]byte)
 	go func() {
 		for i, hash := range blocks {
+			// log.Info("Sending hash #%d for file %s", i, path[len(path)-20:])
 			bc <- bData{id: i, hash: hash, ret: ret}
 		}
 	}()
@@ -186,10 +190,10 @@ func (r *Recovery) fileWriter(path string, blocks []string, b *broadcast.Broadca
 	for x := 0; x < len(blocks); x++ {
 		content, ok := blocksBuffer[x]
 		if ok {
-			// log.Info("Block #%d is being written from buffer", x)
+			// log.Info("Block #%d is being written from buffer for %s", x, path[len(path)-20:])
 			if _, err := f.Write(content); err != nil {
 				r.increaseErrors()
-				r.log.Errorln(errors.New(op, fmt.Sprintf("error could not write content for block '%s' for file '%s': %v\n", blocks[x], path, err)))
+				r.log.Errorln(errors.New(op, fmt.Sprintf("error could not write content for block '%s' for file '%s': %v\n", blocks[x], path[len(path)-20:], err)))
 			}
 			r.tracker.ChangeCurr("size", len(content))
 			r.tracker.IncreaseCurr("blocks")
@@ -200,24 +204,25 @@ func (r *Recovery) fileWriter(path string, blocks []string, b *broadcast.Broadca
 		}
 		for d := range ret {
 			if d.id == x {
-				// log.Info("Block #%d is being written directly", x)
+				// log.Info("Block #%d is being written directly for %s", x, path[len(path)-20:])
 				if _, err := f.Write(d.content); err != nil {
 					r.increaseErrors()
-					r.log.Errorln(errors.New(op, fmt.Sprintf("error could not write content for block '%s' for file '%s': %v\n", blocks[x], path, err)))
+					r.log.Errorln(errors.New(op, fmt.Sprintf("error could not write content for block '%s' for file '%s': %v\n", blocks[x], path[len(path)-20:], err)))
 				}
 				r.tracker.ChangeCurr("size", len(d.content))
 				r.tracker.IncreaseCurr("blocks")
 				break
 			}
-			r.checkBuffer(b.Listen())
+			r.checkBuffer(b)
 			blocksBuffer[d.id] = d.content
 			r.tracker.IncreaseCurr("blocksBuffer")
 		}
 	}
 	r.tracker.IncreaseCurr("files")
+	// log.Info("Finishing file %s", path[len(path)-20:])
 }
 
-func (r *Recovery) checkBuffer(l *broadcast.Listener) {
+func (r *Recovery) checkBuffer(b *broadcast.Broadcaster) {
 	for {
 		c, t, err := r.tracker.RawValues("blocksBuffer")
 		if err != nil {
@@ -226,7 +231,8 @@ func (r *Recovery) checkBuffer(l *broadcast.Listener) {
 		if c < t {
 			break
 		}
+		l := b.Listen()
 		<-l.C
+		l.Close()
 	}
-	l.Close()
 }
