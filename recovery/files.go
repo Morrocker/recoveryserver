@@ -149,16 +149,16 @@ func (r *Recovery) recoverFile(p, hash string, size uint64, b *broadcast.Broadca
 	if fi, err := os.Stat(p); err == nil {
 		if fi.Size() == int64(size) {
 			r.updateTrackerCurrent(int64(size))
-			r.log.NoticeV("skipping file '%s'", p[len(p)-20:])
+			r.log.NoticeV("skipping file '%s'", p)
 			return nil
 		}
 	}
 
-	r.log.Info("Recovering file %s [%s]", p[len(p)-20:], utils.B2H(int64(size)))
+	r.log.Info("Recovering file %s [%s]", p, utils.B2H(int64(size)))
 	blist, err := r.RBS.GetBlocksList(hash, r.Data.User)
 	if err != nil {
 		r.increaseErrors()
-		r.log.ErrorlnV(errors.New(op, fmt.Sprintf("error could not create file '%s' because fileblock is unavailable", p[len(p)-20:])))
+		r.log.ErrorlnV(errors.New(op, fmt.Sprintf("error could not create file '%s' because fileblock is unavailable", p)))
 		return errors.New(op, err)
 	}
 	r.tracker.IncreaseCurr("blocks")
@@ -170,7 +170,6 @@ func (r *Recovery) recoverFile(p, hash string, size uint64, b *broadcast.Broadca
 
 func (r *Recovery) fileWriter(path string, blocks []string, b *broadcast.Broadcaster, bc chan bData) {
 	op := "recovery.fileWriter()"
-	log.Info("Recovering file %s", path)
 	f, err := os.Create(norm.NFC.String(path))
 	if err != nil {
 		r.increaseErrors()

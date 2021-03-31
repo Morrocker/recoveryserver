@@ -151,6 +151,8 @@ github.com/morrocker/broadcast v0.0.0-20210331133415-1b5bd5cdca03 h1:2JggFxFyONU
 github.com/morrocker/broadcast v0.0.0-20210331133415-1b5bd5cdca03/go.mod h1:Y8C0U3vC37uSI2DE0NfTfh1L24R3XvrYpeaddhfpVqc=
 github.com/morrocker/broadcast v0.0.0-20210331135116-1ac9e625145e h1:5k/3LwmWXI9Ovz/1e5mvOBgJmY1wfeEJsMRjbqSw4mE=
 github.com/morrocker/broadcast v0.0.0-20210331135116-1ac9e625145e/go.mod h1:Y8C0U3vC37uSI2DE0NfTfh1L24R3XvrYpeaddhfpVqc=
+github.com/morrocker/broadcast v0.0.0-20210331144645-71f2ee18ca39 h1:XSzmEW1M80vR76B9HTevqib6WDtwxUQAVavG7UwG11w=
+github.com/morrocker/broadcast v0.0.0-20210331144645-71f2ee18ca39/go.mod h1:Y8C0U3vC37uSI2DE0NfTfh1L24R3XvrYpeaddhfpVqc=
 github.com/morrocker/errors v0.0.0-20210323144609-d8629b6d420a h1:5eM0pV4lXVkRyiRUvR9Vw7eb2/dTCPYFylyoGsr4KrA=
 github.com/morrocker/errors v0.0.0-20210323144609-d8629b6d420a/go.mod h1:MaVAsvgPemd2kMO+0xRrt0yeflz4aaWX1it59qu3/gU=
 github.com/morrocker/log v0.0.0-20210322121956-1387843cccea h1:fLjwXu0lWACOUynv76uBAyS035ym1jTiMhhJGvoqZ+Y=

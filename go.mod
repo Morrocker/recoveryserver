@@ -13,7 +13,7 @@ require (
 	github.com/leodido/go-urn v1.2.1 // indirect
 	github.com/metal3d/go-slugify v0.0.0-20160607203414-7ac2014b2f23
 	github.com/morrocker/benchmark v0.0.0-20210326150553-f72660cf55b3 // indirect
-	github.com/morrocker/broadcast v0.0.0-20210331135116-1ac9e625145e
+	github.com/morrocker/broadcast v0.0.0-20210331144645-71f2ee18ca39
 	github.com/morrocker/errors v0.0.0-20210323144609-d8629b6d420a
 	github.com/morrocker/log v0.0.0-20210322121956-1387843cccea
 	github.com/morrocker/progress-tracker v0.0.0-20210325143638-ad470534c561
