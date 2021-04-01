@@ -77,16 +77,16 @@ func (r *Recovery) printFunction() {
 	if err != nil {
 		log.Errorln(errors.New(op, err))
 	}
-	bfc, bft, err := r.tracker.RawValues("blocksBuffer")
-	if err != nil {
-		log.Errorln(errors.New(op, err))
-	}
+	// bfc, bft, err := r.tracker.RawValues("blocksBuffer")
+	// if err != nil {
+	// 	log.Errorln(errors.New(op, err))
+	// }
 	if r.Step == Metafiles {
 		log.Notice("[ Building Filetree ] Files: %d | Blocks: %d | Size: %s",
 			ft, bt, st)
 	} else if r.Step == Files {
-		log.Notice("[ Downloading Files ] Files: %d / %d | Blocks: %d / %d | Size: %s / %s | Errors: %d [ %sps | %s ] BB: %d / %d",
-			fc, ft, bc, bt, sc, st, ec, rt, eta, bfc, bft)
+		log.Notice("[ Downloading Files ] Files: %d / %d | Blocks: %d / %d | Size: %s / %s | Errors: %d [ %sps | %s ]",
+			fc, ft, bc, bt, sc, st, ec, rt, eta /*, bfc, bft*/)
 	}
 }
 
