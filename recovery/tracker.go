@@ -6,6 +6,7 @@ import (
 	"github.com/morrocker/errors"
 	"github.com/morrocker/log"
 	tracker "github.com/morrocker/progress-tracker"
+	"github.com/morrocker/recoveryserver/config"
 	"github.com/morrocker/utils"
 )
 
@@ -17,9 +18,11 @@ func (r *Recovery) autoTrack() {
 			r.tracker.StartAutoPrint(tick)
 			if r.Step == Files {
 				r.tracker.StartAutoMeasure("size", tick)
+				r.tracker.StartAutoMeasure("completedSize", tick)
 			}
 		} else {
 			r.tracker.StopAutoMeasure("size")
+			r.tracker.StopAutoMeasure("completedSize")
 			r.tracker.StopAutoPrint()
 			if r.Status == Done || r.Status == Canceled {
 				break
@@ -37,10 +40,12 @@ func (r *Recovery) startTracker() error {
 	r.tracker.AddGauge("files", "Files", 0)
 	r.tracker.AddGauge("blocks", "Blocks", 0)
 	r.tracker.AddGauge("size", "Size", 0)
+	r.tracker.AddGauge("completedSize", "Size", 0)
 	r.tracker.AddGauge("errors", "Errors", 0)
-	r.tracker.AddGauge("blocksBuffer", "", 2000)
+	r.tracker.AddGauge("blocksBuffer", "", config.Data.BlocksBuffer)
 	r.tracker.AddGauge("metafiles", "Metafiles", 0)
 	r.tracker.InitSpdRate("size", 40)
+	r.tracker.InitSpdRate("completedSize", 40)
 	r.tracker.UnitsFunc("size", utils.B2H)
 	r.tracker.PrintFunc(r.printFunction)
 	return nil
@@ -68,7 +73,11 @@ func (r *Recovery) printFunction() {
 	if err != nil {
 		log.Errorln(errors.New(op, err))
 	}
-	eta, err := r.tracker.ETA("size")
+	eta, err := r.tracker.ETA("completedSize")
+	if err != nil {
+		log.Errorln(errors.New(op, err))
+	}
+	bfc, bft, err := r.tracker.RawValues("blocksBuffer")
 	if err != nil {
 		log.Errorln(errors.New(op, err))
 	}
@@ -76,8 +85,37 @@ func (r *Recovery) printFunction() {
 		log.Notice("[ Building Filetree ] Files: %d | Blocks: %d | Size: %s",
 			ft, bt, st)
 	} else if r.Step == Files {
-		log.Notice("[ Downloading Files ] Files: %d / %d | Blocks: %d / %d | Size: %s / %s | Errors: %d [ %sps | %s ]",
-			fc, ft, bc, bt, sc, st, ec, rt, eta)
-
+		log.Notice("[ Downloading Files ] Files: %d / %d | Blocks: %d / %d | Size: %s / %s | Errors: %d [ %sps | %s ] BB: %d / %d",
+			fc, ft, bc, bt, sc, st, ec, rt, eta, bfc, bft)
 	}
+}
+
+func (r *Recovery) updateTrackerTotals(size int64) {
+	blocks := int64(1)                // fileblock
+	blocks += (int64(size) / 1024000) // 1 MB blocks
+	remainder := size % 1024000
+	if remainder != 0 {
+		blocks++
+	}
+	r.tracker.ChangeTotal("size", size)
+	r.tracker.ChangeTotal("completedSize", size)
+	r.tracker.ChangeTotal("files", 1)
+	r.tracker.ChangeTotal("blocks", blocks)
+}
+
+func (r *Recovery) updateTrackerCurrent(size int64) {
+	blocks := int64(1)                // fileblock
+	blocks += (int64(size) / 1024000) // 1 MB blocks
+	remainder := size % 1024000
+	if remainder != 0 {
+		blocks++
+	}
+	r.tracker.ChangeCurr("size", size)
+	r.tracker.ChangeCurr("completedSize", size)
+	r.tracker.ChangeCurr("files", 1)
+	r.tracker.ChangeCurr("blocks", blocks)
+}
+
+func (r *Recovery) increaseErrors() {
+	r.tracker.IncreaseCurr("errors")
 }

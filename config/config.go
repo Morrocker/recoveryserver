@@ -16,6 +16,7 @@ type Config struct {
 	FileWorkers         int
 	BlockWorkers        int
 	MetafilesBuffSize   int
+	BlocksBuffer        int
 	Clouds              map[string]Cloud
 	SlackToken          string
 	SlackChannel        string

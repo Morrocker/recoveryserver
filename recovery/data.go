@@ -192,34 +192,6 @@ func (r *Recovery) SetPriority(n int) error {
 	return nil
 }
 
-func (r *Recovery) updateTrackerTotals(size int64) {
-	blocks := int64(1)                // fileblock
-	blocks += (int64(size) / 1024000) // 1 MB blocks
-	remainder := size % 1024000
-	if remainder != 0 {
-		blocks++
-	}
-	r.tracker.ChangeTotal("size", size)
-	r.tracker.ChangeTotal("files", 1)
-	r.tracker.ChangeTotal("blocks", blocks)
-}
-
-func (r *Recovery) updateTrackerCurrent(size int64) {
-	blocks := int64(1)                // fileblock
-	blocks += (int64(size) / 1024000) // 1 MB blocks
-	remainder := size % 1024000
-	if remainder != 0 {
-		blocks++
-	}
-	r.tracker.ChangeCurr("size", size)
-	r.tracker.ChangeCurr("files", 1)
-	r.tracker.ChangeCurr("blocks", blocks)
-}
-
-func (r *Recovery) increaseErrors() {
-	r.tracker.IncreaseCurr("errors")
-}
-
 func (r *Recovery) initLogger() {
 	// GIVEN CHANGES TO THE TRACKER & LOGGER MAYBE CHANGES ARE NEEDED
 	op := "recovery.initLogger()"
