@@ -109,7 +109,7 @@ func (r *Recovery) getChildren(id string) ([]*reposerver.Metafile, error) {
 		errOut = nil
 		var newQuery string
 		if r.Data.Deleted {
-			newQuery = fmt.Sprintf("%sapi/latestsChilden?id=%s&repo_id=%s", r.LoginServer, id, r.Data.Repository)
+			newQuery = fmt.Sprintf("%sapi/latestChildren?id=%s&repo_id=%s", r.LoginServer, id, r.Data.Repository)
 		} else {
 			var version int
 			if r.Data.Version == 0 {

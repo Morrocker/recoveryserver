@@ -40,13 +40,14 @@ func (r *Recovery) startTracker() error {
 	r.tracker.AddGauge("files", "Files", 0)
 	r.tracker.AddGauge("blocks", "Blocks", 0)
 	r.tracker.AddGauge("size", "Size", 0)
-	r.tracker.AddGauge("completedSize", "Size", 0)
+	r.tracker.AddGauge("completedSize", "CSize", 0)
 	r.tracker.AddGauge("errors", "Errors", 0)
 	r.tracker.AddGauge("blocksBuffer", "", config.Data.BlocksBuffer)
 	r.tracker.AddGauge("metafiles", "Metafiles", 0)
 	r.tracker.InitSpdRate("size", 40)
 	r.tracker.InitSpdRate("completedSize", 40)
 	r.tracker.UnitsFunc("size", utils.B2H)
+	r.tracker.UnitsFunc("completedSize", utils.B2H)
 	r.tracker.PrintFunc(r.printFunction)
 	return nil
 }
@@ -65,6 +66,10 @@ func (r *Recovery) printFunction() {
 	if err != nil {
 		log.Errorln(errors.New(op, err))
 	}
+	// csc, cst, err := r.tracker.Values("completedSize")
+	// if err != nil {
+	// 	log.Errorln(errors.New(op, err))
+	// }
 	ec, _, err := r.tracker.RawValues("errors")
 	if err != nil {
 		log.Errorln(errors.New(op, err))

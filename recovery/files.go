@@ -8,7 +8,6 @@ import (
 	"time"
 
 	"github.com/clonercl/reposerver"
-	"github.com/morrocker/broadcast"
 	"github.com/morrocker/errors"
 	"github.com/morrocker/log"
 	"github.com/morrocker/recoveryserver/config"
@@ -40,12 +39,11 @@ func (r *Recovery) getFiles(mt *MetaTree) error {
 	bc := make(chan bData)
 	wg := sync.WaitGroup{}
 	wg2 := sync.WaitGroup{}
-	broadcaster := broadcast.New()
 
 	r.log.Notice("Starting %d File workers", config.Data.FileWorkers)
 	for i := 0; i < config.Data.FileWorkers; i++ {
 		wg.Add(1)
-		go r.fileWorker(fc, &wg, broadcaster, bc)
+		go r.fileWorker(fc, &wg, bc)
 	}
 
 	r.log.Notice("Starting %d Block workers", config.Data.FileWorkers)
@@ -108,7 +106,7 @@ func (f *fileQueue) addFile(mt *MetaTree) {
 	f.ToDo = append(f.ToDo, mt)
 }
 
-func (r *Recovery) fileWorker(fc chan *MetaTree, wg *sync.WaitGroup, b *broadcast.Broadcaster, bc chan bData) {
+func (r *Recovery) fileWorker(fc chan *MetaTree, wg *sync.WaitGroup, bc chan bData) {
 	op := "recovery.fileWorker()"
 Outer:
 	for mt := range fc {
@@ -143,6 +141,7 @@ Outer:
 		if err != nil {
 			r.increaseErrors()
 			log.Errorln(errors.New(op, fmt.Sprintf("error could not create file '%s' : %v\n", path, err)))
+			r.tracker.ChangeCurr("completedSize", mt.mf.Size)
 			continue
 		}
 
@@ -171,6 +170,7 @@ Outer:
 				if _, err := f.Write(content); err != nil {
 					r.increaseErrors()
 					r.log.Errorln(errors.New(op, fmt.Sprintf("error could not write content for block '%s' for file '%s': %v\n", blocks[x], path, err)))
+					r.tracker.ChangeCurr("completedSize", len(content))
 					continue Outer
 				}
 				r.tracker.ChangeCurr("completedSize", len(content))
@@ -186,9 +186,10 @@ Outer:
 					if _, err := f.Write(d.content); err != nil {
 						r.increaseErrors()
 						r.log.Errorln(errors.New(op, fmt.Sprintf("error could not write content for block '%s' for file '%s': %v\n", blocks[x], path[len(path)-20:], err)))
+						r.tracker.ChangeCurr("completedSize", len(d.content))
 						continue Outer
 					}
-					r.tracker.ChangeCurr("completedSize", len(content))
+					r.tracker.ChangeCurr("completedSize", len(d.content))
 					r.tracker.ChangeCurr("size", len(d.content))
 					r.tracker.IncreaseCurr("blocks")
 					break
@@ -216,7 +217,6 @@ func (r *Recovery) blockWorker(dc chan bData, wg2 *sync.WaitGroup) {
 			data.ret <- returnBlock{data.id, zeroedBuffer}
 			continue
 		}
-		// log.Info("Returning Block %s", data.hash)
 		data.ret <- returnBlock{data.id, b}
 	}
 	wg2.Done()
@@ -234,82 +234,3 @@ func (r *Recovery) checkBuffer() {
 		time.Sleep(time.Millisecond)
 	}
 }
-
-// func (r *Recovery) recoverFile(p, hash string, size uint64, b *broadcast.Broadcaster, bc chan bData) error {
-// 	op := "recovery.recoverFile()"
-// 	if r.flowGate() {
-// 		return nil
-// 	}
-// 	if fi, err := os.Stat(p); err == nil {
-// 		if fi.Size() == int64(size) {
-// 			r.updateTrackerCurrent(int64(size))
-// 			r.log.NoticeV("skipping file '%s'", p)
-// 			return nil
-// 		}
-// 	}
-
-// 	r.log.Info("Recovering file %s [%s]", p, utils.B2H(int64(size)))
-// 	blist, err := r.RBS.GetBlocksList(hash, r.Data.User)
-// 	if err != nil {
-// 		r.increaseErrors()
-// 		r.log.ErrorlnV(errors.New(op, fmt.Sprintf("error could not create file '%s' because fileblock is unavailable", p)))
-// 		return errors.New(op, err)
-// 	}
-// 	r.tracker.IncreaseCurr("blocks")
-
-// 	r.fileWriter(p, blist.Blocks, b, bc)
-
-// 	return nil
-// }
-
-// func (r *Recovery) fileWriter(path string, blocks []string, b *broadcast.Broadcaster, bc chan bData) {
-// 	op := "recovery.fileWriter()"
-// 	f, err := os.Create(norm.NFC.String(path))
-// 	if err != nil {
-// 		r.increaseErrors()
-// 		log.Errorln(errors.New(op, fmt.Sprintf("error could not create file '%s' : %v\n", path[len(path)-20:], err)))
-// 	}
-// 	defer f.Close()
-
-// 	ret := make(chan returnBlock)
-// 	blocksBuffer := make(map[int][]byte)
-// 	go func() {
-// 		for i, hash := range blocks {
-// 			// log.Info("Sending hash #%d for file %s", i, path[len(path)-20:])
-// 			bc <- bData{id: i, hash: hash, ret: ret}
-// 		}
-// 	}()
-
-// 	for x := 0; x < len(blocks); x++ {
-// 		content, ok := blocksBuffer[x]
-// 		if ok {
-// 			// log.Info("Block #%d is being written from buffer for %s", x, path[len(path)-20:])
-// 			if _, err := f.Write(content); err != nil {
-// 				r.increaseErrors()
-// 				r.log.Errorln(errors.New(op, fmt.Sprintf("error could not write content for block '%s' for file '%s': %v\n", blocks[x], path[len(path)-20:], err)))
-// 			}
-// 			r.tracker.ChangeCurr("size", len(content))
-// 			r.tracker.IncreaseCurr("blocks")
-// 			r.tracker.ChangeCurr("blocksBuffer", -1)
-// 			delete(blocksBuffer, x)
-// 			continue
-// 		}
-// 		for d := range ret {
-// 			if d.id == x {
-// 				// log.Info("Block #%d is being written directly for %s", x, path[len(path)-20:])
-// 				if _, err := f.Write(d.content); err != nil {
-// 					r.increaseErrors()
-// 					r.log.Errorln(errors.New(op, fmt.Sprintf("error could not write content for block '%s' for file '%s': %v\n", blocks[x], path[len(path)-20:], err)))
-// 				}
-// 				r.tracker.ChangeCurr("size", len(d.content))
-// 				r.tracker.IncreaseCurr("blocks")
-// 				break
-// 			}
-// 			r.checkBuffer()
-// 			blocksBuffer[d.id] = d.content
-// 			r.tracker.IncreaseCurr("blocksBuffer")
-// 		}
-// 	}
-// 	r.tracker.IncreaseCurr("files")
-// 	// log.Info("Finishing file %s", path[len(path)-20:])
-// }
