@@ -113,7 +113,7 @@ func (r *Recovery) doDone(finish time.Duration) error {
 }
 
 // Done sets a recovery status as Done
-func (r *Recovery) PreDone() {
+func (r *Recovery) preDone() {
 	_, st, _ := r.tracker.RawValues("size")
 	_, ft, _ := r.tracker.RawValues("files")
 	r.Data.TotalSize = st
@@ -193,7 +193,6 @@ func (r *Recovery) SetPriority(n int) error {
 }
 
 func (r *Recovery) initLogger() {
-	// GIVEN CHANGES TO THE TRACKER & LOGGER MAYBE CHANGES ARE NEEDED
 	op := "recovery.initLogger()"
 	Log := log.New()
 	now := time.Now().Format("2006-01-02T15h04m")

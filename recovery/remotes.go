@@ -56,17 +56,12 @@ func (c *RBS) GetBlocksList(hash, user string) (*BlocksList, error) {
 }
 
 // GetBlocks
-func (c *RBS) GetBlock(hash, user string) ([]byte, error) {
+func (c *RBS) GetBlock(hash string, user string) ([]byte, error) {
 	op := "remotes.GetBlock()"
 
 	for retries := 0; retries < 2; retries++ {
 		if c.Legacy {
-			for _, bs := range c.LegacyStores {
-				content, err := bs.Retrieve(hash)
-				if err == nil {
-					return content, nil
-				}
-			}
+			return nil, errors.New(op, "Legacy store cannot use multiple blocks function")
 		} else {
 			for _, bs := range c.CurrentStores {
 				content, err := bs.Retrieve(hash, user)
@@ -78,4 +73,43 @@ func (c *RBS) GetBlock(hash, user string) ([]byte, error) {
 	}
 
 	return nil, errors.New(op, fmt.Sprintf("block %q is ungettable", hash))
+}
+
+// GetBlockslist
+func (c *RBS) GetBlocksLists(hashs []string, user string) ([]*BlocksList, error) {
+	op := "remotes.GetBlockList()"
+	blocks, err := c.GetBlocks(hashs, user)
+	if err != nil {
+		return nil, errors.Extend(op, err)
+	}
+
+	ret := make([]*BlocksList, len(blocks))
+	for i, block := range blocks {
+		blks := &BlocksList{}
+		if err := json.Unmarshal(block, blks); err != nil {
+			return nil, errors.Extend(op, err)
+		}
+		ret[i] = blks
+	}
+	return ret, nil
+}
+
+// GetBlocks
+func (c *RBS) GetBlocks(hashs []string, user string) ([][]byte, error) {
+	op := "remotes.GetBlock()"
+
+	for retries := 0; retries < 2; retries++ {
+		if c.Legacy {
+			return nil, errors.New(op, "Legacy doesn't support multiblock download")
+		} else {
+			for _, bs := range c.CurrentStores {
+				content, err := bs.RetrieveMultiple(hashs, user)
+				if err == nil {
+					return content, nil
+				}
+			}
+		}
+	}
+
+	return nil, errors.New(op, fmt.Sprintf("blocklist %v is ungettable", hashs))
 }

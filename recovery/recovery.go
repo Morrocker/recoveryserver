@@ -84,5 +84,5 @@ func (r *Recovery) PreCalculate() {
 		log.Infoln("Precalculations cancelled")
 		return
 	}
-	r.PreDone()
+	r.preDone()
 }

@@ -3,7 +3,7 @@ module github.com/morrocker/recoveryserver
 go 1.16
 
 require (
-	github.com/clonercl/blockserver v0.1.9-0.20210223125923-da5a759ce04e
+	github.com/clonercl/blockserver v0.1.9-0.20210409144532-74c4adca2f63
 	github.com/clonercl/kaon v0.1.8
 	github.com/clonercl/reposerver v0.0.0-20190806151941-b7d532a8c047
 	github.com/gin-gonic/gin v1.6.3

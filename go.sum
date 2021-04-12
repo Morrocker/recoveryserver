@@ -18,6 +18,8 @@ github.com/clonercl/blocks v0.0.0-20180829135305-51d9acb847f9/go.mod h1:r4yMM9q0
 github.com/clonercl/blocks v0.0.0-20190109145120-c3ef534e4859/go.mod h1:r4yMM9q0cvsjJYXkhqI35yTmosvhrawJHdt1k8DWlbE=
 github.com/clonercl/blockserver v0.1.9-0.20210223125923-da5a759ce04e h1:NgHIvFbtcm3kcr04WejOw3KLQYk0A4e1bGPcKp3Ex4A=
 github.com/clonercl/blockserver v0.1.9-0.20210223125923-da5a759ce04e/go.mod h1:Kp3+ri7tsjjxDtn5gb23yNC4GMNHPJVORmjXP7xrqhM=
+github.com/clonercl/blockserver v0.1.9-0.20210409144532-74c4adca2f63 h1:wYJOzULyQMaE8bBs+STZ/My6JB1XpWsIv3s+t8WkDCc=
+github.com/clonercl/blockserver v0.1.9-0.20210409144532-74c4adca2f63/go.mod h1:Kp3+ri7tsjjxDtn5gb23yNC4GMNHPJVORmjXP7xrqhM=
 github.com/clonercl/cloner v0.0.0-20180824092011-d472f5342fea/go.mod h1:cHmaA0Y7pV8ogXWmScIkH1YkX28VHlEoW9XrhAKASX8=
 github.com/clonercl/cloner v0.0.0-20180828202840-e523020a7168/go.mod h1:vpcyvMCQE04IIBGsM1bxuV11ZZYHdgJUtTIIa1/qVn0=
 github.com/clonercl/cloner v0.0.0-20190219232746-a08c27a11d1a/go.mod h1:FuKIOaoELd4wpifjjw1uZXzFO47A8trSk3HGSd5URuE=
