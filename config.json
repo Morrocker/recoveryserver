@@ -8,6 +8,7 @@
             "FilesAddress":"https://zifre.cloner.cl/",
             "Stores":[
                 {
+                    "Main": true,
                     "Address":"https://alpha.cloner.cl:4000",
                     "Magic":"youarethebest"
                 },

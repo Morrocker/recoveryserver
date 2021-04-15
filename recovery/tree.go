@@ -16,10 +16,11 @@ import (
 
 // MetaTree stores the information about a single node on a metafile tree. It indicates its own metafile data and all children it contains
 type MetaTree struct {
-	mf       *reposerver.Metafile
-	children []*MetaTree
-	path     string
-	lock     sync.Mutex
+	mf         *reposerver.Metafile
+	children   []*MetaTree
+	path       string
+	blockslist *BlocksList
+	lock       sync.Mutex
 }
 
 // NewMetaTree asfas

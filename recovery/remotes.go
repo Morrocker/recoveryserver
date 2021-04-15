@@ -26,7 +26,7 @@ type BlocksList struct {
 
 // NewRBS Returns a new cloud object
 func NewRBS(c config.Cloud) *RBS {
-	newRemote := &RBS{}
+	newRemote := &RBS{CurrentStores: make([]blocks.MasterStore, 2)}
 	newRemote.Legacy = c.Legacy
 	if newRemote.Legacy {
 		for _, bm := range c.Stores {
@@ -34,7 +34,11 @@ func NewRBS(c config.Cloud) *RBS {
 		}
 	} else {
 		for _, bm := range c.Stores {
-			newRemote.CurrentStores = append(newRemote.CurrentStores, blocksremote.New(bm.Address, bm.Magic))
+			if bm.Main {
+				newRemote.CurrentStores[0] = blocksremote.New(bm.Address, bm.Magic)
+			} else {
+				newRemote.CurrentStores[1] = blocksremote.New(bm.Address, bm.Magic)
+			}
 		}
 	}
 	return newRemote
@@ -78,4 +82,48 @@ func (c *RBS) GetBlock(hash, user string) ([]byte, error) {
 	}
 
 	return nil, errors.New(op, fmt.Sprintf("block %q is ungettable", hash))
+}
+
+// GetBlocks
+func (c *RBS) GetBlocks(hashs []string, user string) (contents map[string][]byte, err error) {
+	op := "remotes.GetBlock()"
+	contents = make(map[string][]byte)
+
+	bArray := [][]byte{}
+	for retries := 0; retries < 2; retries++ {
+		if c.Legacy {
+			return nil, errors.New(op, "Legacy Store does not support multiblock feature")
+		} else {
+			bArray, err = c.CurrentStores[0].RetrieveMultiple(hashs, user)
+			if err == nil {
+				break
+			}
+		}
+		if retries == 2 {
+			return nil, errors.New(op, fmt.Sprintf("failed to fetch blocks array: \n%v", hashs))
+		}
+	}
+
+	issues := []string{}
+	iArray := [][]byte{}
+	for i, content := range bArray {
+		if content == nil {
+			issues = append(issues, hashs[i])
+			continue
+		}
+		contents[hashs[i]] = content
+	}
+
+	for retries := 0; retries < 2; retries++ {
+		iArray, err = c.CurrentStores[1].RetrieveMultiple(issues, user)
+		if err == nil {
+			break
+		}
+	}
+
+	for i, content := range iArray {
+		contents[issues[i]] = content
+	}
+
+	return
 }

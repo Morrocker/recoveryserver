@@ -1,6 +1,7 @@
 package recovery
 
 import (
+	"encoding/json"
 	"fmt"
 	"os"
 	"path"
@@ -16,7 +17,7 @@ import (
 )
 
 type fileQueue struct {
-	ToDo []*MetaTree
+	ToDo map[string]*MetaTree
 	lock sync.Mutex
 }
 
@@ -62,18 +63,32 @@ func (r *Recovery) getFiles(mt *MetaTree) error {
 
 	time.Sleep(5 * time.Second)
 
-	for _, tree := range fq.ToDo {
-		if r.flowGate() {
-			break
-		}
-		fc <- tree
-	}
+	r.preProcessFQ(&fq)
 
-	time.Sleep(time.Second)
-	close(fc)
-	wg.Wait()
-	fq = fileQueue{}
-	r.log.Noticeln("Files retrieval completed")
+	// bigFiles, smallFiles := r.sortFiles(&fq)
+
+	// for _, mt := range smallFiles {
+	// 	smallChecker()
+
+	// 	go downloadFiles()
+	// }
+
+	// for _, mt := range bigFiles {
+	// 	bfc <- mt
+	// }
+
+	// for _, tree := range fq.ToDo {
+	// 	if r.flowGate() {
+	// 		break
+	// 	}
+	// 	fc <- tree
+	// }
+
+	// time.Sleep(time.Second)
+	// close(fc)
+	// wg.Wait()
+	// fq = fileQueue{}
+	// r.log.Noticeln("Files retrieval completed")
 	return nil
 }
 
@@ -103,7 +118,7 @@ func (r *Recovery) createFileQueue(filepath string, mt *MetaTree) {
 func (f *fileQueue) addFile(mt *MetaTree) {
 	f.lock.Lock()
 	defer f.lock.Unlock()
-	f.ToDo = append(f.ToDo, mt)
+	f.ToDo[mt.mf.Hash] = mt
 }
 
 func (r *Recovery) fileWorker(fc chan *MetaTree, wg *sync.WaitGroup, bc chan bData) {
@@ -233,4 +248,53 @@ func (r *Recovery) checkBuffer() {
 		}
 		time.Sleep(time.Millisecond)
 	}
+}
+
+func (r *Recovery) preProcessFQ(fq *fileQueue) error {
+	subHl := []string{}
+	var size int64
+	for hash, mt := range fq.ToDo {
+		if size+mt.mf.Size > 10737418240 && size != 0 { // 10000 BLOCKS
+			r.getBlockLists(subHl, fq)
+			size = 0
+			subHl = []string{}
+		}
+		subHl = append(subHl, hash)
+		size += mt.mf.Size
+	}
+
+	if len(subHl) != 0 {
+		r.getBlockLists(subHl, fq)
+	}
+	return nil
+}
+
+func (r *Recovery) getBlockLists(hl []string, fq *fileQueue) error {
+	contents, err := r.RBS.GetBlocks(hl, r.Data.User)
+	if err != nil {
+		return errors.Extend("recovery.getBlockList()", err)
+	}
+	for hash, content := range contents {
+		if content == nil {
+			delete(fq.ToDo, hash)
+			continue
+		}
+		bl := &BlocksList{}
+		if err := json.Unmarshal(content, bl); err != nil {
+			log.Errorln(errors.Extend("recoveries.getBlockLists()", err))
+		}
+		fq.ToDo[hash].blockslist = bl
+	}
+	return nil
+}
+
+func (r *Recovery) sortFiles(fq *fileQueue) (bigFiles []*MetaTree, smallFiles []*MetaTree) {
+	for _, mt := range fq.ToDo {
+		if mt.mf.Size > 104857600 {
+			bigFiles = append(bigFiles, mt)
+		} else {
+			smallFiles = append(smallFiles, mt)
+		}
+	}
+	return
 }

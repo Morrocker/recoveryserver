@@ -32,6 +32,7 @@ type Cloud struct {
 
 //BlocksMaster stores the address and magic to use for each store
 type BlocksMaster struct {
+	Main    bool
 	Magic   string
 	Address string
 }
