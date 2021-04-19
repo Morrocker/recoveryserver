@@ -47,9 +47,9 @@ func newMetaTree(mf *reposerver.Metafile) *MetaTree {
 func GetRecoveryTree(data Data, t Throttling, tr *tracker.SuperTracker) (*MetaTree, error) {
 	// r.log.Task("Starting metafile tree retrieval")
 
-	if len(data.exclusions) > 0 {
+	if len(data.Exclusions) > 0 {
 		// r.log.InfoV("List of metafiles (and their children) that will be excluded")
-		for hash := range data.exclusions {
+		for hash := range data.Exclusions {
 			log.Infoln("ID: " + hash) // Temporary
 		}
 	}
@@ -114,16 +114,16 @@ func getChildren(id string, data Data, tr *tracker.SuperTracker) ([]*MetaTree, e
 	for retries := 0; retries < 5; retries++ {
 		errOut = nil
 		var newQuery string
-		if data.deleted {
-			newQuery = fmt.Sprintf("%sapi/latestChildren?id=%s&repo_id=%s", data.server, id, data.repository)
+		if data.Deleted {
+			newQuery = fmt.Sprintf("%sapi/latestChildren?id=%s&repo_id=%s", data.Server, id, data.Repository)
 		} else {
 			var version int
-			if data.version == 0 {
+			if data.Version == 0 {
 				version = 999999999999
 			} else {
-				version = data.version
+				version = data.Version
 			}
-			newQuery = fmt.Sprintf("%sapi/children?id=%s&version=%d&repo_id=%s", data.server, id, version, data.repository)
+			newQuery = fmt.Sprintf("%sapi/children?id=%s&version=%d&repo_id=%s", data.Server, id, version, data.Repository)
 		}
 		req, err := http.NewRequest("GET", newQuery, nil)
 		if err != nil {
@@ -131,7 +131,7 @@ func getChildren(id string, data Data, tr *tracker.SuperTracker) ([]*MetaTree, e
 			continue
 		}
 
-		req.Header.Add("Cloner_key", data.clonerKey)
+		req.Header.Add("Cloner_key", data.ClonerKey)
 		resp, err := http.DefaultClient.Do(req)
 		if err != nil {
 			errOut = errors.Extend(op, err)
@@ -187,7 +187,7 @@ func getRootMetaTree(data Data) (mt *MetaTree, errOut error) {
 		errOut = nil
 		req, err := http.NewRequest(
 			"GET",
-			fmt.Sprintf("%sapi/metafile?id=%s&repo_id=%s", data.server, data.rootId, data.repository),
+			fmt.Sprintf("%sapi/metafile?id=%s&repo_id=%s", data.Server, data.RootId, data.Repository),
 			nil,
 		)
 		if err != nil {
@@ -195,7 +195,7 @@ func getRootMetaTree(data Data) (mt *MetaTree, errOut error) {
 			continue
 		}
 
-		req.Header.Add("Cloner_key", data.clonerKey)
+		req.Header.Add("Cloner_key", data.ClonerKey)
 		resp, err := http.DefaultClient.Do(req)
 		if err != nil {
 			errOut = errors.Extend(op, err)
