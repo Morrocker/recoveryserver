@@ -9,17 +9,28 @@ import (
 
 	"github.com/clonercl/reposerver"
 	"github.com/morrocker/errors"
+	"github.com/morrocker/log"
+	tracker "github.com/morrocker/progress-tracker"
+	"github.com/morrocker/recoveryserver/recovery2/remote"
 	"github.com/morrocker/recoveryserver/recovery2/tree"
 	"golang.org/x/text/unicode/norm"
 )
 
-type FilesData struct {
-	OutputPath string
+type Data struct {
+	User    string
+	Legacy  bool
+	Workers int
 }
 
-type fileQueue struct {
-	ToDo map[string]*tree.MetaTree
+type filesList struct {
+	ToDo map[string]*fileData
 	lock sync.Mutex
+}
+
+type fileData struct {
+	Mt         *tree.MetaTree
+	OutputPath string
+	blocksList []string
 }
 
 type bData struct {
@@ -33,94 +44,148 @@ type returnBlock struct {
 	content []byte
 }
 
-var fq fileQueue = fileQueue{}
+var zeroedBuffer = make([]byte, 1024*1000)
 
-func getFiles(mt *tree.MetaTree, data FilesData) error {
+func getFiles(fd *fileData, data Data, rbs remote.RBS, tr *tracker.SuperTracker) error {
 	op := "recovery.getFiles()"
-	// fc := make(chan *tree.MetaTree)
-	// bc := make(chan bData)
-	// wg := sync.WaitGroup{}
-	// wg2 := sync.WaitGroup{}
 
-	// r.log.Notice("Starting %d File workers", config.Data.FileWorkers)
-	// for i := 0; i < config.Data.FileWorkers; i++ {
-	// 	wg.Add(1)
-	// 	go r.fileWorker(fc, &wg, bc)
-	// }
+	fl := &filesList{}
 
-	// r.log.Notice("Starting %d Block workers", config.Data.FileWorkers)
-	// for i := 0; i < config.Data.BlockWorkers; i++ {
-	// 	wg2.Add(1)
-	// 	go r.blockWorker(bc, &wg)
-	// }
+	sfc, sfWg := startSmallFilesWorkers(data, rbs)
+	bfc, bfWg := startBigFilesWorkers(data, rbs)
 
-	// dst := path.Join(r.OutputTo, r.Data.Org, r.Data.User, r.Data.Machine, r.Data.Disk)
-	// r.log.Notice("Creating root directory " + data.OutputPath)
-	if err := os.MkdirAll(data.OutputPath, 0700); err != nil {
+	if err := os.MkdirAll(fd.OutputPath, 0700); err != nil {
 		return errors.New(op, errors.Extend(op, err))
 	}
-	// log.Info("Writting files to " + data.OutputPath)
-	createFileQueue(data.OutputPath, mt)
+
+	fillFilesList(fd, fl)
+
+	fl.ToDo = filterDoneFiles(fl.ToDo)
 
 	time.Sleep(5 * time.Second)
 
-	// preProcessFQ(&fq)
+	preProcessFQ(fl, data, rbs)
 
-	// bigFiles, smallFiles := r.sortFiles(&fq)
+	bigFiles, smallFiles := sortFiles(fl)
 
-	// for _, mt := range smallFiles {
-	// 	smallChecker()
+	var size int64
+	var subFl []*fileData
+	for _, fd := range smallFiles {
+		fileSize := fd.Mt.Mf.Size
+		if size+fileSize > 104857600 && size != 0 { // 10000 BLOCKS
+			sfc <- subFl
+			size = 0
+			subFl = []*fileData{}
+		}
+		subFl = append(subFl, fd)
+		size += fileSize
+	}
+	if len(subFl) > 0 {
+		sfc <- subFl
+	}
+	time.Sleep(time.Second)
+	close(sfc)
+	sfWg.Wait()
 
-	// 	go downloadFiles()
-	// }
+	for _, fd := range bigFiles {
+		bfc <- fd
+	}
+	time.Sleep(time.Second)
+	close(bfc)
+	bfWg.Wait()
 
-	// for _, mt := range bigFiles {
-	// 	bfc <- mt
-	// }
-
-	// for _, tree := range fq.ToDo {
-	// 	if r.flowGate() {
-	// 		break
-	// 	}
-	// 	fc <- tree
-	// }
-
-	// time.Sleep(time.Second)
-	// close(fc)
-	// wg.Wait()
-	// fq = fileQueue{}
-	// r.log.Noticeln("Files retrieval completed")
+	log.Noticeln("Files retrieval completed")
 	return nil
 }
 
-func createFileQueue(filepath string, mt *tree.MetaTree) {
-	f := mt.mf
-	p := path.Join(filepath, f.Name)
-	if f.Type == reposerver.FolderType {
-		if f.Parent == "" {
-			p = filepath
+func fillFilesList(fd *fileData, fl *filesList) {
+	mf := fd.Mt.Mf
+	p := path.Join(fd.OutputPath, mf.Name)
+	if mf.Type == reposerver.FolderType {
+		if mf.Parent == "" {
+			p = fd.OutputPath
 		} else {
 			if err := os.MkdirAll(norm.NFC.String(p), 0700); err != nil {
 				panic(fmt.Sprintf("could not create path '%s': %v\n", p, err))
 			}
 		}
-		for _, child := range mt.children {
-			if r.flowGate() {
-				break
+		for _, child := range fd.Mt.Children {
+			// if r.flowGate() {
+			// 	break
+			// }
+			newFD := &fileData{
+				Mt:         child,
+				OutputPath: p,
 			}
-			r.createFileQueue(p, child)
+			fillFilesList(newFD, fl)
 		}
 		return
 	}
-	mt.path = p
-	fq.addFile(mt)
+	fl.ToDo[mf.Hash] = fd
 }
 
-// func (f *fileQueue) addFile(mt *MetaTree) {
-// 	f.lock.Lock()
-// 	defer f.lock.Unlock()
-// 	f.ToDo[mt.mf.Hash] = mt
-// }
+func preProcessFQ(fl *filesList, data Data, rbs remote.RBS) error {
+	subHl := []string{}
+	var size int64
+	for hash, fd := range fl.ToDo {
+		fileSize := fd.Mt.Mf.Size
+		if size+fileSize > 10737418240 && size != 0 { // 10000 BLOCKS
+			getBlockLists(subHl, fl, data, rbs)
+			size = 0
+			subHl = []string{}
+		}
+		subHl = append(subHl, hash)
+		size += fileSize
+	}
+
+	if len(subHl) != 0 {
+		getBlockLists(subHl, fl, data, rbs)
+	}
+	return nil
+}
+
+func getBlockLists(hl []string, fl *filesList, data Data, rbs remote.RBS) error {
+	contents, err := rbs.GetBlocksLists(hl, data.User)
+	if err != nil {
+		return errors.Extend("recovery.getBlockList()", err)
+	}
+	for i, content := range contents {
+		if content == nil {
+			delete(fl.ToDo, hl[i])
+			continue
+		}
+		fl.ToDo[hl[i]].blocksList = content
+	}
+	return nil
+}
+
+func sortFiles(fl *filesList) (bigFiles []*fileData, smallFiles []*fileData) {
+	for _, fd := range fl.ToDo {
+		if fd.Mt.Mf.Size > 104857600 {
+			bigFiles = append(bigFiles, fd)
+		} else {
+			smallFiles = append(smallFiles, fd)
+		}
+	}
+	return
+}
+
+func filterDoneFiles(fda map[string]*fileData) map[string]*fileData {
+	subFDA := make(map[string]*fileData)
+	for key, fd := range fda {
+		size := fd.Mt.Mf.Size
+		path := fd.OutputPath
+		if fi, err := os.Stat(path); err == nil {
+			if fi.Size() == int64(size) {
+				// r.updateTrackerCurrent(int64(size))
+				log.NoticeV("skipping file '%s'", path) // Temporal
+				continue
+			}
+		}
+		subFDA[key] = fd
+	}
+	return subFDA
+}
 
 // func (r *Recovery) fileWorker(fc chan *MetaTree, wg *sync.WaitGroup, bc chan bData) {
 // 	op := "recovery.fileWorker()"
@@ -249,53 +314,4 @@ func createFileQueue(filepath string, mt *tree.MetaTree) {
 // 		}
 // 		time.Sleep(time.Millisecond)
 // 	}
-// }
-
-// func (r *Recovery) preProcessFQ(fq *fileQueue) error {
-// 	subHl := []string{}
-// 	var size int64
-// 	for hash, mt := range fq.ToDo {
-// 		if size+mt.mf.Size > 10737418240 && size != 0 { // 10000 BLOCKS
-// 			r.getBlockLists(subHl, fq)
-// 			size = 0
-// 			subHl = []string{}
-// 		}
-// 		subHl = append(subHl, hash)
-// 		size += mt.mf.Size
-// 	}
-
-// 	if len(subHl) != 0 {
-// 		r.getBlockLists(subHl, fq)
-// 	}
-// 	return nil
-// }
-
-// func (r *Recovery) getBlockLists(hl []string, fq *fileQueue) error {
-// 	contents, err := r.RBS.GetBlocks(hl, r.Data.User)
-// 	if err != nil {
-// 		return errors.Extend("recovery.getBlockList()", err)
-// 	}
-// 	for hash, content := range contents {
-// 		if content == nil {
-// 			delete(fq.ToDo, hash)
-// 			continue
-// 		}
-// 		bl := &BlocksList{}
-// 		if err := json.Unmarshal(content, bl); err != nil {
-// 			log.Errorln(errors.Extend("recoveries.getBlockLists()", err))
-// 		}
-// 		fq.ToDo[hash].blockslist = bl
-// 	}
-// 	return nil
-// }
-
-// func (r *Recovery) sortFiles(fq *fileQueue) (bigFiles []*MetaTree, smallFiles []*MetaTree) {
-// 	for _, mt := range fq.ToDo {
-// 		if mt.mf.Size > 104857600 {
-// 			bigFiles = append(bigFiles, mt)
-// 		} else {
-// 			smallFiles = append(smallFiles, mt)
-// 		}
-// 	}
-// 	return
 // }
