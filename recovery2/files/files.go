@@ -46,15 +46,19 @@ type returnBlock struct {
 
 var zeroedBuffer = make([]byte, 1024*1000)
 
-func getFiles(fd *fileData, data Data, rbs remote.RBS, tr *tracker.SuperTracker) error {
+func getFiles(mt *tree.MetaTree, OutputPath string, data Data, rbs remote.RBS, tr *tracker.SuperTracker) error {
 	op := "recovery.getFiles()"
 
+	fd := &fileData{
+		Mt:         mt,
+		OutputPath: path.Join(OutputPath, mt.Mf.Name),
+	}
 	fl := &filesList{}
 
 	sfc, sfWg := startSmallFilesWorkers(data, rbs)
 	bfc, bfWg := startBigFilesWorkers(data, rbs)
 
-	if err := os.MkdirAll(fd.OutputPath, 0700); err != nil {
+	if err := os.MkdirAll(OutputPath, 0700); err != nil {
 		return errors.New(op, errors.Extend(op, err))
 	}
 
