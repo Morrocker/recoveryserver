@@ -15,13 +15,13 @@ import (
 )
 
 type Data struct {
-	rootId     string
-	repository string
-	server     string
-	clonerKey  string
-	version    int
-	deleted    bool
-	exclusions map[string]bool
+	RootId     string
+	Repository string
+	Server     string
+	ClonerKey  string
+	Version    int
+	Deleted    bool
+	Exclusions map[string]bool
 }
 
 type Throttling struct {
