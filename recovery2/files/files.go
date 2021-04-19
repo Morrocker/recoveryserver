@@ -46,7 +46,7 @@ type returnBlock struct {
 
 var zeroedBuffer = make([]byte, 1024*1000)
 
-func getFiles(mt *tree.MetaTree, OutputPath string, data Data, rbs remote.RBS, tr *tracker.SuperTracker) error {
+func GetFiles(mt *tree.MetaTree, OutputPath string, data Data, rbs remote.RBS, tr *tracker.SuperTracker) error {
 	op := "recovery.getFiles()"
 
 	fd := &fileData{
