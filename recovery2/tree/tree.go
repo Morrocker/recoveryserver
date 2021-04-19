@@ -31,15 +31,15 @@ type Throttling struct {
 
 // MetaTree stores the information about a single node on a metafile tree. It indicates its own metafile data and all children it contains
 type MetaTree struct {
-	mf       *reposerver.Metafile
-	children []*MetaTree
+	Mf       *reposerver.Metafile
+	Children []*MetaTree
 	// path     string
 	// blockslist *BlocksList
 }
 
 // NewMetaTree asfas
 func newMetaTree(mf *reposerver.Metafile) *MetaTree {
-	tree := &MetaTree{mf: mf}
+	tree := &MetaTree{Mf: mf}
 	return tree
 }
 
@@ -80,8 +80,8 @@ func metaTreeWorker(data TreeData, tc chan *MetaTree, wg *sync.WaitGroup, tr *tr
 		// 	break
 		// }
 
-		if mt.mf.Type == reposerver.FolderType {
-			childrenTrees, err := getChildren(mt.mf.ID, data, tr)
+		if mt.Mf.Type == reposerver.FolderType {
+			childrenTrees, err := getChildren(mt.Mf.ID, data, tr)
 			if err != nil {
 				// r.log.Error("Couldnt retrieve metafile: %s", errors.Extend("recoveries.getChildMetaTree()", err))
 				// r.tracker.IncreaseCurr("metafiles")
@@ -92,7 +92,7 @@ func metaTreeWorker(data TreeData, tc chan *MetaTree, wg *sync.WaitGroup, tr *tr
 				// if r.flowGate() {
 				// 	break Outer
 				// }
-				mt.children = append(mt.children, childTree)
+				mt.Children = append(mt.Children, childTree)
 
 				tc <- childTree
 			}

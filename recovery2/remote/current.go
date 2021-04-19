@@ -11,7 +11,7 @@ import (
 )
 
 // RBS stores the info to set-up and query remote Files and Blocksmaster
-type RBS struct {
+type RBSMulti struct {
 	Main blocks.MasterStore
 	Bkp  blocks.MasterStore
 }
@@ -22,20 +22,29 @@ type BlocksList struct {
 }
 
 // NewRBS Returns a new cloud object
-func NewRBS(addr, magic string) *RBS {
-	newRemote := &RBS{
+func NewRBS(addr, magic string) *RBSMulti {
+	newRemote := &RBSMulti{
 		Main: blocksremote.New(addr, magic),
 	}
 	return newRemote
 }
 
 // SetBkp adfa adfs
-func (r *RBS) SetBkp(addr, magic string) {
+func (r *RBSMulti) SetBkp(addr, magic string) {
 	r.Bkp = blocksremote.New(addr, magic)
 }
 
+func (r *RBSMulti) GetBlock(hash string, user string) ([]byte, error) {
+	hashs := []string{hash}
+	bytesArray, err := r.GetBlocks(hashs, user)
+	if bytesArray[0] == nil {
+		return nil, errors.New("remote.current.GetBlocksList()", fmt.Sprintf("Block %s is ungettable", hash))
+	}
+	return bytesArray[0], err
+}
+
 // GetBlocks afda fa fasf
-func (r *RBS) GetBlocks(hashs []string, user string) (bytesArray [][]byte, err error) {
+func (r *RBSMulti) GetBlocks(hashs []string, user string) (bytesArray [][]byte, err error) {
 	op := "remotes.GetBlocks()"
 
 	for retries := 0; retries < 2; retries++ {
@@ -79,8 +88,17 @@ func (r *RBS) GetBlocks(hashs []string, user string) (bytesArray [][]byte, err e
 	return
 }
 
+func (r *RBSMulti) GetBlocksList(hash string, user string) (blockList []string, err error) {
+	hashs := []string{hash}
+	bLists, err := r.GetBlocksLists(hashs, user)
+	if bLists[0] == nil {
+		return nil, errors.New("remote.current.GetBlocksList()", "Blocklist ungettable")
+	}
+	return bLists[0], err
+}
+
 // GetBlockslists asfd adf afd
-func (r *RBS) GetBlocksLists(hashs []string, user string) (blockLists [][]string, err error) {
+func (r *RBSMulti) GetBlocksLists(hashs []string, user string) (blockLists [][]string, err error) {
 	op := "remotes.GetBlockLists()"
 	blocks, err := r.GetBlocks(hashs, user)
 	if err != nil {

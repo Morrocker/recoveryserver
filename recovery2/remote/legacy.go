@@ -44,6 +44,10 @@ func (r *RBSLegacy) GetBlock(hash, user string) ([]byte, error) {
 	return nil, errors.New(op, fmt.Sprintf("block %q is ungettable", hash))
 }
 
+func (r *RBSLegacy) GetBlocks(hashs []string, user string) ([][]byte, error) {
+	return nil, errors.New("remote.legacy.GetBlocks()", "Multi-block feature not available on legacy remote")
+}
+
 // GetBlockslist
 func (r *RBSLegacy) GetBlocksList(hash, user string) (blocks []string, err error) {
 	op := "remotes.GetBlockList()"
@@ -57,4 +61,8 @@ func (r *RBSLegacy) GetBlocksList(hash, user string) (blocks []string, err error
 		return nil, errors.Extend(op, err)
 	}
 	return blocksLists.Blocks, nil
+}
+
+func (r *RBSLegacy) GetBlocksLists(hashs []string, user string) ([][]string, error) {
+	return nil, errors.New("remote.legacy.GetBlocks()", "Multi-block feature not available on legacy remote")
 }
