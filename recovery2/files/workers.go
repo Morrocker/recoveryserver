@@ -35,7 +35,7 @@ func smallFilesWorker(fc chan []*fileData, user string, wg *sync.WaitGroup, rbs 
 				bytesArray = appendContent(bytesArray, content)
 			} else {
 				writeSmallFile(positionArray[i-1], bytesArray)
-				bytesArray := []byte{}
+				bytesArray = []byte{}
 				bytesArray = appendContent(bytesArray, content)
 			}
 		}

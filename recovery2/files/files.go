@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"os"
 	"path"
-	"sync"
 	"time"
 
 	"github.com/clonercl/reposerver"
@@ -24,24 +23,12 @@ type Data struct {
 
 type filesList struct {
 	ToDo map[string]*fileData
-	lock sync.Mutex
 }
 
 type fileData struct {
 	Mt         *tree.MetaTree
 	OutputPath string
 	blocksList []string
-}
-
-type bData struct {
-	id   int
-	hash string
-	ret  chan returnBlock
-}
-
-type returnBlock struct {
-	id      int
-	content []byte
 }
 
 var zeroedBuffer = make([]byte, 1024*1000)
