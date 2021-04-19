@@ -14,7 +14,7 @@ import (
 	tracker "github.com/morrocker/progress-tracker"
 )
 
-type TreeData struct {
+type Data struct {
 	rootId     string
 	repository string
 	server     string
@@ -44,7 +44,7 @@ func newMetaTree(mf *reposerver.Metafile) *MetaTree {
 }
 
 // GetRecoveryTree takes in a recovery data and returns a metafileTree
-func GetRecoveryTree(data TreeData, t Throttling, tr *tracker.SuperTracker) (*MetaTree, error) {
+func GetRecoveryTree(data Data, t Throttling, tr *tracker.SuperTracker) (*MetaTree, error) {
 	// r.log.Task("Starting metafile tree retrieval")
 
 	if len(data.exclusions) > 0 {
@@ -73,7 +73,7 @@ func GetRecoveryTree(data TreeData, t Throttling, tr *tracker.SuperTracker) (*Me
 	return mt, nil
 }
 
-func metaTreeWorker(data TreeData, tc chan *MetaTree, wg *sync.WaitGroup, tr *tracker.SuperTracker) {
+func metaTreeWorker(data Data, tc chan *MetaTree, wg *sync.WaitGroup, tr *tracker.SuperTracker) {
 	// Outer:
 	for mt := range tc {
 		// if r.flowGate() {
@@ -107,7 +107,7 @@ func metaTreeWorker(data TreeData, tc chan *MetaTree, wg *sync.WaitGroup, tr *tr
 	wg.Done()
 }
 
-func getChildren(id string, data TreeData, tr *tracker.SuperTracker) ([]*MetaTree, error) {
+func getChildren(id string, data Data, tr *tracker.SuperTracker) ([]*MetaTree, error) {
 	op := "recovery.getChildren()"
 	// r.log.Task("Getting children from " + id)
 	var errOut error
@@ -166,7 +166,7 @@ func getChildren(id string, data TreeData, tr *tracker.SuperTracker) ([]*MetaTre
 	return nil, errOut
 }
 
-func startWorkers(data TreeData, t Throttling, tr *tracker.SuperTracker) (chan *MetaTree, *sync.WaitGroup) {
+func startWorkers(data Data, t Throttling, tr *tracker.SuperTracker) (chan *MetaTree, *sync.WaitGroup) {
 	wg := &sync.WaitGroup{}
 	// r.log.TaskV("Opening workers channel with buffer %d", config.Data.MetafilesBuffSize)
 	tc := make(chan *MetaTree, t.BuffSize)
@@ -180,7 +180,7 @@ func startWorkers(data TreeData, t Throttling, tr *tracker.SuperTracker) (chan *
 	return tc, wg
 }
 
-func getRootMetaTree(data TreeData) (mt *MetaTree, errOut error) {
+func getRootMetaTree(data Data) (mt *MetaTree, errOut error) {
 	op := "recovery.getMetafile()"
 	// r.log.Task("Getting root metafile")
 	for retries := 0; retries < 3; retries++ {
