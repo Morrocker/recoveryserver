@@ -158,10 +158,12 @@ func getChildren(id string, data Data, tr *tracker.SuperTracker) ([]*MetaTree, e
 			continue
 		}
 		tr.ChangeTotal("metafiles", len(children))
-		trees := make([]*MetaTree, len(children))
-		for i, child := range children {
-			trees[i] = newMetaTree(child)
+		trees := make([]*MetaTree, 0)
+		for _, child := range children {
+			childTree := newMetaTree(child)
+			trees = append(trees, childTree)
 		}
+		log.Task("Got children from " + id)
 		return trees, nil
 	}
 	errOut = errors.New(op, fmt.Sprintf("Failed to obtain metafile %s", errOut))
