@@ -139,7 +139,7 @@ func preProcessFQ(fl *filesList, data Data, rbs remote.RBS) error {
 		}
 		subHl = append(subHl, hash)
 		size += fileSize
-		log.Info("Size: #%d. subHl len:%d", size, len(subHl))
+		// log.Info("Size: #%d. subHl len:%d", size, len(subHl))
 	}
 
 	if len(subHl) != 0 {
@@ -157,7 +157,7 @@ func getBlockLists(hl []string, fl *filesList, data Data, rbs remote.RBS) error 
 		return errors.Extend("recovery.getBlockList()", err)
 	}
 	for i, content := range contents {
-		if content == nil {
+		if len(content) == 0 {
 			delete(fl.ToDo, hl[i])
 			continue
 		}

@@ -275,7 +275,7 @@ func (r *Recovery) getBlockLists(hl []string, fq *fileQueue) error {
 		return errors.Extend("recovery.getBlockList()", err)
 	}
 	for hash, content := range contents {
-		if content == nil {
+		if len(content) == 0 {
 			delete(fq.ToDo, hash)
 			continue
 		}

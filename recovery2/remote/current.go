@@ -37,7 +37,7 @@ func (r *RBSMulti) SetBkp(addr, magic string) {
 func (r *RBSMulti) GetBlock(hash string, user string) ([]byte, error) {
 	hashs := []string{hash}
 	bytesArray, err := r.GetBlocks(hashs, user)
-	if bytesArray[0] == nil {
+	if len(bytesArray[0]) == 0 {
 		return nil, errors.New("remote.current.GetBlocksList()", fmt.Sprintf("Block %s is ungettable", hash))
 	}
 	return bytesArray[0], err
@@ -66,7 +66,7 @@ func (r *RBSMulti) GetBlocks(hashs []string, user string) (bytesArray [][]byte, 
 	issuesMap := make(map[string]int)
 	issuesArr := []string{}
 	for i, content := range bytesArray {
-		if content == nil {
+		if len(content) == 0 {
 			issuesArr = append(issuesArr, hashs[i])
 			issuesMap[hashs[i]] = i
 		}
@@ -84,7 +84,7 @@ func (r *RBSMulti) GetBlocks(hashs []string, user string) (bytesArray [][]byte, 
 	}
 
 	for i, content := range issBytesArray {
-		if content != nil {
+		if len(content) != 0 {
 			idx := issuesMap[issuesArr[i]]
 			bytesArray[idx] = content
 		}
@@ -96,7 +96,7 @@ func (r *RBSMulti) GetBlocks(hashs []string, user string) (bytesArray [][]byte, 
 func (r *RBSMulti) GetBlocksList(hash string, user string) (blockList []string, err error) {
 	hashs := []string{hash}
 	bLists, err := r.GetBlocksLists(hashs, user)
-	if bLists[0] == nil {
+	if len(bLists[0]) == 0 {
 		return nil, errors.New("remote.current.GetBlocksList()", "Blocklist ungettable")
 	}
 	return bLists[0], err
@@ -111,7 +111,7 @@ func (r *RBSMulti) GetBlocksLists(hashs []string, user string) (blockLists [][]s
 	}
 
 	for _, block := range blocks {
-		if block == nil {
+		if len(block) == 0 {
 			blockLists = append(blockLists, nil)
 		} else {
 			blockList := &BlocksList{}
