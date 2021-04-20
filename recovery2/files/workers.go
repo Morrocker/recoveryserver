@@ -44,6 +44,7 @@ func smallFilesWorker(fc chan []*fileData, user string, wg *sync.WaitGroup, rbs 
 		bytesArray := []byte{}
 		log.Task("Writting small files. Original list: #%d. Positional list: #%d. BlocksArray: #%d", len(fda), len(positionArray), len(blocksArray))
 		for i, content := range bytesArrays {
+			log.Bench("Index: %d", i)
 			if i == 0 {
 				bytesArray = appendContent(bytesArray, content)
 			} else if positionArray[i-1].Mt.Mf.Hash == positionArray[i].Mt.Mf.Hash {
