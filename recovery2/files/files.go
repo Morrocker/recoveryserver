@@ -122,6 +122,7 @@ func fillFilesList(output string, fd *fileData, fl *filesList) {
 		}
 		return
 	}
+	fd.OutputPath = p
 	fl.ToDo[mf.Hash] = fd
 }
 
