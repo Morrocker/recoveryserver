@@ -45,10 +45,10 @@ func newMetaTree(mf *reposerver.Metafile) *MetaTree {
 
 // GetRecoveryTree takes in a recovery data and returns a metafileTree
 func GetRecoveryTree(data Data, t Throttling, tr *tracker.SuperTracker) (*MetaTree, error) {
-	// r.log.Task("Starting metafile tree retrieval")
+	log.Task("Starting metafile tree retrieval")
 
 	if len(data.Exclusions) > 0 {
-		// r.log.InfoV("List of metafiles (and their children) that will be excluded")
+		log.Info("List of metafiles (and their children) that will be excluded")
 		for hash := range data.Exclusions {
 			log.Infoln("ID: " + hash) // Temporary
 		}
@@ -69,11 +69,12 @@ func GetRecoveryTree(data Data, t Throttling, tr *tracker.SuperTracker) (*MetaTr
 		close(tc)
 	}
 
-	// r.log.Task("Metafile tree completed")
+	log.Info("Metafile tree completed")
 	return mt, nil
 }
 
 func metaTreeWorker(data Data, tc chan *MetaTree, wg *sync.WaitGroup, tr *tracker.SuperTracker) {
+	log.Taskln("Starting metaTreeWorker")
 	// Outer:
 	for mt := range tc {
 		// if r.flowGate() {
@@ -109,7 +110,8 @@ func metaTreeWorker(data Data, tc chan *MetaTree, wg *sync.WaitGroup, tr *tracke
 
 func getChildren(id string, data Data, tr *tracker.SuperTracker) ([]*MetaTree, error) {
 	op := "recovery.getChildren()"
-	// r.log.Task("Getting children from " + id)
+	log.Task("Getting children from " + id)
+
 	var errOut error
 	for retries := 0; retries < 5; retries++ {
 		errOut = nil
@@ -156,7 +158,7 @@ func getChildren(id string, data Data, tr *tracker.SuperTracker) ([]*MetaTree, e
 			continue
 		}
 		tr.ChangeTotal("metafiles", len(children))
-		trees := make([]*MetaTree, 0)
+		trees := make([]*MetaTree, len(children))
 		for i, child := range children {
 			trees[i] = newMetaTree(child)
 		}
@@ -167,6 +169,8 @@ func getChildren(id string, data Data, tr *tracker.SuperTracker) ([]*MetaTree, e
 }
 
 func startWorkers(data Data, t Throttling, tr *tracker.SuperTracker) (chan *MetaTree, *sync.WaitGroup) {
+	log.Taskln("Starting metaTree workers")
+
 	wg := &sync.WaitGroup{}
 	// r.log.TaskV("Opening workers channel with buffer %d", config.Data.MetafilesBuffSize)
 	tc := make(chan *MetaTree, t.BuffSize)
@@ -181,7 +185,8 @@ func startWorkers(data Data, t Throttling, tr *tracker.SuperTracker) (chan *Meta
 
 func getRootMetaTree(data Data, tr *tracker.SuperTracker) (mt *MetaTree, errOut error) {
 	op := "recovery.getMetafile()"
-	// r.log.Task("Getting root metafile")
+	log.Task("Getting root metafile %s", data.RootId)
+
 	for retries := 0; retries < 3; retries++ {
 		errOut = nil
 		req, err := http.NewRequest(
