@@ -54,7 +54,7 @@ func GetRecoveryTree(data Data, t Throttling, tr *tracker.SuperTracker) (*MetaTr
 		}
 	}
 
-	mt, err := getRootMetaTree(data)
+	mt, err := getRootMetaTree(data, tr)
 	if err != nil {
 		return nil, errors.New("recovery.GetRecoveryTree()", err)
 	}
@@ -83,8 +83,8 @@ func metaTreeWorker(data Data, tc chan *MetaTree, wg *sync.WaitGroup, tr *tracke
 		if mt.Mf.Type == reposerver.FolderType {
 			childrenTrees, err := getChildren(mt.Mf.ID, data, tr)
 			if err != nil {
-				// r.log.Error("Couldnt retrieve metafile: %s", errors.Extend("recoveries.getChildMetaTree()", err))
-				// r.tracker.IncreaseCurr("metafiles")
+				log.Error("Couldnt retrieve metafile: %s", errors.Extend("recoveries.getChildMetaTree()", err))
+				tr.IncreaseCurr("metafiles")
 				continue
 			}
 
@@ -96,12 +96,12 @@ func metaTreeWorker(data Data, tc chan *MetaTree, wg *sync.WaitGroup, tr *tracke
 
 				tc <- childTree
 			}
-			// r.tracker.IncreaseCurr("metafiles")
+			tr.IncreaseCurr("metafiles")
 			isDone(tc, tr)
 			continue
 		}
 		// r.updateTrackerTotals(mt.mf.Size)
-		// r.tracker.IncreaseCurr("metafiles")
+		tr.IncreaseCurr("metafiles")
 		isDone(tc, tr)
 	}
 	wg.Done()
@@ -174,13 +174,12 @@ func startWorkers(data Data, t Throttling, tr *tracker.SuperTracker) (chan *Meta
 	wg.Add(t.Workers)
 	for x := 0; x < t.Workers; x++ {
 		go metaTreeWorker(data, tc, wg, tr)
-		// go r.getChildMetaTree(tc, &wg)
 	}
 
 	return tc, wg
 }
 
-func getRootMetaTree(data Data) (mt *MetaTree, errOut error) {
+func getRootMetaTree(data Data, tr *tracker.SuperTracker) (mt *MetaTree, errOut error) {
 	op := "recovery.getMetafile()"
 	// r.log.Task("Getting root metafile")
 	for retries := 0; retries < 3; retries++ {
@@ -219,7 +218,7 @@ func getRootMetaTree(data Data) (mt *MetaTree, errOut error) {
 			errOut = errors.Extend(op, err)
 			continue
 		}
-		// r.tracker.ChangeTotal("metafiles", 1)
+		tr.ChangeTotal("metafiles", 1)
 		return newMetaTree(mf), nil
 	}
 	errOut = errors.New(op, fmt.Sprintf("Failed to obtain metafile: %s", errOut))
