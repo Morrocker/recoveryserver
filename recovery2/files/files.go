@@ -93,7 +93,7 @@ func GetFiles(mt *tree.MetaTree, OutputPath string, data Data, rbs remote.RBS, t
 }
 
 func fillFilesList(fd *fileData, fl *filesList) {
-	log.Taskln("Filling files list")
+	// log.Taskln("Filling files list")
 	mf := fd.Mt.Mf
 	p := path.Join(fd.OutputPath, mf.Name)
 	if mf.Type == reposerver.FolderType {
