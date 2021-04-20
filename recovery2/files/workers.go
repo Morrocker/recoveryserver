@@ -26,7 +26,6 @@ func smallFilesWorker(fc chan []*fileData, user string, wg *sync.WaitGroup, rbs 
 	op := "recovery.smallFilesWorker()"
 	log.Taskln("Starting small files workers")
 	for fda := range fc {
-		log.Notice("Received lists: #%d", len(fda))
 		positionArray := []*fileData{}
 		blocksArray := []string{}
 		for _, fd := range fda {
@@ -35,6 +34,7 @@ func smallFilesWorker(fc chan []*fileData, user string, wg *sync.WaitGroup, rbs 
 				positionArray = append(positionArray, fd)
 			}
 		}
+		log.Notice("Blockslists: #%d. List: %v", len(blocksArray), blocksArray)
 		bytesArrays, err := rbs.GetBlocks(blocksArray, user)
 		if err != nil {
 			log.Errorln(errors.Extend(op, err))
