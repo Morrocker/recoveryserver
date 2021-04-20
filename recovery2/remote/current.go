@@ -61,6 +61,8 @@ func (r *RBSMulti) GetBlocks(hashs []string, user string) (bytesArray [][]byte, 
 		}
 	}
 
+	log.Noticeln("went through???")
+
 	issuesMap := make(map[string]int)
 	issuesArr := []string{}
 	for i, content := range bytesArray {

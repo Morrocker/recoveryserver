@@ -52,6 +52,7 @@ func GetFiles(mt *tree.MetaTree, OutputPath string, data Data, rbs remote.RBS, t
 		return errors.New(op, errors.Extend(op, err))
 	}
 
+	log.Taskln("Filling files list")
 	fillFilesList(fd, fl)
 
 	fl.ToDo = filterDoneFiles(fl.ToDo)
@@ -64,6 +65,7 @@ func GetFiles(mt *tree.MetaTree, OutputPath string, data Data, rbs remote.RBS, t
 
 	var size int64
 	var subFl []*fileData
+
 	for _, fd := range smallFiles {
 		fileSize := fd.Mt.Mf.Size
 		if size+fileSize > 104857600 && size != 0 { // 10000 BLOCKS
@@ -74,6 +76,7 @@ func GetFiles(mt *tree.MetaTree, OutputPath string, data Data, rbs remote.RBS, t
 		subFl = append(subFl, fd)
 		size += fileSize
 	}
+
 	if len(subFl) > 0 {
 		sfc <- subFl
 	}
@@ -93,7 +96,6 @@ func GetFiles(mt *tree.MetaTree, OutputPath string, data Data, rbs remote.RBS, t
 }
 
 func fillFilesList(fd *fileData, fl *filesList) {
-	// log.Taskln("Filling files list")
 	mf := fd.Mt.Mf
 	p := path.Join(fd.OutputPath, mf.Name)
 	if mf.Type == reposerver.FolderType {
