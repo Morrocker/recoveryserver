@@ -47,7 +47,7 @@ func (r *RBSMulti) GetBlock(hash string, user string) ([]byte, error) {
 func (r *RBSMulti) GetBlocks(hashs []string, user string) (bytesArray [][]byte, err error) {
 	op := "remotes.GetBlocks()"
 
-	for retries := 0; retries < 2; retries++ {
+	for retries := 0; retries < 3; retries++ {
 		bytesArray, err = r.Main.RetrieveMultiple(hashs, user)
 		if err == nil {
 			log.Noticeln("Error nil, checking if Bkp exists")
@@ -56,8 +56,8 @@ func (r *RBSMulti) GetBlocks(hashs []string, user string) (bytesArray [][]byte, 
 				return
 			}
 			log.Noticeln("Bkp presernt")
-		} else if retries == 2 {
-			return nil, errors.New(op, fmt.Sprintf("failed to fetch blocks array: \n%v", hashs))
+		} else if retries == 1 {
+			return nil, errors.New(op, fmt.Sprintf("failed to fetch blocks array: \n%v\nError:%s", hashs, err))
 		}
 	}
 
