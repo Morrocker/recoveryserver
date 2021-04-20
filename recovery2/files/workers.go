@@ -5,6 +5,7 @@ import (
 	"os"
 	"sync"
 
+	"github.com/davecgh/go-spew/spew"
 	"github.com/morrocker/errors"
 	"github.com/morrocker/log"
 	"github.com/morrocker/recoveryserver/recovery2/remote"
@@ -26,6 +27,7 @@ func smallFilesWorker(fc chan []*fileData, user string, wg *sync.WaitGroup, rbs 
 	op := "recovery.smallFilesWorker()"
 	log.Taskln("Starting small files workers")
 	for fda := range fc {
+		spew.Dump(fda[0])
 		positionArray := []*fileData{}
 		blocksArray := []string{}
 		for _, fd := range fda {
@@ -34,7 +36,7 @@ func smallFilesWorker(fc chan []*fileData, user string, wg *sync.WaitGroup, rbs 
 				positionArray = append(positionArray, fd)
 			}
 		}
-		log.Notice("Blockslists: #%d. List: %v", len(blocksArray), blocksArray)
+		log.Notice("Blockslists: #%d.", len(blocksArray))
 		bytesArrays, err := rbs.GetBlocks(blocksArray, user)
 		if err != nil {
 			log.Errorln(errors.Extend(op, err))
