@@ -52,7 +52,7 @@ func (r *RBSMulti) GetBlocks(hashs []string, user string) (bytesArray [][]byte, 
 		if err == nil {
 			log.Noticeln("Error nil, checking if Bkp exists")
 			if r.Bkp == nil {
-				log.Noticeln("Bkp NOt presernt")
+				log.Notice("Exiting GetBlocks hashs len:%d | bytes len: %d", len(hashs), len(bytesArray))
 				return
 			}
 			log.Noticeln("Bkp presernt")
@@ -60,8 +60,6 @@ func (r *RBSMulti) GetBlocks(hashs []string, user string) (bytesArray [][]byte, 
 			return nil, errors.New(op, fmt.Sprintf("failed to fetch blocks array: \n%v\nError:%s", hashs, err))
 		}
 	}
-
-	log.Noticeln("went through???")
 
 	issuesMap := make(map[string]int)
 	issuesArr := []string{}
