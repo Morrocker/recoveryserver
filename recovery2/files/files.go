@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path"
+	"time"
 
 	"github.com/clonercl/reposerver"
 	"github.com/morrocker/errors"
@@ -44,8 +45,8 @@ func GetFiles(mt *tree.MetaTree, OutputPath string, data Data, rbs remote.RBS, t
 		ToDo: make(map[string]*fileData),
 	}
 
-	// sfc, sfWg := startSmallFilesWorkers(data, rbs)
-	// bfc, bfWg := startBigFilesWorkers(data, rbs)
+	sfc, sfWg := startSmallFilesWorkers(data, rbs)
+	bfc, bfWg := startBigFilesWorkers(data, rbs)
 
 	if err := os.MkdirAll(OutputPath, 0700); err != nil {
 		return errors.New(op, errors.Extend(op, err))
@@ -54,45 +55,45 @@ func GetFiles(mt *tree.MetaTree, OutputPath string, data Data, rbs remote.RBS, t
 	log.Taskln("Filling files list")
 	fillFilesList(OutputPath, fd, fl)
 
-	// fl.ToDo = filterDoneFiles(fl.ToDo)
+	fl.ToDo = filterDoneFiles(fl.ToDo)
 
-	// time.Sleep(5 * time.Second)
+	time.Sleep(5 * time.Second)
 
-	// preProcessFQ(fl, data, rbs)
+	preProcessFQ(fl, data, rbs)
 
-	// bigFiles, smallFiles := sortFiles(fl)
+	bigFiles, smallFiles := sortFiles(fl)
 
-	// var size int64
-	// var subFl []*fileData
+	var size int64
+	var subFl []*fileData
 
-	// log.Notice("Sending small files lists. #%d", len(smallFiles))
-	// for _, fd := range smallFiles {
-	// 	fileSize := fd.Mt.Mf.Size
-	// 	if size+fileSize > 104857600 && size != 0 { // 10000 BLOCKS
-	// 		log.Info("Small sublist #%d", len(subFl))
-	// 		sfc <- subFl
-	// 		size = 0
-	// 		subFl = []*fileData{}
-	// 	}
-	// 	subFl = append(subFl, fd)
-	// 	size += fileSize
-	// }
+	log.Notice("Sending small files lists. #%d", len(smallFiles))
+	for _, fd := range smallFiles {
+		fileSize := fd.Mt.Mf.Size
+		if size+fileSize > 104857600 && size != 0 { // 10000 BLOCKS
+			log.Info("Small sublist #%d", len(subFl))
+			sfc <- subFl
+			size = 0
+			subFl = []*fileData{}
+		}
+		subFl = append(subFl, fd)
+		size += fileSize
+	}
 
-	// if len(subFl) > 0 {
-	// 	sfc <- subFl
-	// }
-	// time.Sleep(time.Second)
-	// close(sfc)
-	// sfWg.Wait()
+	if len(subFl) > 0 {
+		sfc <- subFl
+	}
+	time.Sleep(time.Second)
+	close(sfc)
+	sfWg.Wait()
 
-	// for _, fd := range bigFiles {
-	// 	bfc <- fd
-	// }
-	// time.Sleep(time.Second)
-	// close(bfc)
-	// bfWg.Wait()
+	for _, fd := range bigFiles {
+		bfc <- fd
+	}
+	time.Sleep(time.Second)
+	close(bfc)
+	bfWg.Wait()
 
-	// log.Noticeln("Files retrieval completed")
+	log.Noticeln("Files retrieval completed")
 	for _, fd := range fl.ToDo {
 		log.Info("File: %s", fd.OutputPath)
 	}
