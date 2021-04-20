@@ -70,6 +70,7 @@ func GetFiles(mt *tree.MetaTree, OutputPath string, data Data, rbs remote.RBS, t
 	for _, fd := range smallFiles {
 		fileSize := fd.Mt.Mf.Size
 		if size+fileSize > 104857600 && size != 0 { // 10000 BLOCKS
+			log.Info("Small sublist #%d", len(subFl))
 			sfc <- subFl
 			size = 0
 			subFl = []*fileData{}
