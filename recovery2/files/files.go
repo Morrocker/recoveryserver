@@ -137,6 +137,7 @@ func preProcessFQ(fl *filesList, data Data, rbs remote.RBS) error {
 		}
 		subHl = append(subHl, hash)
 		size += fileSize
+		log.Info("Size: #%d. subHl len:%d", size, len(subHl))
 	}
 
 	if len(subHl) != 0 {
