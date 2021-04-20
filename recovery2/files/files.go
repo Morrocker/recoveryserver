@@ -131,7 +131,9 @@ func preProcessFQ(fl *filesList, data Data, rbs remote.RBS) error {
 		fileSize := fd.Mt.Mf.Size
 		if size+fileSize > 10737418240 && size != 0 { // 10000 BLOCKS
 			log.Info("going to get BlockLists")
-			getBlockLists(subHl, fl, data, rbs)
+			if err := getBlockLists(subHl, fl, data, rbs); err != nil {
+				log.Errorln(errors.Extend("recovery.files.preProcessFQ()", err))
+			}
 			size = 0
 			subHl = []string{}
 		}
@@ -142,7 +144,9 @@ func preProcessFQ(fl *filesList, data Data, rbs remote.RBS) error {
 
 	if len(subHl) != 0 {
 		log.Info("going to get BlockLists")
-		getBlockLists(subHl, fl, data, rbs)
+		if err := getBlockLists(subHl, fl, data, rbs); err != nil {
+			log.Errorln(errors.Extend("recovery.files.preProcessFQ()", err))
+		}
 	}
 	return nil
 }
