@@ -149,6 +149,7 @@ func getBlockLists(hl []string, fl *filesList, data Data, rbs remote.RBS) error 
 	if err != nil {
 		return errors.Extend("recovery.getBlockList()", err)
 	}
+	log.Info("getBlockLists() result: %v", contents)
 	for i, content := range contents {
 		if content == nil {
 			delete(fl.ToDo, hl[i])
@@ -156,6 +157,7 @@ func getBlockLists(hl []string, fl *filesList, data Data, rbs remote.RBS) error 
 		}
 		fl.ToDo[hl[i]].blocksList = content
 	}
+
 	return nil
 }
 
