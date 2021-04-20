@@ -34,6 +34,7 @@ type fileData struct {
 var zeroedBuffer = make([]byte, 1024*1000)
 
 func GetFiles(mt *tree.MetaTree, OutputPath string, data Data, rbs remote.RBS, tr *tracker.SuperTracker) error {
+	log.Taskln("Starting files recovery")
 	op := "recovery.getFiles()"
 
 	fd := &fileData{
@@ -92,6 +93,7 @@ func GetFiles(mt *tree.MetaTree, OutputPath string, data Data, rbs remote.RBS, t
 }
 
 func fillFilesList(fd *fileData, fl *filesList) {
+	log.Taskln("Filling files list")
 	mf := fd.Mt.Mf
 	p := path.Join(fd.OutputPath, mf.Name)
 	if mf.Type == reposerver.FolderType {
@@ -118,6 +120,7 @@ func fillFilesList(fd *fileData, fl *filesList) {
 }
 
 func preProcessFQ(fl *filesList, data Data, rbs remote.RBS) error {
+	log.Taskln("Pre-processing FQ (getting blocklists)")
 	subHl := []string{}
 	var size int64
 	for hash, fd := range fl.ToDo {
@@ -153,6 +156,7 @@ func getBlockLists(hl []string, fl *filesList, data Data, rbs remote.RBS) error 
 }
 
 func sortFiles(fl *filesList) (bigFiles []*fileData, smallFiles []*fileData) {
+	log.Taskln("Sorting files")
 	for _, fd := range fl.ToDo {
 		if fd.Mt.Mf.Size > 104857600 {
 			bigFiles = append(bigFiles, fd)
@@ -160,10 +164,12 @@ func sortFiles(fl *filesList) (bigFiles []*fileData, smallFiles []*fileData) {
 			smallFiles = append(smallFiles, fd)
 		}
 	}
+	log.Task("Small files: %d, Big files: %d", len(smallFiles), len(bigFiles))
 	return
 }
 
 func filterDoneFiles(fda map[string]*fileData) map[string]*fileData {
+	log.Taskln("Filtering Done Files")
 	subFDA := make(map[string]*fileData)
 	for key, fd := range fda {
 		size := fd.Mt.Mf.Size

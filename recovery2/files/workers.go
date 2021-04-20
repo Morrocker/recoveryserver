@@ -11,8 +11,20 @@ import (
 	"golang.org/x/text/unicode/norm"
 )
 
+func startSmallFilesWorkers(data Data, rbs remote.RBS) (chan []*fileData, *sync.WaitGroup) {
+	log.Task("Starting %d big files workers", data.Workers)
+	wg := &sync.WaitGroup{}
+	fdc := make(chan []*fileData)
+	wg.Add(data.Workers)
+	for x := 0; x < data.Workers; x++ {
+		go smallFilesWorker(fdc, data.User, wg, rbs)
+	}
+	return fdc, wg
+}
+
 func smallFilesWorker(fc chan []*fileData, user string, wg *sync.WaitGroup, rbs remote.RBS /*, bc chan bData*/) {
 	op := "recovery.smallFilesWorker()"
+	log.Taskln("Starting small files workers")
 	for fda := range fc {
 		positionArray := []*fileData{}
 		blocksArray := []string{}
@@ -54,20 +66,23 @@ func appendContent(content []byte, newContent []byte) []byte {
 	return content
 }
 
-func startSmallFilesWorkers(data Data, rbs remote.RBS) (chan []*fileData, *sync.WaitGroup) {
+func startBigFilesWorkers(data Data, rbs remote.RBS) (chan *fileData, *sync.WaitGroup) {
+	log.Task("Starting %d big files workers", data.Workers)
 	wg := &sync.WaitGroup{}
-	fdc := make(chan []*fileData)
+	fdc := make(chan *fileData)
 	wg.Add(data.Workers)
 	for x := 0; x < data.Workers; x++ {
-		go smallFilesWorker(fdc, data.User, wg, rbs)
+		go bigFilesWorker(fdc, data.User, wg, rbs)
 	}
 	return fdc, wg
 }
 
 func bigFilesWorker(fc chan *fileData, user string, wg *sync.WaitGroup, rbs remote.RBS /*, bc chan bData*/) {
 	op := "recovery.bigFilesWorker()"
+	log.Taskln("Starting big files workers")
 Outer:
 	for fd := range fc {
+		log.Taskln("Writting big file %s", fd.OutputPath)
 		f, err := os.Create(norm.NFC.String(fd.OutputPath))
 		if err != nil {
 			// r.increaseErrors()
@@ -103,19 +118,10 @@ Outer:
 	wg.Done()
 }
 
-func startBigFilesWorkers(data Data, rbs remote.RBS) (chan *fileData, *sync.WaitGroup) {
-	wg := &sync.WaitGroup{}
-	fdc := make(chan *fileData)
-	wg.Add(data.Workers)
-	for x := 0; x < data.Workers; x++ {
-		go bigFilesWorker(fdc, data.User, wg, rbs)
-	}
-	return fdc, wg
-}
-
 func writeSmallFile(fd *fileData, content []byte) error {
 	// Creating recovery file
 	op := "recovery.writeFile()"
+	log.Taskln("Writting small file %s", fd.OutputPath)
 	f, err := os.Create(norm.NFC.String(fd.OutputPath))
 	if err != nil {
 		// r.increaseErrors()
