@@ -130,6 +130,7 @@ func preProcessFQ(fl *filesList, data Data, rbs remote.RBS) error {
 	for hash, fd := range fl.ToDo {
 		fileSize := fd.Mt.Mf.Size
 		if size+fileSize > 10737418240 && size != 0 { // 10000 BLOCKS
+			log.Info("going to get BlockLists")
 			getBlockLists(subHl, fl, data, rbs)
 			size = 0
 			subHl = []string{}
@@ -139,6 +140,7 @@ func preProcessFQ(fl *filesList, data Data, rbs remote.RBS) error {
 	}
 
 	if len(subHl) != 0 {
+		log.Info("going to get BlockLists")
 		getBlockLists(subHl, fl, data, rbs)
 	}
 	return nil
@@ -149,7 +151,6 @@ func getBlockLists(hl []string, fl *filesList, data Data, rbs remote.RBS) error 
 	if err != nil {
 		return errors.Extend("recovery.getBlockList()", err)
 	}
-	log.Info("getBlockLists() result: %v", contents)
 	for i, content := range contents {
 		if content == nil {
 			delete(fl.ToDo, hl[i])

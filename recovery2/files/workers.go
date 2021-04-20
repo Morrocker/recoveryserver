@@ -5,7 +5,6 @@ import (
 	"os"
 	"sync"
 
-	"github.com/davecgh/go-spew/spew"
 	"github.com/morrocker/errors"
 	"github.com/morrocker/log"
 	"github.com/morrocker/recoveryserver/recovery2/remote"
@@ -27,7 +26,7 @@ func smallFilesWorker(fc chan []*fileData, user string, wg *sync.WaitGroup, rbs 
 	op := "recovery.smallFilesWorker()"
 	log.Taskln("Starting small files workers")
 	for fda := range fc {
-		spew.Dump(fda[0])
+		// spew.Dump(fda[0])
 		positionArray := []*fileData{}
 		blocksArray := []string{}
 		for _, fd := range fda {
