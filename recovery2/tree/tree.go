@@ -235,6 +235,7 @@ func isDone(tc chan *MetaTree, tr *tracker.SuperTracker) {
 	if err != nil {
 		log.Errorln("ERROR while getting metafiles tracker values") // Temporary???
 	}
+	log.Notice("is done? c:%d,t:%d", curr, tot)
 	if curr == tot {
 		time.Sleep(time.Second)
 		close(tc)
