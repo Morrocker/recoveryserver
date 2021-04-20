@@ -111,11 +111,15 @@ func (r *RBSMulti) GetBlocksLists(hashs []string, user string) (blockLists [][]s
 	}
 
 	for _, block := range blocks {
-		blockList := &BlocksList{}
-		if err := json.Unmarshal(block, blockList); err != nil {
-			return nil, errors.Extend(op, err)
+		if block == nil {
+			blockLists = append(blockLists, nil)
+		} else {
+			blockList := &BlocksList{}
+			if err := json.Unmarshal(block, blockList); err != nil {
+				return nil, errors.Extend(op, err)
+			}
+			blockLists = append(blockLists, blockList.Blocks)
 		}
-		blockLists = append(blockLists, blockList.Blocks)
 	}
 	return
 }
