@@ -112,7 +112,7 @@ func (r *RBSMulti) GetBlocksLists(hashs []string, user string) (blockLists [][]s
 
 	for _, block := range blocks {
 		if len(block) == 0 {
-			blockLists = append(blockLists, nil)
+			blockLists = append(blockLists, []string{})
 		} else {
 			blockList := &BlocksList{}
 			if err := json.Unmarshal(block, blockList); err != nil {

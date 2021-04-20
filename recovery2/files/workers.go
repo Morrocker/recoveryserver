@@ -42,13 +42,16 @@ func smallFilesWorker(fc chan []*fileData, user string, wg *sync.WaitGroup, rbs 
 			continue
 		}
 		bytesArray := []byte{}
+		log.Task("Writting small files. Original list: #%d. Positional list: #%d. BlocksArray: #%d", len(fda), len(positionArray), len(blocksArray))
 		for i, content := range bytesArrays {
 			if i == 0 {
 				bytesArray = appendContent(bytesArray, content)
 			} else if positionArray[i-1].Mt.Mf.Hash == positionArray[i].Mt.Mf.Hash {
 				bytesArray = appendContent(bytesArray, content)
 			} else {
-				writeSmallFile(positionArray[i-1], bytesArray)
+				if err := writeSmallFile(positionArray[i-1], bytesArray); err != nil {
+					log.Errorln(errors.Extend(op, err))
+				}
 				bytesArray = []byte{}
 				bytesArray = appendContent(bytesArray, content)
 			}
@@ -123,7 +126,7 @@ Outer:
 func writeSmallFile(fd *fileData, content []byte) error {
 	// Creating recovery file
 	op := "recovery.writeFile()"
-	log.Taskln("Writting small file %s", fd.OutputPath)
+	log.Task("Writting small file %s", fd.OutputPath)
 	f, err := os.Create(norm.NFC.String(fd.OutputPath))
 	if err != nil {
 		// r.increaseErrors()
