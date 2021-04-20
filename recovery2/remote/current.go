@@ -6,8 +6,8 @@ import (
 
 	"github.com/clonercl/blockserver/blocks"
 	blocksremote "github.com/clonercl/blockserver/blocks/master/remote"
-	"github.com/clonercl/blockserver/log"
 	"github.com/morrocker/errors"
+	"github.com/morrocker/log"
 )
 
 // RBS stores the info to set-up and query remote Files and Blocksmaster
@@ -50,9 +50,11 @@ func (r *RBSMulti) GetBlocks(hashs []string, user string) (bytesArray [][]byte, 
 	for retries := 0; retries < 2; retries++ {
 		bytesArray, err = r.Main.RetrieveMultiple(hashs, user)
 		if err == nil {
+			log.Noticeln("Error nil, checking if Bkp exists")
 			if r.Bkp == nil {
 				return
 			}
+			log.Noticeln("Bkp presernt")
 		} else if retries == 2 {
 			return nil, errors.New(op, fmt.Sprintf("failed to fetch blocks array: \n%v", hashs))
 		}
