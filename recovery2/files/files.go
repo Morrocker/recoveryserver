@@ -40,7 +40,9 @@ func GetFiles(mt *tree.MetaTree, OutputPath string, data Data, rbs remote.RBS, t
 		Mt:         mt,
 		OutputPath: path.Join(OutputPath, mt.Mf.Name),
 	}
-	fl := &filesList{}
+	fl := &filesList{
+		ToDo: make(map[string]*fileData),
+	}
 
 	sfc, sfWg := startSmallFilesWorkers(data, rbs)
 	bfc, bfWg := startBigFilesWorkers(data, rbs)

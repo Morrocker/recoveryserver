@@ -44,7 +44,7 @@ func newMetaTree(mf *reposerver.Metafile) *MetaTree {
 }
 
 // GetRecoveryTree takes in a recovery data and returns a metafileTree
-func GetRecoveryTree(data Data, t Throttling, tr *tracker.SuperTracker) (*MetaTree, error) {
+func GetRecoveryTree(data Data, tt Throttling, tr *tracker.SuperTracker) (*MetaTree, error) {
 	log.Task("Starting metafile tree retrieval")
 
 	if len(data.Exclusions) > 0 {
@@ -59,7 +59,7 @@ func GetRecoveryTree(data Data, t Throttling, tr *tracker.SuperTracker) (*MetaTr
 		return nil, errors.New("recovery.GetRecoveryTree()", err)
 	}
 
-	tc, wg := startWorkers(data, t, tr)
+	tc, wg := startWorkers(data, tt, tr)
 	tc <- mt
 
 	wg.Wait()
