@@ -42,7 +42,7 @@ func smallFilesWorker(fc chan []*fileData, user string, wg *sync.WaitGroup, rbs 
 			continue
 		}
 		bytesArray := []byte{}
-		log.Task("Writting small files. Original list: #%d. Positional list: #%d. BlocksArray: #%d", len(fda), len(positionArray), len(blocksArray))
+		log.Task("Writting small files. Original list: #%d. Positional list: #%d. BlocksArray: #%d. BytesArrays: #%d", len(fda), len(positionArray), len(blocksArray), len(bytesArrays))
 		for i, content := range bytesArrays {
 			log.Bench("Index: %d", i)
 			if i == 0 {
