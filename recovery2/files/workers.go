@@ -27,6 +27,7 @@ func smallFilesWorker(fc chan []*fileData, user string, wg *sync.WaitGroup, rbs 
 	log.Taskln("Starting small files workers")
 	for fda := range fc {
 		// spew.Dump(fda[0])
+		log.Info("Small sublist #%d", len(fda))
 		positionArray := []*fileData{}
 		blocksArray := []string{}
 		for _, fd := range fda {
