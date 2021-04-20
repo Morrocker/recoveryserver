@@ -53,6 +53,7 @@ func (r *RBSMulti) GetBlocks(hashs []string, user string) (bytesArray [][]byte, 
 			log.Noticeln("Error nil, checking if Bkp exists")
 			if r.Bkp == nil {
 				log.Notice("Exiting GetBlocks hashs len:%d | bytes len: %d", len(hashs), len(bytesArray))
+				log.Notice("Top 10 hashs > %v", hashs[:10])
 				return
 			}
 			log.Noticeln("Bkp presernt")
