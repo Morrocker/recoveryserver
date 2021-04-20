@@ -163,7 +163,7 @@ func getChildren(id string, data Data, tr *tracker.SuperTracker) ([]*MetaTree, e
 			childTree := newMetaTree(child)
 			trees = append(trees, childTree)
 		}
-		log.Task("Got children from " + id)
+		// log.Task("Got children from " + id)
 		return trees, nil
 	}
 	errOut = errors.New(op, fmt.Sprintf("Failed to obtain metafile %s", errOut))
@@ -237,7 +237,7 @@ func isDone(tc chan *MetaTree, tr *tracker.SuperTracker) {
 	if err != nil {
 		log.Errorln("ERROR while getting metafiles tracker values") // Temporary???
 	}
-	log.Notice("is done? c:%d,t:%d", curr, tot)
+	// log.Notice("is done? c:%d,t:%d", curr, tot)
 	if curr == tot {
 		time.Sleep(time.Second)
 		close(tc)
