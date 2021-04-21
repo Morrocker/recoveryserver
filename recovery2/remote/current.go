@@ -46,17 +46,15 @@ func (r *RBSMulti) GetBlock(hash string, user string) ([]byte, error) {
 // GetBlocks afda fa fasf
 func (r *RBSMulti) GetBlocks(hashs []string, user string) (bytesArray [][]byte, err error) {
 	op := "remotes.GetBlocks()"
-	// log.Notice("GetBlocks initial hash:%v", hashs)
+	log.Notice("Getting %d Blocks", len(hashs))
 	for retries := 0; retries < 3; retries++ {
 		bytesArray, err = r.Main.RetrieveMultiple(hashs, user)
 		if err == nil {
-			log.Noticeln("Error nil, checking if Bkp exists")
+			// log.Noticeln("Error nil, checking if Bkp exists")
 			if r.Bkp == nil {
-				log.Notice("Exiting GetBlocks hashs len:%d | bytes len: %d", len(hashs), len(bytesArray))
-				log.Notice("Top 10 hashs > %v", hashs[0])
 				return
 			}
-			log.Noticeln("Bkp presernt")
+			// log.Noticeln("Bkp presernt")
 		} else if retries == 1 {
 			return nil, errors.New(op, fmt.Sprintf("failed to fetch blocks array: \n%v\nError:%s", hashs, err))
 		}
