@@ -3,7 +3,8 @@ module github.com/morrocker/recoveryserver
 go 1.16
 
 require (
-	github.com/clonercl/blockserver v0.1.9-0.20210409144532-74c4adca2f63
+	github.com/DATA-DOG/go-sqlmock v1.5.0 // indirect
+	github.com/clonercl/blockserver v0.1.9-0.20210421002115-9970c15b6dff
 	github.com/clonercl/kaon v0.1.8
 	github.com/clonercl/reposerver v0.0.0-20190806151941-b7d532a8c047
 	github.com/davecgh/go-spew v1.1.1
