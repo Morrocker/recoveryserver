@@ -27,7 +27,7 @@ func smallFilesWorker(fc chan []*fileData, user string, wg *sync.WaitGroup, rbs 
 	log.Taskln("Starting small files workers")
 	for fda := range fc {
 		// spew.Dump(fda[0])
-		log.Info("Small sublist #%d", len(fda))
+		// log.Info("Small sublist #%d", len(fda))
 		positionArray := []*fileData{}
 		blocksArray := []string{}
 		for _, fd := range fda {
@@ -36,21 +36,21 @@ func smallFilesWorker(fc chan []*fileData, user string, wg *sync.WaitGroup, rbs 
 				positionArray = append(positionArray, fd)
 			}
 		}
-		log.Notice("Blockslists: #%d.", len(blocksArray))
+		// log.Notice("Blockslists: #%d.", len(blocksArray))
 		bytesArrays, err := rbs.GetBlocks(blocksArray, user)
 		if err != nil {
 			log.Errorln(errors.Extend(op, err))
 			continue
 		}
 		bytesArray := []byte{}
-		log.Task("Writting small files. Original list: #%d. Positional list: #%d. BlocksArray: #%d. BytesArrays: #%d", len(fda), len(positionArray), len(blocksArray), len(bytesArrays))
-		log.Notice("Analyzing bytes arrays total:%d", len(bytesArrays))
-		for i, btArray := range bytesArrays {
-			log.Bench("Index: %d. Length: %d", i, len(btArray))
-		}
+		// log.Task("Writting small files. Original list: #%d. Positional list: #%d. BlocksArray: #%d. BytesArrays: #%d", len(fda), len(positionArray), len(blocksArray), len(bytesArrays))
+		// log.Notice("Analyzing bytes arrays total:%d", len(bytesArrays))
+		// for i, btArray := range bytesArrays {
+		// log.Bench("Index: %d. Length: %d", i, len(btArray))
+		// }
 
 		for i, content := range bytesArrays {
-			log.Bench("Index: %d", i)
+			// log.Bench("Index: %d", i)
 			if i == 0 {
 				bytesArray = appendContent(bytesArray, content)
 			} else if positionArray[i-1].Mt.Mf.Hash == positionArray[i].Mt.Mf.Hash {
