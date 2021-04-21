@@ -86,7 +86,7 @@ func GetFiles(mt *tree.MetaTree, OutputPath string, data Data, rbs remote.RBS, t
 	sfWg.Wait()
 
 	for _, fd := range bigFiles {
-		bfc <- fd
+		recoverBigFile(fd, data.User, bfc, bfWg, rbs)
 	}
 	time.Sleep(time.Second)
 	close(bfc)
