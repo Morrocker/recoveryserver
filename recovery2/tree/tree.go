@@ -12,6 +12,7 @@ import (
 	"github.com/morrocker/errors"
 	"github.com/morrocker/log"
 	tracker "github.com/morrocker/progress-tracker"
+	"github.com/morrocker/utils"
 )
 
 type Data struct {
@@ -108,7 +109,7 @@ func metaTreeWorker(data Data, tc chan *MetaTree, wg *sync.WaitGroup, tr *tracke
 
 func getChildren(id string, data Data, tr *tracker.SuperTracker) ([]*MetaTree, error) {
 	op := "recovery.getChildren()"
-	log.Task("Getting children from " + id)
+	log.Task("Getting children from " + utils.Trimmer(id))
 
 	var errOut error
 	for retries := 0; retries < 5; retries++ {
