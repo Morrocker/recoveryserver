@@ -85,7 +85,7 @@ func metaTreeWorker(data Data, tc chan *MetaTree, wg *sync.WaitGroup, tr *tracke
 			childrenTrees, err := getChildren(mt.Mf.ID, data, tr)
 			if err != nil {
 				log.Error("Couldnt retrieve metafile: %s", errors.Extend("recoveries.getChildMetaTree()", err))
-				tr.IncreaseCurr("metafiles")
+				isDone(1, 0, tc, tr)
 				continue
 			}
 
@@ -97,13 +97,11 @@ func metaTreeWorker(data Data, tc chan *MetaTree, wg *sync.WaitGroup, tr *tracke
 
 				tc <- childTree
 			}
-			tr.IncreaseCurr("metafiles")
-			isDone(tc, tr)
+			isDone(1, 0, tc, tr)
 			continue
 		}
 		// r.updateTrackerTotals(mt.mf.Size)
-		tr.IncreaseCurr("metafiles")
-		isDone(tc, tr)
+		isDone(1, 0, tc, tr)
 	}
 	wg.Done()
 }
@@ -232,13 +230,9 @@ func getRootMetaTree(data Data, tr *tracker.SuperTracker) (mt *MetaTree, errOut 
 	return nil, errOut
 }
 
-func isDone(tc chan *MetaTree, tr *tracker.SuperTracker) {
-	curr, tot, err := tr.RawValues("metafiles")
-	if err != nil {
-		log.Errorln("ERROR while getting metafiles tracker values") // Temporary???
-	}
-	// log.Notice("is done? c:%d,t:%d", curr, tot)
-	if curr == tot {
+func isDone(curr, tot int, tc chan *MetaTree, tr *tracker.SuperTracker) {
+	c, t, _ := tr.ChangeAndReturn("metafiles", curr, tot)
+	if c == t {
 		time.Sleep(time.Second)
 		close(tc)
 	}

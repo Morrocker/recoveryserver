@@ -155,6 +155,10 @@ github.com/morrocker/progress-tracker v0.0.0-20210325143638-ad470534c561 h1:a8W+
 github.com/morrocker/progress-tracker v0.0.0-20210325143638-ad470534c561/go.mod h1:xmaMk3YmP0MsbHaLXHi0W225GbXOrfSAY6RklkLe4Bo=
 github.com/morrocker/progress-tracker v0.0.0-20210421163456-9d90c63d9231 h1:9uEZY4H0EWuqoIEyoInOEJW1BLpWH42up38H2GwLj4U=
 github.com/morrocker/progress-tracker v0.0.0-20210421163456-9d90c63d9231/go.mod h1:QE2MkgPQM1qFK4c9L8Zsw3wsG6O9y8ub9uCfmb0FWas=
+github.com/morrocker/progress-tracker v0.0.0-20210422153555-0435af229b7b h1:AMcbHf3xHGIPjRx2yv48t4vLtpXWzMfjgK/IGMU/PFI=
+github.com/morrocker/progress-tracker v0.0.0-20210422153555-0435af229b7b/go.mod h1:QE2MkgPQM1qFK4c9L8Zsw3wsG6O9y8ub9uCfmb0FWas=
+github.com/morrocker/progress-tracker v0.0.0-20210422155722-2c27dc7df1a6 h1:wqIwshBcncKBFAcGuR3R07bqh1+su1uSA8Rr9K4kR04=
+github.com/morrocker/progress-tracker v0.0.0-20210422155722-2c27dc7df1a6/go.mod h1:QE2MkgPQM1qFK4c9L8Zsw3wsG6O9y8ub9uCfmb0FWas=
 github.com/morrocker/utils v0.0.0-20210326152034-ee75a97c3c41 h1:TEsBkdfExiYCWsCUVeUyMxBi8XCINAduJGmyGgqpn7E=
 github.com/morrocker/utils v0.0.0-20210326152034-ee75a97c3c41/go.mod h1:kfvMwyMNz1837k6VSkty0EJ5zLwAm86grPz4tlvdJ+I=
 github.com/mwitkow/go-conntrack v0.0.0-20161129095857-cc309e4a2223/go.mod h1:qRWi+5nqEBWmkhHvq77mSJWrCKwh8bxhgT7d/eI7P4U=
@@ -282,6 +286,8 @@ golang.org/x/sys v0.0.0-20210415045647-66c3f260301c h1:6L+uOeS3OQt/f4eFHXZcTxeZr
 golang.org/x/sys v0.0.0-20210415045647-66c3f260301c/go.mod h1:h1NjWce9XRLGQEsW7wpKNCjG9DtNlClVuFLEZdDNbEs=
 golang.org/x/sys v0.0.0-20210420205809-ac73e9fd8988 h1:EjgCl+fVlIaPJSori0ikSz3uV0DOHKWOJFpv1sAAhBM=
 golang.org/x/sys v0.0.0-20210420205809-ac73e9fd8988/go.mod h1:h1NjWce9XRLGQEsW7wpKNCjG9DtNlClVuFLEZdDNbEs=
+golang.org/x/sys v0.0.0-20210421221651-33663a62ff08 h1:qyN5bV+96OX8pL78eXDuz6YlDPzCYgdW74H5yE9BoSU=
+golang.org/x/sys v0.0.0-20210421221651-33663a62ff08/go.mod h1:h1NjWce9XRLGQEsW7wpKNCjG9DtNlClVuFLEZdDNbEs=
 golang.org/x/term v0.0.0-20201126162022-7de9c90e9dd1/go.mod h1:bj7SfCRtBDWHUb9snDiAeCFNEtKQo2Wmx5Cou7ajbmo=
 golang.org/x/text v0.3.0/go.mod h1:NqM8EUOU14njkJ3fqMW+pc6Ldnwhi/IjpwHt7yyuwOQ=
 golang.org/x/text v0.3.2/go.mod h1:bEr9sfX3Q8Zfm5fL9x+3itogRgK3+ptLWKqgva+5dAk=

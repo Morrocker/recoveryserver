@@ -18,13 +18,13 @@ require (
 	github.com/morrocker/broadcast v0.0.0-20210331144645-71f2ee18ca39
 	github.com/morrocker/errors v0.0.0-20210323144609-d8629b6d420a
 	github.com/morrocker/log v0.0.0-20210322121956-1387843cccea
-	github.com/morrocker/progress-tracker v0.0.0-20210421163456-9d90c63d9231
+	github.com/morrocker/progress-tracker v0.0.0-20210422155722-2c27dc7df1a6
 	github.com/morrocker/utils v0.0.0-20210326152034-ee75a97c3c41
 	github.com/sirupsen/logrus v1.8.1 // indirect
 	github.com/spf13/pflag v1.0.5
 	github.com/ugorji/go v1.2.5 // indirect
 	golang.org/x/crypto v0.0.0-20210322153248-0c34fe9e7dc2 // indirect
-	golang.org/x/sys v0.0.0-20210420205809-ac73e9fd8988 // indirect
+	golang.org/x/sys v0.0.0-20210421221651-33663a62ff08 // indirect
 	golang.org/x/text v0.3.5
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 )
