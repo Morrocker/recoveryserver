@@ -96,9 +96,6 @@ func GetFiles(mt *tree.MetaTree, OutputPath string, data Data, rbs remote.RBS, t
 	bfWg.Wait()
 
 	log.Noticeln("Files retrieval completed")
-	for _, fd := range fl.ToDo {
-		log.Info("File: %s", fd.OutputPath)
-	}
 	return nil
 }
 

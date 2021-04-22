@@ -34,6 +34,7 @@ func smallFilesWorker(fc chan []*fileData, user string, wg *sync.WaitGroup, rbs 
 		positionArray := []*fileData{}
 		blocksArray := []string{}
 		for _, fd := range fda {
+			log.Info("Recovering file %s [%s]", fd.OutputPath, utils.B2H(int64(fd.Mt.Mf.Size)))
 			blocksArray = append(blocksArray, fd.blocksList...)
 			for x := 0; x < len(fd.blocksList); x++ {
 				positionArray = append(positionArray, fd)
@@ -136,7 +137,7 @@ func startBigFilesWorkers(data Data, rbs remote.RBS) (chan bigData, *sync.WaitGr
 func writeSmallFile(fd *fileData, content []byte) error {
 	// Creating recovery file
 	op := "recovery.writeFile()"
-	log.Task("Writting small file %s [%s]", utils.Trimmer(fd.OutputPath, 0, 60), utils.B2H(int64(fd.Mt.Mf.Size)))
+	// log.Task("Writting small file %s [%s]", fd.OutputPath, utils.B2H(int64(fd.Mt.Mf.Size)))
 	f, err := os.Create(norm.NFC.String(fd.OutputPath))
 	if err != nil {
 		// r.increaseErrors()
@@ -173,7 +174,7 @@ func recoverBigFile(fd *fileData, user string, bfc chan bigData, wg *sync.WaitGr
 	// if r.flowGate() {
 	// 	break
 	// }
-	log.Info("Recovering file %s [%s]", utils.Trimmer(fd.OutputPath, 0, 60), utils.B2H(int64(fd.Mt.Mf.Size)))
+	log.Info("Recovering file %s [%s]", fd.OutputPath, utils.B2H(int64(fd.Mt.Mf.Size)))
 
 	// Creating recovery file
 	f, err := os.Create(norm.NFC.String(fd.OutputPath))
@@ -218,7 +219,7 @@ func recoverBigFile(fd *fileData, user string, bfc chan bigData, wg *sync.WaitGr
 		// }
 		content, ok := blocksBuffer[x]
 		if ok {
-			log.Info("Block #%d is being written from buffer for %s", x, utils.Trimmer(fd.OutputPath, 0, 50))
+			// log.Info("Block #%d is being written from buffer for %s", x, utils.Trimmer(fd.OutputPath, 0, 50))
 			if _, err := f.Write(content); err != nil {
 				// r.increaseErrors()
 				// r.log.Errorln(errors.New(op, fmt.Sprintf("error could not write content for block '%s' for file '%s': %v\n", blocks[x], path, err)))
@@ -238,7 +239,7 @@ func recoverBigFile(fd *fileData, user string, bfc chan bigData, wg *sync.WaitGr
 				return errors.Extend(op, data.err)
 			}
 			if data.idx == x {
-				log.Info("Block #%d is being written directly for %s", x, utils.Trimmer(fd.OutputPath, 0, 50))
+				// log.Info("Block #%d is being written directly for %s", x, utils.Trimmer(fd.OutputPath, 0, 50))
 				if _, err := f.Write(data.content); err != nil {
 					// r.increaseErrors()
 					// r.log.Errorln(errors.New(op, fmt.Sprintf("error could not write content for block '%s' for file '%s': %v\n", blocks[x], path[len(path)-20:], err)))
