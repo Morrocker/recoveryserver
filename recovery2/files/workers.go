@@ -233,6 +233,10 @@ func recoverBigFile(fd *fileData, user string, bfc chan bigData, wg *sync.WaitGr
 			continue
 		}
 		for data := range ret {
+			if data.err != nil {
+				f.Close()
+				return errors.Extend(op, data.err)
+			}
 			if data.idx == x {
 				// log.Info("Block #%d is being written directly for %s", x, path[len(path)-20:])
 				if _, err := f.Write(data.content); err != nil {
