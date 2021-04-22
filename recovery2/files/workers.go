@@ -136,7 +136,7 @@ func startBigFilesWorkers(data Data, rbs remote.RBS) (chan bigData, *sync.WaitGr
 func writeSmallFile(fd *fileData, content []byte) error {
 	// Creating recovery file
 	op := "recovery.writeFile()"
-	log.Task("Writting small file %s", fd.OutputPath)
+	log.Task("Writting small file %s [%s]", utils.Trimmer(fd.OutputPath, 0, 60), utils.B2H(int64(fd.Mt.Mf.Size)))
 	f, err := os.Create(norm.NFC.String(fd.OutputPath))
 	if err != nil {
 		// r.increaseErrors()
@@ -173,7 +173,7 @@ func recoverBigFile(fd *fileData, user string, bfc chan bigData, wg *sync.WaitGr
 	// if r.flowGate() {
 	// 	break
 	// }
-	log.Info("Recovering file %s [%s]", fd.OutputPath, utils.B2H(int64(fd.Mt.Mf.Size)))
+	log.Info("Recovering file %s [%s]", utils.Trimmer(fd.OutputPath, 0, 60), utils.B2H(int64(fd.Mt.Mf.Size)))
 
 	// Creating recovery file
 	f, err := os.Create(norm.NFC.String(fd.OutputPath))
@@ -252,7 +252,7 @@ func recoverBigFile(fd *fileData, user string, bfc chan bigData, wg *sync.WaitGr
 			}
 			checkBuffer(tr)
 			blocksBuffer[data.idx] = data.content
-			tr.IncreaseCurr("blocksBuffer")
+			tr.ChangeCurr("blocksBuffer", 1)
 		}
 	}
 	// r.tracker.IncreaseCurr("files")
