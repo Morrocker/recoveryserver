@@ -211,14 +211,14 @@ func recoverBigFile(fd *fileData, user string, bfc chan bigData, wg *sync.WaitGr
 	// Receiving blocks from blocksworkers and writting into file
 	tr := tracker.New()
 	tr.AddGauge("buffer", "buffer", 10)
-	for x := 0; x < idx; x++ {
+	for x := 0; x < idx+1; x++ {
 		// if r.flowGate() {
 		// 	f.Close()
 		// 	break Outer
 		// }
 		content, ok := blocksBuffer[x]
 		if ok {
-			// log.Info("Block #%d is being written from buffer for %s", x, path[len(path)-20:])
+			log.Info("Block #%d is being written from buffer for %s", x, utils.Trimmer(fd.OutputPath, 0, 50))
 			if _, err := f.Write(content); err != nil {
 				// r.increaseErrors()
 				// r.log.Errorln(errors.New(op, fmt.Sprintf("error could not write content for block '%s' for file '%s': %v\n", blocks[x], path, err)))
@@ -238,7 +238,7 @@ func recoverBigFile(fd *fileData, user string, bfc chan bigData, wg *sync.WaitGr
 				return errors.Extend(op, data.err)
 			}
 			if data.idx == x {
-				// log.Info("Block #%d is being written directly for %s", x, path[len(path)-20:])
+				log.Info("Block #%d is being written directly for %s", x, utils.Trimmer(fd.OutputPath, 0, 50))
 				if _, err := f.Write(data.content); err != nil {
 					// r.increaseErrors()
 					// r.log.Errorln(errors.New(op, fmt.Sprintf("error could not write content for block '%s' for file '%s': %v\n", blocks[x], path[len(path)-20:], err)))
