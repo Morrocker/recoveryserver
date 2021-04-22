@@ -19,7 +19,7 @@ require (
 	github.com/morrocker/errors v0.0.0-20210323144609-d8629b6d420a
 	github.com/morrocker/log v0.0.0-20210322121956-1387843cccea
 	github.com/morrocker/progress-tracker v0.0.0-20210422155722-2c27dc7df1a6
-	github.com/morrocker/utils v0.0.0-20210422163133-46e73adb6232
+	github.com/morrocker/utils v0.0.0-20210422181607-ae1434a6596a
 	github.com/sirupsen/logrus v1.8.1 // indirect
 	github.com/spf13/pflag v1.0.5
 	github.com/ugorji/go v1.2.5 // indirect
