@@ -227,7 +227,7 @@ func recoverBigFile(fd *fileData, user string, bfc chan bigData, wg *sync.WaitGr
 			}
 			// r.tracker.ChangeCurr("completedSize", len(content))
 			// r.tracker.ChangeCurr("size", len(content))
-			// r.tracker.IncreaseCurr("blocks")
+			// r.tracker.ChangeCurr("blocks")
 			tr.ChangeCurr("buffer", -1)
 			delete(blocksBuffer, x)
 			continue
@@ -247,7 +247,7 @@ func recoverBigFile(fd *fileData, user string, bfc chan bigData, wg *sync.WaitGr
 				}
 				// r.tracker.ChangeCurr("completedSize", len(d.content))
 				// r.tracker.ChangeCurr("size", len(d.content))
-				// r.tracker.IncreaseCurr("blocks")
+				// r.tracker.ChangeCurr("blocks")
 				break
 			}
 			checkBuffer(tr)
@@ -255,7 +255,7 @@ func recoverBigFile(fd *fileData, user string, bfc chan bigData, wg *sync.WaitGr
 			tr.ChangeCurr("blocksBuffer", 1)
 		}
 	}
-	// r.tracker.IncreaseCurr("files")
+	// r.tracker.ChangeCurr("files")
 	// log.Info("Finishing file %s", path[len(path)-20:])
 	f.Close()
 	return nil

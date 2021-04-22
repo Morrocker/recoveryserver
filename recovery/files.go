@@ -148,7 +148,7 @@ Outer:
 			r.tracker.ChangeCurr("completedSize", mt.mf.Size)
 			continue
 		}
-		r.tracker.IncreaseCurr("blocks") // This is the fileblock
+		r.tracker.ChangeCurr("blocks", 1) // This is the fileblock
 
 		// Creating recovery file
 		op := "recovery.fileWriter()"
@@ -190,7 +190,7 @@ Outer:
 				}
 				r.tracker.ChangeCurr("completedSize", len(content))
 				r.tracker.ChangeCurr("size", len(content))
-				r.tracker.IncreaseCurr("blocks")
+				r.tracker.ChangeCurr("blocks", 1)
 				r.tracker.ChangeCurr("blocksBuffer", -1)
 				delete(blocksBuffer, x)
 				continue
@@ -206,15 +206,15 @@ Outer:
 					}
 					r.tracker.ChangeCurr("completedSize", len(d.content))
 					r.tracker.ChangeCurr("size", len(d.content))
-					r.tracker.IncreaseCurr("blocks")
+					r.tracker.ChangeCurr("blocks", 1)
 					break
 				}
 				r.checkBuffer()
 				blocksBuffer[d.id] = d.content
-				r.tracker.IncreaseCurr("blocksBuffer")
+				r.tracker.ChangeCurr("blocksBuffer", 1)
 			}
 		}
-		r.tracker.IncreaseCurr("files")
+		r.tracker.ChangeCurr("files", 1)
 		// log.Info("Finishing file %s", path[len(path)-20:])
 		f.Close()
 	}
@@ -288,13 +288,13 @@ func (r *Recovery) getBlockLists(hl []string, fq *fileQueue) error {
 	return nil
 }
 
-func (r *Recovery) sortFiles(fq *fileQueue) (bigFiles []*MetaTree, smallFiles []*MetaTree) {
-	for _, mt := range fq.ToDo {
-		if mt.mf.Size > 104857600 {
-			bigFiles = append(bigFiles, mt)
-		} else {
-			smallFiles = append(smallFiles, mt)
-		}
-	}
-	return
-}
+// func (r *Recovery) sortFiles(fq *fileQueue) (bigFiles []*MetaTree, smallFiles []*MetaTree) {
+// 	for _, mt := range fq.ToDo {
+// 		if mt.mf.Size > 104857600 {
+// 			bigFiles = append(bigFiles, mt)
+// 		} else {
+// 			smallFiles = append(smallFiles, mt)
+// 		}
+// 	}
+// 	return
+// }

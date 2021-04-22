@@ -79,7 +79,7 @@ Outer:
 			children, err := r.getChildren(mt.mf.ID)
 			if err != nil {
 				r.log.Error("Couldnt retrieve metafile: %s", errors.Extend("recoveries.getChildMetaTree()", err))
-				r.tracker.IncreaseCurr("metafiles")
+				r.tracker.ChangeCurr("metafiles", 1)
 				continue
 			}
 
@@ -91,12 +91,12 @@ Outer:
 				mt.addChildren(childTree)
 				tc <- childTree
 			}
-			r.tracker.IncreaseCurr("metafiles")
+			r.tracker.ChangeCurr("metafiles", 1)
 			r.isDone(tc)
 			continue
 		}
 		r.updateTrackerTotals(mt.mf.Size)
-		r.tracker.IncreaseCurr("metafiles")
+		r.tracker.ChangeCurr("metafiles", 1)
 		r.isDone(tc)
 	}
 	wg.Done()

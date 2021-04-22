@@ -122,5 +122,5 @@ func (r *Recovery) updateTrackerCurrent(size int64) {
 }
 
 func (r *Recovery) increaseErrors() {
-	r.tracker.IncreaseCurr("errors")
+	r.tracker.ChangeCurr("errors", 1)
 }

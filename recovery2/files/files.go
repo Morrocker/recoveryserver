@@ -231,7 +231,7 @@ func filterDoneFiles(fda map[string]*fileData) map[string]*fileData {
 // 			r.tracker.ChangeCurr("completedSize", mt.mf.Size)
 // 			continue
 // 		}
-// 		r.tracker.IncreaseCurr("blocks") // This is the fileblock
+// 		r.tracker.ChangeCurr("blocks") // This is the fileblock
 
 // 		// Creating recovery file
 // 		op := "recovery.fileWriter()"
@@ -273,7 +273,7 @@ func filterDoneFiles(fda map[string]*fileData) map[string]*fileData {
 // 				}
 // 				r.tracker.ChangeCurr("completedSize", len(content))
 // 				r.tracker.ChangeCurr("size", len(content))
-// 				r.tracker.IncreaseCurr("blocks")
+// 				r.tracker.ChangeCurr("blocks")
 // 				r.tracker.ChangeCurr("blocksBuffer", -1)
 // 				delete(blocksBuffer, x)
 // 				continue
@@ -289,15 +289,15 @@ func filterDoneFiles(fda map[string]*fileData) map[string]*fileData {
 // 					}
 // 					r.tracker.ChangeCurr("completedSize", len(d.content))
 // 					r.tracker.ChangeCurr("size", len(d.content))
-// 					r.tracker.IncreaseCurr("blocks")
+// 					r.tracker.ChangeCurr("blocks")
 // 					break
 // 				}
 // 				r.checkBuffer()
 // 				blocksBuffer[d.id] = d.content
-// 				r.tracker.IncreaseCurr("blocksBuffer")
+// 				r.tracker.ChangeCurr("blocksBuffer")
 // 			}
 // 		}
-// 		r.tracker.IncreaseCurr("files")
+// 		r.tracker.ChangeCurr("files")
 // 		// log.Info("Finishing file %s", path[len(path)-20:])
 // 		f.Close()
 // 	}

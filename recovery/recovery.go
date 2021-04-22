@@ -43,7 +43,7 @@ func (r *Recovery) Run() {
 		r.Cancel()
 		return
 	}
-	r.tracker.Print()
+	// r.tracker.Print()
 	if r.flowGate() {
 		return
 	}
