@@ -56,6 +56,7 @@ func smallFilesWorker(fc chan []*fileData, user string, wg *sync.WaitGroup, rbs 
 					log.Errorln(errors.Extend(op, err))
 					track.FailedFiles(1, tr)
 				}
+				track.CompleteFile(int64(len(bytesArray)), tr)
 				bytesArray = []byte{}
 				bytesArray = appendContent(bytesArray, content, tr)
 			}
@@ -65,6 +66,7 @@ func smallFilesWorker(fc chan []*fileData, user string, wg *sync.WaitGroup, rbs 
 			log.Errorln(errors.Extend(op, err))
 			track.FailedFiles(1, tr)
 		} // writting the last file
+		track.CompleteFile(int64(len(bytesArray)), tr)
 	}
 	wg.Done()
 }
@@ -196,7 +198,7 @@ func recoverBigFile(bfc chan *fileData, fdc chan bigData, user string, wg *sync.
 				tr.ChangeCurr("blocksBuffer", 1)
 			}
 		}
-		tr.ChangeCurr("files", 1)
+		track.CompleteFile(fd.Mt.Mf.Size, tr)
 		f.Close()
 	}
 	wg.Done()
