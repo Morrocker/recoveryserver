@@ -11,7 +11,6 @@ import (
 	tracker "github.com/morrocker/progress-tracker"
 	"github.com/morrocker/recoveryserver/recovery2/remote"
 	track "github.com/morrocker/recoveryserver/recovery2/tracker"
-	"github.com/morrocker/utils"
 	"golang.org/x/text/unicode/norm"
 )
 
@@ -33,13 +32,13 @@ func smallFilesWorker(fc chan []*fileData, user string, wg *sync.WaitGroup, rbs 
 		positionArray := []*fileData{}
 		blocksArray := []string{}
 		for _, fd := range fda {
-			log.Info("Recovering file %s [%s]", fd.OutputPath, utils.B2H(int64(fd.Mt.Mf.Size)))
+			// log.Info("Recovering file %s [%s]", fd.OutputPath, utils.B2H(int64(fd.Mt.Mf.Size)))
 			blocksArray = append(blocksArray, fd.blocksList...)
 			for x := 0; x < len(fd.blocksList); x++ {
 				positionArray = append(positionArray, fd)
 			}
 		}
-		log.Infoln("Sending small files hashs")
+		// log.Infoln("Sending small files hashs")
 		bytesArrays, err := rbs.GetBlocks(blocksArray, user)
 		if err != nil {
 			log.Errorln(errors.Extend(op, err))
@@ -48,7 +47,7 @@ func smallFilesWorker(fc chan []*fileData, user string, wg *sync.WaitGroup, rbs 
 		}
 		bytesArray := []byte{}
 
-		log.Infoln("Writting small files hashs")
+		// log.Infoln("Writting small files hashs")
 		for i, content := range bytesArrays {
 			if i == 0 {
 				bytesArray = appendContent(bytesArray, content, tr)
@@ -70,7 +69,7 @@ func smallFilesWorker(fc chan []*fileData, user string, wg *sync.WaitGroup, rbs 
 			track.FailedFiles(1, tr)
 		} // writting the last file
 		track.CompleteFile(int64(len(bytesArray)), tr)
-		log.Infoln("Completed Writting small files hashs")
+		// log.Infoln("Completed Writting small files hashs")
 	}
 	wg.Done()
 }
@@ -134,7 +133,7 @@ type bigData struct {
 func recoverBigFile(bfc chan *fileData, fdc chan bigData, user string, wg *sync.WaitGroup, rbs remote.RBS, tr *tracker.SuperTracker) {
 	op := "files.recoverBigFile()"
 	for fd := range bfc {
-		log.Info("Recovering file %s [%s]", fd.OutputPath, utils.B2H(int64(fd.Mt.Mf.Size)))
+		// log.Info("Recovering file %s [%s]", fd.OutputPath, utils.B2H(int64(fd.Mt.Mf.Size)))
 
 		// Creating recovery file
 		f, err := os.Create(norm.NFC.String(fd.OutputPath))
