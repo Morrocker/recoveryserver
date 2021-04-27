@@ -67,9 +67,9 @@ func GetFiles(mt *tree.MetaTree, OutputPath string, data Data, rbs remote.RBS, t
 	var size int64
 	var subFl []*fileData
 
-	tr.StartAutoPrint(60)
+	tr.StartAutoPrint(6 * time.Second)
 	tr.StartAutoMeasure("size", 60)
-	// log.Notice("Sending small files lists. #%d", len(smallFiles))
+	log.Notice("Sending small files lists. #%d", len(smallFiles))
 	for _, fd := range smallFiles {
 		fileSize := fd.Mt.Mf.Size
 		if size+fileSize > 104857600 && size != 0 { // 10000 BLOCKS
@@ -88,6 +88,7 @@ func GetFiles(mt *tree.MetaTree, OutputPath string, data Data, rbs remote.RBS, t
 	close(sfc)
 	sfWg.Wait()
 
+	log.Notice("Sending big files lists. #%d", len(bigFiles))
 	for _, fd := range bigFiles {
 		bfc <- fd
 	}
