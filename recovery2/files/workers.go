@@ -39,6 +39,7 @@ func smallFilesWorker(fc chan []*fileData, user string, wg *sync.WaitGroup, rbs 
 				positionArray = append(positionArray, fd)
 			}
 		}
+		log.Infoln("Sending small files hashs")
 		bytesArrays, err := rbs.GetBlocks(blocksArray, user)
 		if err != nil {
 			log.Errorln(errors.Extend(op, err))
@@ -47,6 +48,7 @@ func smallFilesWorker(fc chan []*fileData, user string, wg *sync.WaitGroup, rbs 
 		}
 		bytesArray := []byte{}
 
+		log.Infoln("Writting small files hashs")
 		for i, content := range bytesArrays {
 			if i == 0 {
 				bytesArray = appendContent(bytesArray, content, tr)
@@ -68,6 +70,7 @@ func smallFilesWorker(fc chan []*fileData, user string, wg *sync.WaitGroup, rbs 
 			track.FailedFiles(1, tr)
 		} // writting the last file
 		track.CompleteFile(int64(len(bytesArray)), tr)
+		log.Infoln("Completed Writting small files hashs")
 	}
 	wg.Done()
 }
