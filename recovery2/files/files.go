@@ -67,6 +67,8 @@ func GetFiles(mt *tree.MetaTree, OutputPath string, data Data, rbs remote.RBS, t
 	var size int64
 	var subFl []*fileData
 
+	tr.StartAutoPrint(60)
+	tr.StartAutoMeasure("size", 60)
 	// log.Notice("Sending small files lists. #%d", len(smallFiles))
 	for _, fd := range smallFiles {
 		fileSize := fd.Mt.Mf.Size
@@ -96,6 +98,8 @@ func GetFiles(mt *tree.MetaTree, OutputPath string, data Data, rbs remote.RBS, t
 	close(bdc)
 	bdWg.Wait()
 
+	tr.StopAutoPrint()
+	tr.StopAutoMeasure("size")
 	log.Noticeln("Files retrieval completed")
 	return nil
 }
