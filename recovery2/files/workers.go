@@ -11,6 +11,7 @@ import (
 	tracker "github.com/morrocker/progress-tracker"
 	"github.com/morrocker/recoveryserver/recovery2/remote"
 	track "github.com/morrocker/recoveryserver/recovery2/tracker"
+	"github.com/morrocker/utils"
 	"golang.org/x/text/unicode/norm"
 )
 
@@ -32,7 +33,7 @@ func smallFilesWorker(fc chan []*fileData, user string, wg *sync.WaitGroup, rbs 
 		positionArray := []*fileData{}
 		blocksArray := []string{}
 		for _, fd := range fda {
-			// log.Info("Recovering file %s [%s]", fd.OutputPath, utils.B2H(int64(fd.Mt.Mf.Size)))
+			log.Info("Recovering file %s [%s]", fd.OutputPath, utils.B2H(int64(fd.Mt.Mf.Size)))
 			blocksArray = append(blocksArray, fd.blocksList...)
 			for x := 0; x < len(fd.blocksList); x++ {
 				positionArray = append(positionArray, fd)
@@ -130,7 +131,7 @@ type bigData struct {
 func recoverBigFile(bfc chan *fileData, fdc chan bigData, user string, wg *sync.WaitGroup, rbs remote.RBS, tr *tracker.SuperTracker) {
 	op := "files.recoverBigFile()"
 	for fd := range bfc {
-		// log.Info("Recovering file %s [%s]", fd.OutputPath, utils.B2H(int64(fd.Mt.Mf.Size)))
+		log.Info("Recovering file %s [%s]", fd.OutputPath, utils.B2H(int64(fd.Mt.Mf.Size)))
 
 		// Creating recovery file
 		f, err := os.Create(norm.NFC.String(fd.OutputPath))
