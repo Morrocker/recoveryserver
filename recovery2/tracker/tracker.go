@@ -22,7 +22,7 @@ func New() *tracker.SuperTracker {
 		cs, ts, _ := tr.Values("totalsize")
 		rt, _ := tr.TrueProgressRate("size")
 		eta, _ := tr.ETA("size")
-		log.Notice("Files: %d/%d | Size: %s | Error Files/Total: %d/%d \t\t[ %s | ETA: %s ]", cf, tf, cs, ts, fe, et, rt, eta)
+		log.Notice("Files: %d/%d | Size: %s/%s | Error Files/Total: %d/%d \t\t[ %s | ETA: %s ]", cf, tf, cs, ts, fe, et, rt, eta)
 	}
 	tr.PrintFunc(fn)
 
