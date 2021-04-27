@@ -105,11 +105,11 @@ func startBigFilesWorkers(data Data, rbs remote.RBS, tr *tracker.SuperTracker) (
 	bdc := make(chan bigData)
 	wg.Add(data.Workers)
 	for x := 0; x < data.Workers; x++ {
-		go blocksWorker(bdc, data.User, wg, rbs, tr)
+		go recoverBigFile(bfc, bdc, data.User, wg, rbs, tr)
 	}
 	wg2.Add(data.Workers)
 	for x := 0; x < data.Workers; x++ {
-		go recoverBigFile(bfc, bdc, data.User, wg2, rbs, tr)
+		go blocksWorker(bdc, data.User, wg2, rbs, tr)
 	}
 	return bfc, bdc, wg, wg2
 }
