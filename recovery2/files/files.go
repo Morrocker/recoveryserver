@@ -96,8 +96,10 @@ func GetFiles(mt *tree.MetaTree, OutputPath string, data Data, rbs remote.RBS, t
 	time.Sleep(time.Second)
 	close(bfc)
 	bfWg.Wait()
+	log.Noticeln("A")
 	close(bdc)
 	bdWg.Wait()
+	log.Noticeln("B")
 
 	tr.StopAutoPrint()
 	tr.StopAutoMeasure("size")
