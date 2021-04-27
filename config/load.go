@@ -5,7 +5,6 @@ import (
 	"io/ioutil"
 	"os"
 	"path"
-	"time"
 
 	"github.com/morrocker/errors"
 	"github.com/morrocker/log"
@@ -38,11 +37,11 @@ func (c *Config) Load() error {
 
 func SetLogger() {
 	op := "config.SetLogger()"
-	if debug {
-		log.SetMode("debug")
-	} else if verbose {
-		log.SetMode("verbose")
-	}
+	// if debug {
+	// 	log.SetMode("debug")
+	// } else if verbose {
+	// 	log.SetMode("verbose")
+	// }
 
 	srvLogPath := path.Join(Data.RootLogDir, "logs", "server")
 	Data.SrvLogDir = srvLogPath
@@ -58,12 +57,12 @@ func SetLogger() {
 		os.Exit(1)
 	}
 
-	now := time.Now().Format("2006-01-02T15h04m")
-	log.SetScope(true, true, false)
-	log.Info("Setting logfile to %s", path.Join(srvLogPath, "recoveryServer-"+now+".log"))
-	log.OutputFile(path.Join(srvLogPath, "recoveryServer-"+now+".log"))
-	log.StartWriter()
-	log.ToggleDualMode()
+	// now := time.Now().Format("2006-01-02T15h04m")
+	// log.SetScope(true, true, false)
+	// log.Info("Setting logfile to %s", path.Join(srvLogPath, "recoveryServer-"+now+".log"))
+	// log.OutputFile(path.Join(srvLogPath, "recoveryServer-"+now+".log"))
+	// log.StartWriter()
+	// log.ToggleDualMode()
 }
 
 func CreatePDFDir() {

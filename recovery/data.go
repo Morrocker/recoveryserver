@@ -205,9 +205,9 @@ func (r *Recovery) initLogger() {
 	}
 	log.Info("Setting output log file for recovery #%d to %s", r.Data.ID, logPath)
 	Log.OutputFile(logPath)
-	Log.ToggleSilent()
-	Log.StartWriter()
-	Log.SetScope(true, true, true)
-	Log.SetMode("verbose")
+	// Log.ToggleSilent()
+	// Log.StartWriter()
+	// Log.SetScope(true, true, true)
+	// Log.SetMode("verbose")
 	r.log = Log
 }

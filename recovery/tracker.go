@@ -6,8 +6,6 @@ import (
 	"github.com/morrocker/errors"
 	"github.com/morrocker/log"
 	tracker "github.com/morrocker/progress-tracker"
-	"github.com/morrocker/recoveryserver/config"
-	"github.com/morrocker/utils"
 )
 
 func (r *Recovery) autoTrack() {
@@ -37,18 +35,18 @@ func (r *Recovery) autoTrack() {
 func (r *Recovery) startTracker() error {
 	st := tracker.New()
 	r.tracker = st
-	r.tracker.AddGauge("files", "Files", 0)
-	r.tracker.AddGauge("blocks", "Blocks", 0)
-	r.tracker.AddGauge("size", "Size", 0)
-	r.tracker.AddGauge("completedSize", "CSize", 0)
-	r.tracker.AddGauge("errors", "Errors", 0)
-	r.tracker.AddGauge("blocksBuffer", "", config.Data.BlocksBuffer)
-	r.tracker.AddGauge("metafiles", "Metafiles", 0)
-	r.tracker.InitSpdRate("size", 40)
-	r.tracker.InitSpdRate("completedSize", 40)
-	r.tracker.UnitsFunc("size", utils.B2H)
-	r.tracker.UnitsFunc("completedSize", utils.B2H)
-	r.tracker.PrintFunc(r.printFunction)
+	// r.tracker.AddGauge("files", "Files", 0)
+	// r.tracker.AddGauge("blocks", "Blocks", 0)
+	// r.tracker.AddGauge("size", "Size", 0)
+	// r.tracker.AddGauge("completedSize", "CSize", 0)
+	// r.tracker.AddGauge("errors", "Errors", 0)
+	// r.tracker.AddGauge("blocksBuffer", "", config.Data.BlocksBuffer)
+	// r.tracker.AddGauge("metafiles", "Metafiles", 0)
+	// r.tracker.InitSpdRate("size", 40)
+	// r.tracker.InitSpdRate("completedSize", 40)
+	// r.tracker.UnitsFunc("size", utils.B2H)
+	// r.tracker.UnitsFunc("completedSize", utils.B2H)
+	// r.tracker.PrintFunc(r.printFunction)
 	return nil
 }
 
