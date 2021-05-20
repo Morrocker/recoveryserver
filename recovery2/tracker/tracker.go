@@ -10,6 +10,7 @@ func New() *tracker.SuperTracker {
 	tr := tracker.New()
 	tr.AddGauge("buffer", 10)
 	tr.AddGauge("files", 0)
+	tr.AddGauge("metafiles", 0)
 	tr.AddGauge("size", 0)
 	tr.AddGauge("totalsize", 0)
 	tr.AddGauge("errors", 0)

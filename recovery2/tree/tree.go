@@ -34,11 +34,9 @@ type Throttling struct {
 type MetaTree struct {
 	Mf       *reposerver.Metafile
 	Children []*MetaTree
-	// path     string
-	// blockslist *BlocksList
 }
 
-// NewMetaTree asfas
+// NewMetaTree returns a metatree with the given reposerver.Metafile
 func newMetaTree(mf *reposerver.Metafile) *MetaTree {
 	tree := &MetaTree{Mf: mf}
 	return tree
@@ -75,7 +73,7 @@ func GetRecoveryTree(data Data, tt Throttling, tr *tracker.SuperTracker) (*MetaT
 }
 
 func metaTreeWorker(data Data, tc chan *MetaTree, wg *sync.WaitGroup, tr *tracker.SuperTracker) {
-	log.Taskln("Starting metaTreeWorker")
+	log.Task("Starting metaTreeWorker")
 	// Outer:
 	for mt := range tc {
 		// if r.flowGate() {
@@ -169,15 +167,15 @@ func getChildren(id string, data Data, tr *tracker.SuperTracker) ([]*MetaTree, e
 	return nil, errOut
 }
 
-func startWorkers(data Data, t Throttling, tr *tracker.SuperTracker) (chan *MetaTree, *sync.WaitGroup) {
-	log.Taskln("Starting metaTree workers")
+func startWorkers(data Data, tt Throttling, tr *tracker.SuperTracker) (chan *MetaTree, *sync.WaitGroup) {
+	log.Taskln("Starting %d metaTree workers", tt.Workers)
 
 	wg := &sync.WaitGroup{}
 	// r.log.TaskV("Opening workers channel with buffer %d", config.Data.MetafilesBuffSize)
-	tc := make(chan *MetaTree, t.BuffSize)
+	tc := make(chan *MetaTree, tt.BuffSize)
 	// r.log.TaskV("Starting %d metafile workers", config.Data.MetafileWorkers)
-	wg.Add(t.Workers)
-	for x := 0; x < t.Workers; x++ {
+	wg.Add(tt.Workers)
+	for x := 0; x < tt.Workers; x++ {
 		go metaTreeWorker(data, tc, wg, tr)
 	}
 
