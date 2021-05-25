@@ -168,7 +168,7 @@ func getChildren(id string, data Data, tr *tracker.SuperTracker) ([]*MetaTree, e
 }
 
 func startWorkers(data Data, tt Throttling, tr *tracker.SuperTracker) (chan *MetaTree, *sync.WaitGroup) {
-	log.Taskln("Starting %d metaTree workers", tt.Workers)
+	log.Task("Starting %d metaTree workers", tt.Workers)
 
 	wg := &sync.WaitGroup{}
 	// r.log.TaskV("Opening workers channel with buffer %d", config.Data.MetafilesBuffSize)
