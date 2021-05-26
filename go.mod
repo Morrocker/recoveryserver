@@ -15,6 +15,7 @@ require (
 	github.com/morrocker/benchmark v0.0.0-20210423174424-b7bb35a8f18b // indirect
 	github.com/morrocker/broadcast v0.0.0-20210331144645-71f2ee18ca39
 	github.com/morrocker/errors v0.0.0-20210323144609-d8629b6d420a
+	github.com/morrocker/flow v0.0.0-20210526162134-cd31da452ce1
 	github.com/morrocker/log v1.0.0
 	github.com/morrocker/progress-tracker v0.0.0-20210423174136-4fa836e85800
 	github.com/morrocker/utils v0.0.0-20210422183138-f61d567976f4
