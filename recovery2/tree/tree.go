@@ -241,11 +241,11 @@ func isDone(curr, tot int, tc chan *MetaTree, rt *tracker.RecoveryTracker) {
 	if err != nil {
 		log.Error("Error updating metafiles total")
 	}
-	c, err := rt.Gauges["metafiles"].Current(int64(tot))
+	c, err := rt.Gauges["metafiles"].Current(int64(curr))
 	if err != nil {
 		log.Error("Error updating current total")
 	}
-	log.Benchln("Is done?: %d / %d", c, t)
+	log.Bench("Is done?: %d / %d", c, t)
 	if c == t {
 		time.Sleep(time.Second)
 		close(tc)
