@@ -148,7 +148,7 @@ func getChildren(id string, data Data, rt *tracker.RecoveryTracker) ([]*MetaTree
 		}
 
 		if resp.StatusCode != http.StatusOK {
-			errOut = errors.NewSimple("Status not ok")
+			errOut = errors.Single("Status not ok")
 			continue
 		}
 
@@ -213,7 +213,7 @@ func getRootMetaTree(data Data, rt *tracker.RecoveryTracker) (mt *MetaTree, errO
 		}
 
 		if resp.StatusCode != http.StatusOK {
-			errOut = errors.NewSimple("Status not ok")
+			errOut = errors.Single("Status not ok")
 			continue
 		}
 
