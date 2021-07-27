@@ -5,7 +5,7 @@ import (
 
 	"github.com/morrocker/errors"
 	"github.com/morrocker/log"
-	tracker "github.com/morrocker/progress-tracker"
+	"github.com/morrocker/tracker"
 )
 
 func (r *Recovery) autoTrack() {

@@ -16,7 +16,6 @@ require (
 	github.com/morrocker/errors v0.0.0-20210323144609-d8629b6d420a
 	github.com/morrocker/flow v0.0.0-20210526162134-cd31da452ce1
 	github.com/morrocker/log v1.0.0
-	github.com/morrocker/progress-tracker v0.0.0-20210423174136-4fa836e85800
 	github.com/morrocker/tracker v1.0.1
 	github.com/morrocker/utils v0.0.0-20210422183138-f61d567976f4
 	github.com/sirupsen/logrus v1.8.1 // indirect

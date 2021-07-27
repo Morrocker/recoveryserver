@@ -140,7 +140,6 @@ github.com/modern-go/reflect2 v0.0.0-20180701023420-4b7aa43c6742/go.mod h1:bx2lN
 github.com/modern-go/reflect2 v0.0.0-20180718012357-94122c33edd3/go.mod h1:bx2lNnkwVCuqBIxFjflWJWanXIb3RllmbCylyMrvgv0=
 github.com/modern-go/reflect2 v1.0.1 h1:9f412s+6RmYXLWZSEzVVgPGK7C2PphHj5RJrvfx9AWI=
 github.com/modern-go/reflect2 v1.0.1/go.mod h1:bx2lNnkwVCuqBIxFjflWJWanXIb3RllmbCylyMrvgv0=
-github.com/morrocker/benchmark v0.0.0-20210326150553-f72660cf55b3/go.mod h1:7ugHkj5e9ur+NmG+qMIzOFZHwJBfa1u1lyt8MED2aJ4=
 github.com/morrocker/benchmark v0.0.0-20210605042952-9c82b225f734 h1:35Th8kxJpChQFDYiYRdV0OJKv6VoHQV/4kMe1wrZsxU=
 github.com/morrocker/benchmark v0.0.0-20210605042952-9c82b225f734/go.mod h1:rmMcKVgW6HkT6hCd4cxwjki9uYnN1+nBfnEwV69zGDo=
 github.com/morrocker/broadcast v0.0.0-20210331144645-71f2ee18ca39 h1:XSzmEW1M80vR76B9HTevqib6WDtwxUQAVavG7UwG11w=
@@ -152,8 +151,6 @@ github.com/morrocker/flow v0.0.0-20210526162134-cd31da452ce1/go.mod h1:O8XpAgh0x
 github.com/morrocker/log v0.0.0-20210322121956-1387843cccea/go.mod h1:MjIRLB46zjJ4ECw3IGjLMlXBSz2+d9D/GIbZqie1Tl0=
 github.com/morrocker/log v1.0.0 h1:USbEIKyuIIxb2zijLbIQYhRRHklNtumk1V0ZmLQxu9I=
 github.com/morrocker/log v1.0.0/go.mod h1:MjIRLB46zjJ4ECw3IGjLMlXBSz2+d9D/GIbZqie1Tl0=
-github.com/morrocker/progress-tracker v0.0.0-20210423174136-4fa836e85800 h1:T2UOOEiF8BEJYzcF0gvh4nx/18fb0c1e/TrCNAK4c7Q=
-github.com/morrocker/progress-tracker v0.0.0-20210423174136-4fa836e85800/go.mod h1:QE2MkgPQM1qFK4c9L8Zsw3wsG6O9y8ub9uCfmb0FWas=
 github.com/morrocker/tracker v1.0.1 h1:Gbe4wEcHt3F5REt1FCWMVm0BSm25d6hpvkdGTwNyXcU=
 github.com/morrocker/tracker v1.0.1/go.mod h1:jlb8C4S5/6BB0ZbeIhHb4wB3DssC0lVa3aJcM9D77Oc=
 github.com/morrocker/utils v0.0.0-20210326152034-ee75a97c3c41/go.mod h1:kfvMwyMNz1837k6VSkty0EJ5zLwAm86grPz4tlvdJ+I=

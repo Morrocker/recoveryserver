@@ -3,8 +3,8 @@ package recovery
 import (
 	"github.com/morrocker/broadcast"
 	"github.com/morrocker/log"
-	tracker "github.com/morrocker/progress-tracker"
 	"github.com/morrocker/recoveryserver/config"
+	"github.com/morrocker/tracker"
 )
 
 // Recovery stores a single recovery data
