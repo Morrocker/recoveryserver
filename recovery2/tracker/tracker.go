@@ -12,6 +12,8 @@ type RecoveryTracker struct {
 
 func New() *RecoveryTracker {
 	r := &RecoveryTracker{}
+	r.Gauges = make(map[string]tracker.Gauge)
+	r.Counters = make(map[string]tracker.Counter)
 	r.Gauges["files"] = tracker.NewGauge()
 	r.Gauges["metafiles"] = tracker.NewGauge()
 	r.Gauges["size"] = tracker.NewGauge()
