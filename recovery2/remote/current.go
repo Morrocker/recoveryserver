@@ -16,12 +16,12 @@ type RBSMulti struct {
 	Bkp  blocks.MasterStore
 }
 
-// BlocksList asfdasfd asdf a
+// BlocksList struct to store incoming blocks
 type BlocksList struct {
 	Blocks []string `json:"blocks"`
 }
 
-// NewRBS Returns a new cloud object
+// NewRBS Returns a new RBSMulti object with a main remote initialized
 func NewRBS(addr, magic string) *RBSMulti {
 	newRemote := &RBSMulti{
 		Main: blocksremote.New(addr, magic),
@@ -29,21 +29,28 @@ func NewRBS(addr, magic string) *RBSMulti {
 	return newRemote
 }
 
-// SetBkp adfa adfs
+// SetBkp Sets and initializes a new remote RBS as a backup to the existing main
 func (r *RBSMulti) SetBkp(addr, magic string) {
 	r.Bkp = blocksremote.New(addr, magic)
 }
 
+// GetBlock takes a blocks parameters searches and returns it
 func (r *RBSMulti) GetBlock(hash string, user string) ([]byte, error) {
-	hashs := []string{hash}
-	bytesArray, err := r.GetBlocks(hashs, user)
-	if len(bytesArray[0]) == 0 {
-		return nil, errors.New("remote.current.GetBlocksList()", fmt.Sprintf("Block %s is ungettable", hash))
+	bytes, err := r.Main.Retrieve(hash, user)
+	if len(bytes) != 0 {
+		return bytes, err
 	}
-	return bytesArray[0], err
+	if r.Bkp != nil {
+		bytes, err := r.Bkp.Retrieve(hash, user)
+		if len(bytes) != 0 {
+			return bytes, err
+		}
+	}
+
+	return nil, errors.New("remote.current.GetBlock()", fmt.Sprintf("Block %s is ungettable", hash))
 }
 
-// GetBlocks afda fa fasf
+// GetBlocks takes an array of blocks from a single user and returns an array with them
 func (r *RBSMulti) GetBlocks(hashs []string, user string) (bytesArray [][]byte, err error) {
 	op := "remotes.GetBlocks()"
 	for retries := 0; retries < 3; retries++ {
@@ -89,16 +96,21 @@ func (r *RBSMulti) GetBlocks(hashs []string, user string) (bytesArray [][]byte, 
 	return
 }
 
-func (r *RBSMulti) GetBlocksList(hash string, user string) (blockList []string, err error) {
-	hashs := []string{hash}
-	bLists, err := r.GetBlocksLists(hashs, user)
-	if len(bLists[0]) == 0 {
+// GetBlockslists receives a block and a user and returns an array of block names
+func (r *RBSMulti) GetBlocksList(hash string, user string) ([]string, error) {
+	op := "remotes.GetBlockList()"
+	block, err := r.GetBlock(hash, user)
+	if len(block) != 0 {
 		return nil, errors.New("remote.current.GetBlocksList()", "Blocklist ungettable")
 	}
-	return bLists[0], err
+	blockList := &BlocksList{}
+	if err := json.Unmarshal(block, blockList); err != nil {
+		return nil, errors.Extend(op, err)
+	}
+	return blockList.Blocks, err
 }
 
-// GetBlockslists asfd adf afd
+// GetBlockslists receives a lists of blocks from a user and returns an array of arrays of block names
 func (r *RBSMulti) GetBlocksLists(hashs []string, user string) (blockLists [][]string, err error) {
 	op := "remotes.GetBlockLists()"
 	blocks, err := r.GetBlocks(hashs, user)

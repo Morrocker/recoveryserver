@@ -10,8 +10,9 @@ import (
 
 	"github.com/clonercl/reposerver"
 	"github.com/morrocker/errors"
+	"github.com/morrocker/flow"
 	"github.com/morrocker/log"
-	tracker "github.com/morrocker/progress-tracker"
+	"github.com/morrocker/recoveryserver/recovery2/tracker"
 	"github.com/morrocker/utils"
 )
 
@@ -43,8 +44,12 @@ func newMetaTree(mf *reposerver.Metafile) *MetaTree {
 }
 
 // GetRecoveryTree takes in a recovery data and returns a metafileTree
-func GetRecoveryTree(data Data, tt Throttling, tr *tracker.SuperTracker) (*MetaTree, error) {
+func GetRecoveryTree(data Data, tt Throttling, rt *tracker.RecoveryTracker, ctrl *flow.Controller) (*MetaTree, error) {
 	log.Task("Starting metafile tree retrieval")
+
+	if ctrl.Checkpoint() != 0 {
+		return nil, nil
+	}
 
 	if len(data.Exclusions) > 0 {
 		log.Info("List of metafiles (and their children) that will be excluded")
@@ -53,32 +58,38 @@ func GetRecoveryTree(data Data, tt Throttling, tr *tracker.SuperTracker) (*MetaT
 		}
 	}
 
-	mt, err := getRootMetaTree(data, tr)
+	mt, err := getRootMetaTree(data, rt)
 	if err != nil {
 		return nil, errors.New("recovery.GetRecoveryTree()", err)
 	}
 
-	tc, wg := startWorkers(data, tt, tr)
+	if ctrl.Checkpoint() != 0 {
+		return nil, nil
+	}
+
+	tc, wg := startWorkers(data, tt, rt, ctrl)
 	tc <- mt
 
 	wg.Wait()
 
 	if _, ok := <-tc; ok {
-		// log.Taskln("Shutting down lingering channel")
 		close(tc)
+	}
+	if ctrl.Checkpoint() != 0 {
+		return nil, nil
 	}
 
 	log.Info("Metafile tree completed")
 	return mt, nil
 }
 
-func metaTreeWorker(data Data, tc chan *MetaTree, wg *sync.WaitGroup, tr *tracker.SuperTracker) {
+func metaTreeWorker(data Data, tc chan *MetaTree, wg *sync.WaitGroup, tr *tracker.RecoveryTracker, ctrl *flow.Controller) {
 	log.Task("Starting metaTreeWorker")
-	// Outer:
+Outer:
 	for mt := range tc {
-		// if r.flowGate() {
-		// 	break
-		// }
+		if ctrl.Checkpoint() != 0 {
+			break
+		}
 
 		if mt.Mf.Type == reposerver.FolderType {
 			childrenTrees, err := getChildren(mt.Mf.ID, data, tr)
@@ -89,9 +100,9 @@ func metaTreeWorker(data Data, tc chan *MetaTree, wg *sync.WaitGroup, tr *tracke
 			}
 
 			for _, childTree := range childrenTrees {
-				// if r.flowGate() {
-				// 	break Outer
-				// }
+				if ctrl.Checkpoint() != 0 {
+					break Outer
+				}
 				mt.Children = append(mt.Children, childTree)
 
 				tc <- childTree
@@ -99,13 +110,12 @@ func metaTreeWorker(data Data, tc chan *MetaTree, wg *sync.WaitGroup, tr *tracke
 			isDone(1, 0, tc, tr)
 			continue
 		}
-		// r.updateTrackerTotals(mt.mf.Size)
 		isDone(1, 0, tc, tr)
 	}
 	wg.Done()
 }
 
-func getChildren(id string, data Data, tr *tracker.SuperTracker) ([]*MetaTree, error) {
+func getChildren(id string, data Data, rt *tracker.RecoveryTracker) ([]*MetaTree, error) {
 	op := "recovery.getChildren()"
 	log.Task("Getting children from " + utils.Trimmer(id))
 
@@ -154,35 +164,32 @@ func getChildren(id string, data Data, tr *tracker.SuperTracker) ([]*MetaTree, e
 			errOut = errors.Extend(op, err)
 			continue
 		}
-		tr.ChangeTotal("metafiles", len(children))
+		rt.Gauges["metafiles"].Total(int64(len(children)))
 		trees := make([]*MetaTree, 0)
 		for _, child := range children {
 			childTree := newMetaTree(child)
 			trees = append(trees, childTree)
 		}
-		// log.Task("Got children from " + id)
 		return trees, nil
 	}
 	errOut = errors.New(op, fmt.Sprintf("Failed to obtain metafile %s", errOut))
 	return nil, errOut
 }
 
-func startWorkers(data Data, tt Throttling, tr *tracker.SuperTracker) (chan *MetaTree, *sync.WaitGroup) {
+func startWorkers(data Data, tt Throttling, rt *tracker.RecoveryTracker, ctrl *flow.Controller) (chan *MetaTree, *sync.WaitGroup) {
 	log.Task("Starting %d metaTree workers", tt.Workers)
 
 	wg := &sync.WaitGroup{}
-	// r.log.TaskV("Opening workers channel with buffer %d", config.Data.MetafilesBuffSize)
 	tc := make(chan *MetaTree, tt.BuffSize)
-	// r.log.TaskV("Starting %d metafile workers", config.Data.MetafileWorkers)
 	wg.Add(tt.Workers)
 	for x := 0; x < tt.Workers; x++ {
-		go metaTreeWorker(data, tc, wg, tr)
+		go metaTreeWorker(data, tc, wg, rt, ctrl)
 	}
 
 	return tc, wg
 }
 
-func getRootMetaTree(data Data, tr *tracker.SuperTracker) (mt *MetaTree, errOut error) {
+func getRootMetaTree(data Data, rt *tracker.RecoveryTracker) (mt *MetaTree, errOut error) {
 	op := "recovery.getMetafile()"
 	log.Task("Getting root metafile %s", data.RootId)
 
@@ -222,15 +229,22 @@ func getRootMetaTree(data Data, tr *tracker.SuperTracker) (mt *MetaTree, errOut 
 			errOut = errors.Extend(op, err)
 			continue
 		}
-		tr.ChangeTotal("metafiles", 1)
+		rt.Gauges["metafiles"].Total(1)
 		return newMetaTree(mf), nil
 	}
 	errOut = errors.New(op, fmt.Sprintf("Failed to obtain metafile: %s", errOut))
 	return nil, errOut
 }
 
-func isDone(curr, tot int, tc chan *MetaTree, tr *tracker.SuperTracker) {
-	c, t, _ := tr.ChangeAndReturn("metafiles", curr, tot)
+func isDone(curr, tot int, tc chan *MetaTree, rt *tracker.RecoveryTracker) {
+	t, err := rt.Gauges["metafiles"].Total(int64(tot))
+	if err != nil {
+		log.Error("Error updating metafiles total")
+	}
+	c, err := rt.Gauges["metafiles"].Current(int64(tot))
+	if err != nil {
+		log.Error("Error updating current total")
+	}
 	if c == t {
 		time.Sleep(time.Second)
 		close(tc)

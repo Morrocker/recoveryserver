@@ -8,6 +8,7 @@ import (
 
 	"github.com/clonercl/reposerver"
 	"github.com/morrocker/errors"
+	"github.com/morrocker/flow"
 	"github.com/morrocker/log"
 	tracker "github.com/morrocker/progress-tracker"
 	"github.com/morrocker/recoveryserver/recovery2/remote"
@@ -18,7 +19,6 @@ import (
 
 type Data struct {
 	User    string
-	Legacy  bool
 	Workers int
 }
 
@@ -34,7 +34,7 @@ type fileData struct {
 
 var zeroedBuffer = make([]byte, 1024*1000)
 
-func GetFiles(mt *tree.MetaTree, OutputPath string, data Data, rbs remote.RBS, tr *tracker.SuperTracker) error {
+func GetFiles(mt *tree.MetaTree, OutputPath string, data Data, rbs remote.RBS, tr *tracker.SuperTracker, ctrl *flow.Controller) error {
 	log.Taskln("Starting files recovery")
 	op := "recovery.getFiles()"
 
@@ -46,8 +46,8 @@ func GetFiles(mt *tree.MetaTree, OutputPath string, data Data, rbs remote.RBS, t
 		ToDo: make(map[string]*fileData),
 	}
 
-	sfc, sfWg := startSmallFilesWorkers(data, rbs, tr)
-	bfc, bdc, bfWg, bdWg := startBigFilesWorkers(data, rbs, tr)
+	sfc, sfWg := startSmallFilesWorkers(data, rbs, tr, ctrl)
+	bfc, bdc, bfWg, bdWg := startBigFilesWorkers(data, rbs, tr, ctrl)
 
 	if err := os.MkdirAll(OutputPath, 0700); err != nil {
 		return errors.New(op, errors.Extend(op, err))
@@ -132,7 +132,7 @@ func fillFilesList(output string, fd *fileData, fl *filesList) {
 	fl.ToDo[mf.Hash] = fd
 }
 
-func filterDoneFiles(fda map[string]*fileData, tr *tracker.SuperTracker) map[string]*fileData {
+func filterDoneFiles(fda map[string]*fileData, ot *tracker.OmniTracker) map[string]*fileData {
 	log.Taskln("Filtering Done Files")
 	subFDA := make(map[string]*fileData)
 	for key, fd := range fda {
@@ -142,7 +142,7 @@ func filterDoneFiles(fda map[string]*fileData, tr *tracker.SuperTracker) map[str
 			if fi.Size() == int64(size) {
 				// r.updateTrackerCurrent(int64(size))
 				log.NoticeV("skipping done file '%s'", path) // Temporal
-				track.AlreadyDone(size, tr)
+				ot.AlreadyDone(size, tr)
 				continue
 			}
 		}

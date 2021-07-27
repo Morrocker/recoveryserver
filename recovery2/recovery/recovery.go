@@ -1,9 +1,13 @@
 package recovery
 
 import (
+	"github.com/morrocker/errors"
 	"github.com/morrocker/flow"
 	tracker "github.com/morrocker/progress-tracker"
+	"github.com/morrocker/recoveryserver/recovery2/files"
+	"github.com/morrocker/recoveryserver/recovery2/remote"
 	track "github.com/morrocker/recoveryserver/recovery2/tracker"
+	"github.com/morrocker/recoveryserver/recovery2/tree"
 )
 
 type Recovery struct {
@@ -12,7 +16,9 @@ type Recovery struct {
 	status     State
 	priority   Prty
 	outputPath string
+	tree       *tree.MetaTree
 
+	rbs        remote.RBS
 	progress   *tracker.SuperTracker
 	controller *flow.Controller
 }
@@ -21,7 +27,7 @@ type Data struct {
 	Metafile   string
 	Repository string
 	User       string
-	Version    string
+	Version    int
 	Deleted    bool
 	Exclusions map[string]bool
 	Key        string
@@ -71,4 +77,48 @@ func (r *Recovery) Prty(p ...Prty) Prty {
 		r.priority = p[0]
 	}
 	return r.priority
+}
+
+func (r *Recovery) GetTree() error {
+	op := "recovery.GetTree()"
+	newTree, err := tree.GetRecoveryTree(
+		tree.Data{
+			RootId:     r.data.Metafile,
+			Repository: r.data.Repository,
+			// Server: ,
+			ClonerKey:  r.data.Key,
+			Version:    r.data.Version,
+			Deleted:    r.data.Deleted,
+			Exclusions: r.data.Exclusions,
+		}, tree.Throttling{
+			BuffSize: r.resources.MetaWorkers,
+			Workers:  r.resources.MetaBuffer,
+		},
+		r.progress,
+		r.controller,
+	)
+	if err != nil {
+		return errors.Extend(op, err)
+	}
+	r.tree = newTree
+	return nil
+}
+
+func (r *Recovery) GetFiles() error {
+	op := "recovery.GetFiles()"
+	err := files.GetFiles(
+		r.tree,
+		r.outputPath,
+		files.Data{
+			User:    r.data.User,
+			Workers: r.resources.FileWorkers,
+		},
+		r.rbs,
+		r.progress,
+		r.controller,
+	)
+	if err != nil {
+		return errors.Extend(op, err)
+	}
+	return nil
 }

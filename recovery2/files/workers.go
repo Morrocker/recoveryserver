@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/morrocker/errors"
+	"github.com/morrocker/flow"
 	"github.com/morrocker/log"
 	tracker "github.com/morrocker/progress-tracker"
 	"github.com/morrocker/recoveryserver/recovery2/remote"
@@ -14,24 +15,31 @@ import (
 	"golang.org/x/text/unicode/norm"
 )
 
-func startSmallFilesWorkers(data Data, rbs remote.RBS, tr *tracker.SuperTracker) (chan []*fileData, *sync.WaitGroup) {
+func startSmallFilesWorkers(data Data, rbs remote.RBS, tr *tracker.SuperTracker, ctrl *flow.Controller) (chan []*fileData, *sync.WaitGroup) {
 	// log.Task("Starting %d small files workers", data.Workers)
 	wg := &sync.WaitGroup{}
 	fdc := make(chan []*fileData)
 	wg.Add(data.Workers)
 	for x := 0; x < data.Workers; x++ {
-		go smallFilesWorker(fdc, data.User, wg, rbs, tr)
+		go smallFilesWorker(fdc, data.User, wg, rbs, tr, ctrl)
 	}
 	return fdc, wg
 }
 
-func smallFilesWorker(fc chan []*fileData, user string, wg *sync.WaitGroup, rbs remote.RBS, tr *tracker.SuperTracker /*, bc chan bData*/) {
+func smallFilesWorker(fc chan []*fileData, user string, wg *sync.WaitGroup, rbs remote.RBS, tr *tracker.SuperTracker, ctrl *flow.Controller) {
 	op := "recovery.smallFilesWorker()"
 	// log.Taskln("Starting small files workers")
+Outer:
 	for fda := range fc {
+		if ctrl.Checkpoint() != 0 {
+			break
+		}
 		positionArray := []*fileData{}
 		blocksArray := []string{}
 		for _, fd := range fda {
+			if ctrl.Checkpoint() != 0 {
+				break
+			}
 			// log.Info("Recovering file %s [%s]", fd.OutputPath, utils.B2H(int64(fd.Mt.Mf.Size)))
 			blocksArray = append(blocksArray, fd.blocksList...)
 			for x := 0; x < len(fd.blocksList); x++ {
@@ -49,6 +57,9 @@ func smallFilesWorker(fc chan []*fileData, user string, wg *sync.WaitGroup, rbs 
 
 		// log.Infoln("Writting small files hashs")
 		for i, content := range bytesArrays {
+			if ctrl.Checkpoint() != 0 {
+				break Outer
+			}
 			if i == 0 {
 				bytesArray = appendContent(bytesArray, content, tr)
 			} else if positionArray[i-1].Mt.Mf.Hash == positionArray[i].Mt.Mf.Hash {
@@ -100,7 +111,7 @@ func writeSmallFile(fd *fileData, content []byte) error {
 	return nil
 }
 
-func startBigFilesWorkers(data Data, rbs remote.RBS, tr *tracker.SuperTracker) (chan *fileData, chan bigData, *sync.WaitGroup, *sync.WaitGroup) {
+func startBigFilesWorkers(data Data, rbs remote.RBS, tr *tracker.SuperTracker, ctrl *flow.Controller) (chan *fileData, chan bigData, *sync.WaitGroup, *sync.WaitGroup) {
 	log.Task("Starting %d big files workers", data.Workers)
 	wg := &sync.WaitGroup{}
 	wg2 := &sync.WaitGroup{}
@@ -108,11 +119,11 @@ func startBigFilesWorkers(data Data, rbs remote.RBS, tr *tracker.SuperTracker) (
 	bdc := make(chan bigData)
 	wg.Add(data.Workers)
 	for x := 0; x < data.Workers; x++ {
-		go recoverBigFile(bfc, bdc, data.User, wg, rbs, tr)
+		go recoverBigFile(bfc, bdc, data.User, wg, rbs, tr, ctrl)
 	}
 	wg2.Add(data.Workers)
 	for x := 0; x < data.Workers; x++ {
-		go blocksWorker(bdc, data.User, wg2, rbs, tr)
+		go blocksWorker(bdc, data.User, wg2, rbs, tr, ctrl)
 	}
 	return bfc, bdc, wg, wg2
 }
@@ -130,9 +141,14 @@ type bigData struct {
 }
 
 // func bigFilesWorker(fc chan *fileData, user string, wg *sync.WaitGroup, rbs remote.RBS /*, bc chan bData*/) {
-func recoverBigFile(bfc chan *fileData, fdc chan bigData, user string, wg *sync.WaitGroup, rbs remote.RBS, tr *tracker.SuperTracker) {
+func recoverBigFile(bfc chan *fileData, fdc chan bigData, user string, wg *sync.WaitGroup, rbs remote.RBS, tr *tracker.SuperTracker, ctrl *flow.Controller) {
 	op := "files.recoverBigFile()"
+
+Outer:
 	for fd := range bfc {
+		if ctrl.Checkpoint() != 0 {
+			break
+		}
 		// log.Info("Recovering file %s [%s]", fd.OutputPath, utils.B2H(int64(fd.Mt.Mf.Size)))
 
 		// Creating recovery file
@@ -149,6 +165,9 @@ func recoverBigFile(bfc chan *fileData, fdc chan bigData, user string, wg *sync.
 		go func() {
 			hashs := []string{}
 			for i, hash := range fd.blocksList {
+				if ctrl.Checkpoint() != 0 {
+					break
+				}
 				if i%100 == 0 && i != 0 {
 					fdc <- bigData{idx: idx, hashs: hashs, ret: ret}
 					hashs = []string{}
@@ -168,10 +187,10 @@ func recoverBigFile(bfc chan *fileData, fdc chan bigData, user string, wg *sync.
 
 		// Receiving blocks from blocksworkers and writting into file
 		for x := 0; x < idx+1; x++ {
-			// if r.flowGate() {
-			// 	f.Close()
-			// 	break Outer
-			// }
+			if ctrl.Checkpoint() != 0 {
+				f.Close()
+				break Outer
+			}
 			content, ok := blocksBuffer[x]
 			if ok {
 				// log.Info("Block #%d is being written from buffer for %s", x, utils.Trimmer(fd.OutputPath, 0, 50))
@@ -184,6 +203,10 @@ func recoverBigFile(bfc chan *fileData, fdc chan bigData, user string, wg *sync.
 				continue
 			}
 			for data := range ret {
+				if ctrl.Checkpoint() != 0 {
+					f.Close()
+					break Outer
+				}
 				if data.err != nil {
 					f.Close()
 					log.Errorln(errors.Extend(op, err))
@@ -207,10 +230,13 @@ func recoverBigFile(bfc chan *fileData, fdc chan bigData, user string, wg *sync.
 	wg.Done()
 }
 
-func blocksWorker(bfc chan bigData, user string, wg *sync.WaitGroup, rbs remote.RBS, tr *tracker.SuperTracker) {
+func blocksWorker(bfc chan bigData, user string, wg *sync.WaitGroup, rbs remote.RBS, tr *tracker.SuperTracker, ctrl *flow.Controller) {
 	op := "recovery.files.blocksWorker()"
 Outer:
 	for data := range bfc {
+		if ctrl.Checkpoint() != 0 {
+			break Outer
+		}
 		ret := returnBlock{idx: data.idx}
 		bytesArray, err := rbs.GetBlocks(data.hashs, user)
 		if err != nil {
@@ -219,6 +245,9 @@ Outer:
 			continue Outer
 		}
 		for _, bytes := range bytesArray {
+			if ctrl.Checkpoint() != 0 {
+				break Outer
+			}
 			if bytes == nil {
 				ret.content = append(ret.content, zeroedBuffer...)
 				tr.ChangeCurr("totalsize", len(bytes))
