@@ -245,8 +245,11 @@ func isDone(curr, tot int, tc chan *MetaTree, rt *tracker.RecoveryTracker) {
 	if err != nil {
 		log.Error("Error updating current total")
 	}
+	log.Benchln("Is done?")
 	if c == t {
+		log.Benchln("DONE")
 		time.Sleep(time.Second)
 		close(tc)
 	}
+	log.Benchln("NOT DONE")
 }
