@@ -1,12 +1,7 @@
 package recovery
 
 import (
-	"encoding/json"
-	"fmt"
-	"io/ioutil"
-	"net/http"
 	"sync"
-	"time"
 
 	"github.com/clonercl/reposerver"
 	"github.com/morrocker/errors"
@@ -69,136 +64,138 @@ func (r *Recovery) GetRecoveryTree() (*MetaTree, error) {
 }
 
 func (r *Recovery) getChildMetaTree(tc chan *MetaTree, wg *sync.WaitGroup) {
-Outer:
-	for mt := range tc {
-		if r.flowGate() {
-			break
-		}
+	// Outer:
+	// 	for mt := range tc {
+	// 		if r.flowGate() {
+	// 			break
+	// 		}
 
-		if mt.mf.Type == reposerver.FolderType {
-			children, err := r.getChildren(mt.mf.ID)
-			if err != nil {
-				r.log.Error("Couldnt retrieve metafile: %s", errors.Extend("recoveries.getChildMetaTree()", err))
-				r.tracker.ChangeCurr("metafiles", 1)
-				continue
-			}
+	// 		if mt.mf.Type == reposerver.FolderType {
+	// 			children, err := r.getChildren(mt.mf.ID)
+	// 			if err != nil {
+	// 				r.log.Error("Couldnt retrieve metafile: %s", errors.Extend("recoveries.getChildMetaTree()", err))
+	// 				r.tracker.ChangeCurr("metafiles", 1)
+	// 				continue
+	// 			}
 
-			for _, child := range children {
-				if r.flowGate() {
-					break Outer
-				}
-				childTree := newMetaTree(child)
-				mt.addChildren(childTree)
-				tc <- childTree
-			}
-			r.tracker.ChangeCurr("metafiles", 1)
-			r.isDone(tc)
-			continue
-		}
-		r.updateTrackerTotals(mt.mf.Size)
-		r.tracker.ChangeCurr("metafiles", 1)
-		r.isDone(tc)
-	}
-	wg.Done()
+	// 			for _, child := range children {
+	// 				if r.flowGate() {
+	// 					break Outer
+	// 				}
+	// 				childTree := newMetaTree(child)
+	// 				mt.addChildren(childTree)
+	// 				tc <- childTree
+	// 			}
+	// 			r.tracker.ChangeCurr("metafiles", 1)
+	// 			r.isDone(tc)
+	// 			continue
+	// 		}
+	// 		r.updateTrackerTotals(mt.mf.Size)
+	// 		r.tracker.ChangeCurr("metafiles", 1)
+	// 		r.isDone(tc)
+	// 	}
+	// 	wg.Done()
 }
 
 func (r *Recovery) getChildren(id string) ([]*reposerver.Metafile, error) {
-	op := "recovery.getChildren()"
-	r.log.Task("Getting children from " + id)
-	var errOut error
-	for retries := 0; retries < 5; retries++ {
-		errOut = nil
-		var newQuery string
-		if r.Data.Deleted {
-			newQuery = fmt.Sprintf("%sapi/latestChildren?id=%s&repo_id=%s", r.LoginServer, id, r.Data.Repository)
-		} else {
-			var version int
-			if r.Data.Version == 0 {
-				version = 999999999999
-			} else {
-				version = r.Data.Version
-			}
-			newQuery = fmt.Sprintf("%sapi/children?id=%s&version=%d&repo_id=%s", r.LoginServer, id, version, r.Data.Repository)
-		}
-		req, err := http.NewRequest("GET", newQuery, nil)
-		if err != nil {
-			errOut = errors.Extend(op, err)
-			continue
-		}
+	// op := "recovery.getChildren()"
+	// r.log.Task("Getting children from " + id)
+	// var errOut error
+	// for retries := 0; retries < 5; retries++ {
+	// 	errOut = nil
+	// 	var newQuery string
+	// 	if r.Data.Deleted {
+	// 		newQuery = fmt.Sprintf("%sapi/latestChildren?id=%s&repo_id=%s", r.LoginServer, id, r.Data.Repository)
+	// 	} else {
+	// 		var version int
+	// 		if r.Data.Version == 0 {
+	// 			version = 999999999999
+	// 		} else {
+	// 			version = r.Data.Version
+	// 		}
+	// 		newQuery = fmt.Sprintf("%sapi/children?id=%s&version=%d&repo_id=%s", r.LoginServer, id, version, r.Data.Repository)
+	// 	}
+	// 	req, err := http.NewRequest("GET", newQuery, nil)
+	// 	if err != nil {
+	// 		errOut = errors.Extend(op, err)
+	// 		continue
+	// 	}
 
-		req.Header.Add("Cloner_key", r.Data.ClonerKey)
-		resp, err := http.DefaultClient.Do(req)
-		if err != nil {
-			errOut = errors.Extend(op, err)
-			continue
-		}
+	// 	req.Header.Add("Cloner_key", r.Data.ClonerKey)
+	// 	resp, err := http.DefaultClient.Do(req)
+	// 	if err != nil {
+	// 		errOut = errors.Extend(op, err)
+	// 		continue
+	// 	}
 
-		if resp.StatusCode != http.StatusOK {
-			errOut = errors.NewSimple("Status not ok")
-			continue
-		}
+	// 	if resp.StatusCode != http.StatusOK {
+	// 		errOut = errors.NewSimple("Status not ok")
+	// 		continue
+	// 	}
 
-		body, err := ioutil.ReadAll(resp.Body)
-		if err != nil {
-			errOut = errors.Extend(op, err)
-			continue
-		}
-		resp.Body.Close()
+	// 	body, err := ioutil.ReadAll(resp.Body)
+	// 	if err != nil {
+	// 		errOut = errors.Extend(op, err)
+	// 		continue
+	// 	}
+	// 	resp.Body.Close()
 
-		var children []*reposerver.Metafile
-		if err := json.Unmarshal(body, &children); err != nil {
-			errOut = errors.Extend(op, err)
-			continue
-		}
-		r.tracker.ChangeTotal("metafiles", len(children))
-		return children, nil
-	}
-	errOut = errors.New(op, fmt.Sprintf("Failed to obtain metafile %s", errOut))
-	return nil, errOut
+	// 	var children []*reposerver.Metafile
+	// 	if err := json.Unmarshal(body, &children); err != nil {
+	// 		errOut = errors.Extend(op, err)
+	// 		continue
+	// 	}
+	// 	r.tracker.ChangeTotal("metafiles", len(children))
+	// 	return children, nil
+	// }
+	// errOut = errors.New(op, fmt.Sprintf("Failed to obtain metafile %s", errOut))
+	// return nil, errOut
+	return nil, nil
 }
 
 func (r *Recovery) getMetafile() (*reposerver.Metafile, error) {
-	op := "recovery.getMetafile()"
-	r.log.Task("Getting root metafile")
-	var errOut error
-	for retries := 0; retries < 5; retries++ {
-		errOut = nil
-		newQuery := fmt.Sprintf("%sapi/metafile?id=%s&repo_id=%s", r.LoginServer, r.Data.Metafile, r.Data.Repository)
-		req, err := http.NewRequest("GET", newQuery, nil)
-		if err != nil {
-			errOut = errors.Extend(op, err)
-			continue
-		}
+	// op := "recovery.getMetafile()"
+	// r.log.Task("Getting root metafile")
+	// var errOut error
+	// for retries := 0; retries < 5; retries++ {
+	// 	errOut = nil
+	// 	newQuery := fmt.Sprintf("%sapi/metafile?id=%s&repo_id=%s", r.LoginServer, r.Data.Metafile, r.Data.Repository)
+	// 	req, err := http.NewRequest("GET", newQuery, nil)
+	// 	if err != nil {
+	// 		errOut = errors.Extend(op, err)
+	// 		continue
+	// 	}
 
-		req.Header.Add("Cloner_key", r.Data.ClonerKey)
-		resp, err := http.DefaultClient.Do(req)
-		if err != nil {
-			errOut = errors.Extend(op, err)
-			continue
-		}
+	// 	req.Header.Add("Cloner_key", r.Data.ClonerKey)
+	// 	resp, err := http.DefaultClient.Do(req)
+	// 	if err != nil {
+	// 		errOut = errors.Extend(op, err)
+	// 		continue
+	// 	}
 
-		if resp.StatusCode != http.StatusOK {
-			errOut = errors.NewSimple("Status not ok")
-			continue
-		}
+	// 	if resp.StatusCode != http.StatusOK {
+	// 		errOut = errors.NewSimple("Status not ok")
+	// 		continue
+	// 	}
 
-		body, err := ioutil.ReadAll(resp.Body)
-		if err != nil {
-			errOut = errors.Extend(op, err)
-			continue
-		}
-		resp.Body.Close()
+	// 	body, err := ioutil.ReadAll(resp.Body)
+	// 	if err != nil {
+	// 		errOut = errors.Extend(op, err)
+	// 		continue
+	// 	}
+	// 	resp.Body.Close()
 
-		var ret reposerver.Metafile
-		if err := json.Unmarshal(body, &ret); err != nil {
-			errOut = errors.Extend(op, err)
-			continue
-		}
-		r.tracker.ChangeTotal("metafiles", 1)
-		return &ret, nil
-	}
-	errOut = errors.New(op, fmt.Sprintf("Failed to obtain metafile: %s", errOut))
-	return nil, errOut
+	// 	var ret reposerver.Metafile
+	// 	if err := json.Unmarshal(body, &ret); err != nil {
+	// 		errOut = errors.Extend(op, err)
+	// 		continue
+	// 	}
+	// 	r.tracker.ChangeTotal("metafiles", 1)
+	// 	return &ret, nil
+	// }
+	// errOut = errors.New(op, fmt.Sprintf("Failed to obtain metafile: %s", errOut))
+	// return nil, errOut
+	return nil, nil
 }
 
 func (m *MetaTree) addChildren(mt *MetaTree) {
@@ -208,12 +205,12 @@ func (m *MetaTree) addChildren(mt *MetaTree) {
 }
 
 func (r *Recovery) isDone(tc chan *MetaTree) {
-	c, t, err := r.tracker.RawValues("metafiles")
-	if err != nil {
-		log.Errorln("ERROR while getting metafiles tracker values")
-	}
-	if c == t {
-		time.Sleep(5 * time.Second)
-		close(tc)
-	}
+	// c, t, err := r.tracker.RawValues("metafiles")
+	// if err != nil {
+	// 	log.Errorln("ERROR while getting metafiles tracker values")
+	// }
+	// if c == t {
+	// 	time.Sleep(5 * time.Second)
+	// 	close(tc)
+	// }
 }

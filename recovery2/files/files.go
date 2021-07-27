@@ -35,7 +35,7 @@ type fileData struct {
 
 var zeroedBuffer = make([]byte, 1024*1000)
 
-func GetFiles(mt *tree.MetaTree, OutputPath string, data Data, rbs remote.RBS, tr *tracker.SuperTracker, ctrl *flow.Controller) error {
+func GetFiles(mt *tree.MetaTree, OutputPath string, data Data, rbs remote.RBS, rt *tracker.RecoveryTracker, ctrl *flow.Controller) error {
 	log.Taskln("Starting files recovery")
 	op := "recovery.getFiles()"
 
@@ -47,8 +47,8 @@ func GetFiles(mt *tree.MetaTree, OutputPath string, data Data, rbs remote.RBS, t
 		ToDo: make(map[string]*fileData),
 	}
 
-	sfc, sfWg := startSmallFilesWorkers(data, rbs, tr, ctrl)
-	bfc, bdc, bfWg, bdWg := startBigFilesWorkers(data, rbs, tr, ctrl)
+	sfc, sfWg := startSmallFilesWorkers(data, rbs, rt, ctrl)
+	bfc, bdc, bfWg, bdWg := startBigFilesWorkers(data, rbs, rt, ctrl)
 
 	if err := os.MkdirAll(OutputPath, 0700); err != nil {
 		return errors.New(op, errors.Extend(op, err))
@@ -57,19 +57,19 @@ func GetFiles(mt *tree.MetaTree, OutputPath string, data Data, rbs remote.RBS, t
 	log.Taskln("Filling files list")
 	fillFilesList(OutputPath, fd, fl)
 
-	fl.ToDo = filterDoneFiles(fl.ToDo, tr)
+	fl.ToDo = filterDoneFiles(fl.ToDo, rt)
 
 	time.Sleep(5 * time.Second)
 
-	preProcessFQ(fl, data, rbs, tr)
+	preProcessFQ(fl, data, rbs, rt)
 
 	bigFiles, smallFiles := sortFiles(fl)
 
 	var size int64
 	var subFl []*fileData
 
-	tr.StartAutoPrint(6 * time.Second)
-	tr.StartAutoMeasure("size", 20*time.Second)
+	// rt.StartAutoPrint(6 * time.Second)
+	// rt.StartAutoMeasure("size", 20*time.Second)
 	log.Notice("Sending small files lists. #%d", len(smallFiles))
 	for _, fd := range smallFiles {
 		fileSize := fd.Mt.Mf.Size
@@ -100,8 +100,8 @@ func GetFiles(mt *tree.MetaTree, OutputPath string, data Data, rbs remote.RBS, t
 	close(bdc)
 	bdWg.Wait()
 
-	tr.StopAutoPrint()
-	tr.StopAutoMeasure("size")
+	// rt.StopAutoPrint()
+	// rt.StopAutoMeasure("size")
 	log.Noticeln("Files retrieval completed")
 	return nil
 }
@@ -133,7 +133,7 @@ func fillFilesList(output string, fd *fileData, fl *filesList) {
 	fl.ToDo[mf.Hash] = fd
 }
 
-func filterDoneFiles(fda map[string]*fileData, ot *tracker.OmniTracker) map[string]*fileData {
+func filterDoneFiles(fda map[string]*fileData, rt *tracker.RecoveryTracker) map[string]*fileData {
 	log.Taskln("Filtering Done Files")
 	subFDA := make(map[string]*fileData)
 	for key, fd := range fda {
@@ -143,7 +143,7 @@ func filterDoneFiles(fda map[string]*fileData, ot *tracker.OmniTracker) map[stri
 			if fi.Size() == int64(size) {
 				// r.updateTrackerCurrent(int64(size))
 				log.NoticeV("skipping done file '%s'", path) // Temporal
-				ot.AlreadyDone(size, tr)
+				rt.AlreadyDone(size)
 				continue
 			}
 		}
@@ -152,14 +152,14 @@ func filterDoneFiles(fda map[string]*fileData, ot *tracker.OmniTracker) map[stri
 	return subFDA
 }
 
-func preProcessFQ(fl *filesList, data Data, rbs remote.RBS, tr *tracker.SuperTracker) error {
+func preProcessFQ(fl *filesList, data Data, rbs remote.RBS, rt *tracker.RecoveryTracker) error {
 	log.Taskln("Pre-processing FQ (getting blocklists)")
 	subHl := []string{}
 	var size int64
 	for hash, fd := range fl.ToDo {
 		fileSize := fd.Mt.Mf.Size
 		if size+fileSize > 10737418240 && size != 0 { // 10000 BLOCKS
-			if err := getBlockLists(subHl, fl, data, rbs, tr); err != nil {
+			if err := getBlockLists(subHl, fl, data, rbs, rt); err != nil {
 				log.Errorln(errors.Extend("recovery.files.preProcessFQ()", err))
 			}
 			size = 0
@@ -171,26 +171,26 @@ func preProcessFQ(fl *filesList, data Data, rbs remote.RBS, tr *tracker.SuperTra
 	}
 
 	if len(subHl) != 0 {
-		if err := getBlockLists(subHl, fl, data, rbs, tr); err != nil {
+		if err := getBlockLists(subHl, fl, data, rbs, rt); err != nil {
 			log.Errorln(errors.Extend("recovery.files.preProcessFQ()", err))
 		}
 	}
 	return nil
 }
 
-func getBlockLists(hl []string, fl *filesList, data Data, rbs remote.RBS, tr *tracker.SuperTracker) error {
+func getBlockLists(hl []string, fl *filesList, data Data, rbs remote.RBS, rt *tracker.RecoveryTracker) error {
 	contents, err := rbs.GetBlocksLists(hl, data.User)
 	if err != nil {
 		return errors.Extend("recovery.getBlockList()", err)
 	}
 	for i, content := range contents {
-		size := fl.ToDo[hl[i]].Mt.Mf.Size
+		// size := fl.ToDo[hl[i]].Mt.Mf.Size
 		if len(content) == 0 {
-			track.FailedBlocklist(size, tr)
+			// rt.FailedBlocklist(size, rt) SEE THIS
 			delete(fl.ToDo, hl[i])
 			continue
 		}
-		track.AddFile(size, tr)
+		// rt.AddFile(size, rt) SEE THIS
 		fl.ToDo[hl[i]].blocksList = content
 	}
 

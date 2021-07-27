@@ -20,7 +20,7 @@ type Recovery struct {
 	tree       *tree.MetaTree
 
 	rbs        remote.RBS
-	progress   *tracker.SuperTracker
+	progress   *tracker.RecoveryTracker
 	controller *flow.Controller
 }
 
@@ -46,7 +46,7 @@ func New(d Data, r Resources) *Recovery {
 		resources:  r,
 		status:     Entry,
 		priority:   MediumPr,
-		progress:   track.New(),
+		progress:   tracker.New(),
 		controller: flow.New(),
 	}
 	return newRecovery

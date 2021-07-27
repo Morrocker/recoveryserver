@@ -10,7 +10,6 @@ import (
 	"github.com/morrocker/errors"
 	"github.com/morrocker/log"
 	"github.com/morrocker/recoveryserver/config"
-	"github.com/morrocker/utils"
 )
 
 type Priority int
@@ -104,24 +103,25 @@ func (r *Recovery) done() error {
 
 // Done sets a recovery status as Done
 func (r *Recovery) doDone(finish time.Duration) error {
-	rate, err := r.tracker.TrueProgressRate("size")
-	if err != nil {
-		return errors.Extend("recovery.doDone()", err)
-	}
-	log.Info("Recovery #%d finished in %s with an average download rate of %sps", r.Data.ID, finish, rate)
-	return r.done()
+	// rate, err := r.tracker.TrueProgressRate("size")
+	// if err != nil {
+	// 	return errors.Extend("recovery.doDone()", err)
+	// }
+	// log.Info("Recovery #%d finished in %s with an average download rate of %sps", r.Data.ID, finish, rate)
+	// return r.done()
+	return nil
 }
 
 // Done sets a recovery status as Done
 func (r *Recovery) PreDone() {
-	_, st, _ := r.tracker.RawValues("size")
-	_, ft, _ := r.tracker.RawValues("files")
-	r.Data.TotalSize = st
-	r.Data.TotalFiles = ft
-	r.changeState(Done)
-	r.changeState(Entry)
-	time.Sleep(6 * time.Second)
-	log.Info("Recovery #%d precalculation finished. Total size: %s, Total Files: %d", r.Data.ID, utils.B2H(st), ft)
+	// _, st, _ := r.tracker.RawValues("size")
+	// _, ft, _ := r.tracker.RawValues("files")
+	// r.Data.TotalSize = st
+	// r.Data.TotalFiles = ft
+	// r.changeState(Done)
+	// r.changeState(Entry)
+	// time.Sleep(6 * time.Second)
+	// log.Info("Recovery #%d precalculation finished. Total size: %s, Total Files: %d", r.Data.ID, utils.B2H(st), ft)
 }
 
 // Cancel sets a recovery status as Cancel

@@ -71,7 +71,7 @@ func (r *RecoveryTracker) CompleteFile(size int64) {
 	r.Gauges["totalsize"].Current(size)
 }
 
-func FailedFiles(n int, r *RecoveryTracker) {
+func (r *RecoveryTracker) FailedFiles(n int) {
 	r.Counters["errors"].Current(int64(n))
 	r.Counters["fileErrors"].Current(int64(n))
 }

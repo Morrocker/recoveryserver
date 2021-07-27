@@ -4,7 +4,6 @@ import (
 	"github.com/morrocker/broadcast"
 	"github.com/morrocker/log"
 	"github.com/morrocker/recoveryserver/config"
-	"github.com/morrocker/tracker"
 )
 
 // Recovery stores a single recovery data
@@ -19,8 +18,8 @@ type Recovery struct {
 	cloud       config.Cloud           `json:"-"`
 	RBS         *RBS                   `json:"-"`
 	broadcaster *broadcast.Broadcaster `json:"-"`
-	tracker     *tracker.SuperTracker  `json:"-"`
-	log         *log.Logger            `json:"-"`
+	// tracker     *tracker.SuperTracker  `json:"-"`
+	log *log.Logger `json:"-"`
 }
 
 // Data stores the data needed to execute a recovery
