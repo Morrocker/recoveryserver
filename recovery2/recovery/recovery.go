@@ -3,10 +3,11 @@ package recovery
 import (
 	"github.com/morrocker/errors"
 	"github.com/morrocker/flow"
-	tracker "github.com/morrocker/progress-tracker"
+
+	// tracker "github.com/morrocker/progress-tracker"
 	"github.com/morrocker/recoveryserver/recovery2/files"
 	"github.com/morrocker/recoveryserver/recovery2/remote"
-	track "github.com/morrocker/recoveryserver/recovery2/tracker"
+	"github.com/morrocker/recoveryserver/recovery2/tracker"
 	"github.com/morrocker/recoveryserver/recovery2/tree"
 )
 

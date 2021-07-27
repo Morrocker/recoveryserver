@@ -9,9 +9,10 @@ import (
 	"github.com/morrocker/errors"
 	"github.com/morrocker/flow"
 	"github.com/morrocker/log"
-	tracker "github.com/morrocker/progress-tracker"
 	"github.com/morrocker/recoveryserver/recovery2/remote"
-	track "github.com/morrocker/recoveryserver/recovery2/tracker"
+	"github.com/morrocker/tracker"
+
+	// track "github.com/morrocker/recoveryserver/recovery2/tracker"
 	"golang.org/x/text/unicode/norm"
 )
 
