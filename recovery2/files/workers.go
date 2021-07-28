@@ -290,3 +290,7 @@ func blockListWorker(blockChan chan string, destMap map[string]*fileData, user s
 		rt.Gauges["files"].Total(1)
 	}
 }
+
+func filesWorker(blockChan chan *fileData, wg *sync.WaitGroup, rbs remote.RBS, rt *tracker.RecoveryTracker, ctrl *flow.Controller) {
+
+}

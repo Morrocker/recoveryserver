@@ -72,6 +72,8 @@ func GetFiles(mt *tree.MetaTree, OutputPath string, data Data, rbs remote.RBS, r
 	}
 	log.Info("Filtered list Size:%d | blocks: %d", len(filesList), x)
 
+	fetchFiles(filesList, data, rbs, rt, ctrl)
+
 	// fetchFiles(filesList)
 
 	// bigFiles, smallFiles := sortFiles(fl)
@@ -188,6 +190,39 @@ func fetchBlockLists(fl map[string]*fileData, data Data, rbs remote.RBS, rt *tra
 			delete(fl, hash)
 		}
 	}
+}
+
+func fetchFiles(fl map[string]*fileData, data Data, rbs remote.RBS, rt *tracker.RecoveryTracker, ctrl *flow.Controller) {
+	orderedFiles := []*fileData{}
+	for _, fd := range fl {
+		if len(orderedFiles) == 0 {
+			orderedFiles = append(orderedFiles, fd)
+		}
+		orderedFiles = splitInsertSort(orderedFiles, fd)
+	}
+	for _, fd := range orderedFiles {
+		log.Info("Size: %d", fd.Mt.Mf.Size)
+	}
+}
+
+func splitInsertSort(arr []*fileData, newFD *fileData) []*fileData {
+	fsz := newFD.Mt.Mf.Size
+	size := len(arr)
+	pre := arr[:size/2]
+	post := arr[size/2:]
+	if fsz >= post[len(post)-1].Mt.Mf.Size {
+		return append(arr, newFD)
+	} else if fsz <= pre[0].Mt.Mf.Size {
+		newArr := []*fileData{newFD}
+		return append(newArr, arr...)
+	} else if fsz < post[0].Mt.Mf.Size {
+		// process pre
+		pre = splitInsertSort(pre, newFD)
+	} else {
+		// process post
+		post = splitInsertSort(post, newFD)
+	}
+	return append(pre, post...)
 }
 
 // func getBlockLists(hl []string, fl *filesList, data Data, rbs remote.RBS, rt *tracker.RecoveryTracker) error {
