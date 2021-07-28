@@ -72,6 +72,8 @@ func GetFiles(mt *tree.MetaTree, OutputPath string, data Data, rbs remote.RBS, r
 	}
 	log.Info("Filtered list Size:%d | blocks: %d", len(filesList), x)
 
+	// fetchFiles(filesList)
+
 	// bigFiles, smallFiles := sortFiles(fl)
 
 	// var size int64
@@ -181,6 +183,11 @@ func fetchBlockLists(fl map[string]*fileData, data Data, rbs remote.RBS, rt *tra
 	}
 	time.Sleep(5 * time.Second)
 	close(fdc)
+	for hash := range fl {
+		if len(fl[hash].blocksList) <= 0 {
+			delete(fl, hash)
+		}
+	}
 }
 
 // func getBlockLists(hl []string, fl *filesList, data Data, rbs remote.RBS, rt *tracker.RecoveryTracker) error {
