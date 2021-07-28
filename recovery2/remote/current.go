@@ -47,12 +47,12 @@ func (r *RBSMulti) GetBlock(hash string, user string) ([]byte, error) {
 		}
 	}
 
-	return nil, errors.New("remote.current.GetBlock()", fmt.Sprintf("Block %s is ungettable", hash))
+	return nil, errors.New("remote.GetBlock()", fmt.Sprintf("Block %s is ungettable", hash))
 }
 
 // GetBlocks takes an array of blocks from a single user and returns an array with them
 func (r *RBSMulti) GetBlocks(hashs []string, user string) (bytesArray [][]byte, err error) {
-	op := "remotes.GetBlocks()"
+	op := "remote.GetBlocks()"
 	for retries := 0; retries < 3; retries++ {
 		bytesArray, err = r.Main.RetrieveMultiple(hashs, user)
 		if err == nil {
@@ -98,10 +98,10 @@ func (r *RBSMulti) GetBlocks(hashs []string, user string) (bytesArray [][]byte, 
 
 // GetBlockslists receives a block and a user and returns an array of block names
 func (r *RBSMulti) GetBlocksList(hash string, user string) ([]string, error) {
-	op := "remotes.GetBlockList()"
+	op := "remote.GetBlockList()"
 	block, err := r.GetBlock(hash, user)
 	if err != nil {
-		return nil, errors.New("remote.current.GetBlocksList()", "Blocklist ungettable")
+		return nil, errors.Extend(op, err)
 	}
 	blockList := &BlocksList{}
 	if err := json.Unmarshal(block, blockList); err != nil {
@@ -112,7 +112,7 @@ func (r *RBSMulti) GetBlocksList(hash string, user string) ([]string, error) {
 
 // GetBlockslists receives a lists of blocks from a user and returns an array of arrays of block names
 func (r *RBSMulti) GetBlocksLists(hashs []string, user string) (blockLists [][]string, err error) {
-	op := "remotes.GetBlockLists()"
+	op := "remote.GetBlockLists()"
 	blocks, err := r.GetBlocks(hashs, user)
 	if err != nil {
 		return nil, errors.Extend(op, err)
