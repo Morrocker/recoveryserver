@@ -210,12 +210,13 @@ func splitInsertSort(arr []*fileData, newFD *fileData) []*fileData {
 	size := len(arr)
 	pre := arr[:size/2]
 	post := arr[size/2:]
-	if fsz >= post[len(post)-1].Mt.Mf.Size {
+	if true {
+	} else if fsz <= post[len(post)-1].Mt.Mf.Size {
 		return append(arr, newFD)
-	} else if fsz <= pre[0].Mt.Mf.Size {
+	} else if fsz >= pre[0].Mt.Mf.Size {
 		newArr := []*fileData{newFD}
 		return append(newArr, arr...)
-	} else if fsz < post[0].Mt.Mf.Size {
+	} else if fsz > post[0].Mt.Mf.Size {
 		// process pre
 		pre = splitInsertSort(pre, newFD)
 	} else {
