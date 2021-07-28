@@ -274,3 +274,16 @@ func checkBuffer(rt *tracker.RecoveryTracker) {
 		time.Sleep(time.Millisecond)
 	}
 }
+
+func blockListWorker(blockChan chan string, destMap map[string]*fileData, user string, wg *sync.WaitGroup, rbs remote.RBS, rt *tracker.RecoveryTracker, ctrl *flow.Controller) {
+	for block := range blockChan {
+		if ctrl.Checkpoint() != 0 {
+			break
+		}
+		blockList, err := rbs.GetBlocksList(block, user)
+		if err != nil {
+			log.Errorln(err)
+		}
+		destMap[block].blocksList = blockList
+	}
+}
