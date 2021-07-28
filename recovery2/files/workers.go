@@ -283,7 +283,10 @@ func blockListWorker(blockChan chan string, destMap map[string]*fileData, user s
 		blockList, err := rbs.GetBlocksList(block, user)
 		if err != nil {
 			log.Errorln(err)
+			rt.Counters["fileErrors"].Current(1)
+			continue
 		}
 		destMap[block].blocksList = blockList
+		rt.Gauges["files"].Total(1)
 	}
 }
