@@ -100,7 +100,7 @@ func (r *RBSMulti) GetBlocks(hashs []string, user string) (bytesArray [][]byte, 
 func (r *RBSMulti) GetBlocksList(hash string, user string) ([]string, error) {
 	op := "remotes.GetBlockList()"
 	block, err := r.GetBlock(hash, user)
-	if len(block) != 0 {
+	if err != nil {
 		return nil, errors.New("remote.current.GetBlocksList()", "Blocklist ungettable")
 	}
 	blockList := &BlocksList{}
