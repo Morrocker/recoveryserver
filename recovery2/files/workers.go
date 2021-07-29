@@ -315,7 +315,7 @@ func fileWorker(
 		log.Info("Recovering file %s\t[%s]", fd.OutputPath, utils.B2H(fd.Mt.Mf.Size))
 		time.Sleep(1 * time.Second)
 		log.Infoln("Buffermap")
-		// spew.Dump(bufferMap)
+		spew.Dump(bufferMap)
 		go func() {
 			for _, block := range fd.blocksList {
 				newBlockData := blockData{
@@ -367,12 +367,13 @@ func filesBlockWorker(
 
 	for bd := range bdc {
 		wg.Add(1)
+		log.Info("fbw Buffermap")
+		spew.Dump(bufferMap)
 		bytes, err := rbs.GetBlock(bd.hash, bd.user)
 		if err != nil {
 			log.Errorln(errors.Extend(op, err))
 			bytes = zeroedBuffer
 		}
-		spew.Dump(bufferMap)
 		bufferMap[bd.fileHash][bd.hash] = bytes
 		bc.Broadcast()
 		wg.Done()
