@@ -371,6 +371,7 @@ func filesBlockWorker(
 			log.Errorln(errors.Extend(op, err))
 			bytes = zeroedBuffer
 		}
+		spew.Dump(bufferMap)
 		bufferMap[bd.fileHash][bd.hash] = bytes
 		bc.Broadcast()
 		wg.Done()
