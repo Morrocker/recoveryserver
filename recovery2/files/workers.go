@@ -313,7 +313,6 @@ func fileWorker(
 	for fd := range fdc {
 		wg.Add(1)
 		log.Info("Recovering file %s\t[%s]", fd.OutputPath, utils.B2H(fd.Mt.Mf.Size))
-		bufferMap[fd.Mt.Mf.Hash] = make(map[string][]byte)
 		time.Sleep(1 * time.Second)
 		log.Infoln("Buffermap")
 		// spew.Dump(bufferMap)
