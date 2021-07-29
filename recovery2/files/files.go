@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/clonercl/reposerver"
+	"github.com/morrocker/broadcast"
 	"github.com/morrocker/errors"
 	"github.com/morrocker/flow"
 	"github.com/morrocker/log"
@@ -66,11 +67,6 @@ func GetFiles(mt *tree.MetaTree, OutputPath string, data Data, rbs remote.RBS, r
 	time.Sleep(5 * time.Second)
 
 	fetchBlockLists(filesList, data, rbs, rt, ctrl)
-	x := 0
-	for _, fd := range filesList {
-		x += len(fd.blocksList)
-	}
-	log.Info("Filtered list Size:%d | blocks: %d", len(filesList), x)
 
 	fetchFiles(filesList, data, rbs, rt, ctrl)
 
@@ -200,9 +196,28 @@ func fetchFiles(fl map[string]*fileData, data Data, rbs remote.RBS, rt *tracker.
 		}
 		orderedFiles = splitInsertSort(orderedFiles, fd)
 	}
-	for _, fd := range orderedFiles {
-		log.Info("Size: %d", fd.Mt.Mf.Size)
+
+	wg := &sync.WaitGroup{}
+	wg2 := &sync.WaitGroup{}
+	fdc := make(chan *fileData)
+	bdc := make(chan blockData)
+	bufferMap := make(map[string]map[string][]byte)
+	bc := broadcast.New()
+	for x := 0; x < data.Workers; x++ {
+		go fileWorker(fdc, bdc, bufferMap, data.User, bc.Listen(), wg, rbs, rt, ctrl)
 	}
+	for x := 0; x < data.Workers*2; x++ {
+		go filesBlockWorker(bdc, bufferMap, bc, wg2, rbs, rt, ctrl)
+	}
+
+	for _, fd := range orderedFiles {
+		fdc <- fd
+	}
+	time.Sleep(5 * time.Second)
+	close(fdc)
+	wg.Wait()
+	close(bdc)
+	wg2.Wait()
 }
 
 func splitInsertSort(arr []*fileData, newFD *fileData) []*fileData {
@@ -216,43 +231,9 @@ func splitInsertSort(arr []*fileData, newFD *fileData) []*fileData {
 		newArr := []*fileData{newFD}
 		return append(newArr, arr...)
 	} else if fsz > post[0].Mt.Mf.Size {
-		// process pre
 		pre = splitInsertSort(pre, newFD)
 	} else {
-		// process post
 		post = splitInsertSort(post, newFD)
 	}
 	return append(pre, post...)
 }
-
-// func getBlockLists(hl []string, fl *filesList, data Data, rbs remote.RBS, rt *tracker.RecoveryTracker) error {
-// 	contents, err := rbs.GetBlocksLists(hl, data.User)
-// 	if err != nil {
-// 		return errors.Extend("recovery.getBlockList()", err)
-// 	}
-// 	for i, content := range contents {
-// 		// size := fl.ToDo[hl[i]].Mt.Mf.Size
-// 		if len(content) == 0 {
-// 			// rt.FailedBlocklist(size, rt) SEE THIS
-// 			delete(fl.ToDo, hl[i])
-// 			continue
-// 		}
-// 		// rt.AddFile(size, rt) SEE THIS
-// 		fl.ToDo[hl[i]].blocksList = content
-// 	}
-
-// 	return nil
-// }
-
-// func sortFiles(fl *filesList) (bigFiles []*fileData, smallFiles []*fileData) {
-// 	log.Taskln("Sorting files")
-// 	for _, fd := range fl.ToDo {
-// 		if fd.Mt.Mf.Size > 104857600 {
-// 			bigFiles = append(bigFiles, fd)
-// 		} else {
-// 			smallFiles = append(smallFiles, fd)
-// 		}
-// 	}
-// 	log.Task("Small files: %d, Big files: %d", len(smallFiles), len(bigFiles))
-// 	return
-// }

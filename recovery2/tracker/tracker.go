@@ -22,6 +22,8 @@ func New() *RecoveryTracker {
 	r.Gauges["totalsize"].UnitsFunc(utils.B2H)
 	r.Counters["errors"] = tracker.NewCounter()
 	r.Counters["fileErrors"] = tracker.NewCounter()
+
+	r.Gauges["membuff"] = tracker.NewGauge()
 	return r
 
 	// tr.AddGauge("buffer", 10)

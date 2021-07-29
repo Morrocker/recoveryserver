@@ -35,18 +35,19 @@ func (r *RBSMulti) SetBkp(addr, magic string) {
 }
 
 // GetBlock takes a blocks parameters searches and returns it
-func (r *RBSMulti) GetBlock(hash string, user string) ([]byte, error) {
-	bytes, err := r.Main.Retrieve(hash, user)
-	if len(bytes) != 0 {
-		return bytes, err
-	}
-	if r.Bkp != nil {
-		bytes, err := r.Bkp.Retrieve(hash, user)
+func (r *RBSMulti) GetBlock(hash string, user string) (bytes []byte, err error) {
+	for x := 0; x < 2; x++ {
+		bytes, err = r.Main.Retrieve(hash, user)
 		if len(bytes) != 0 {
-			return bytes, err
+			return
+		}
+		if r.Bkp != nil {
+			bytes, err = r.Bkp.Retrieve(hash, user)
+			if len(bytes) != 0 {
+				return
+			}
 		}
 	}
-
 	return nil, errors.New("remote.GetBlock()", fmt.Sprintf("Block %s is ungettable", hash))
 }
 
@@ -97,17 +98,22 @@ func (r *RBSMulti) GetBlocks(hashs []string, user string) (bytesArray [][]byte, 
 }
 
 // GetBlockslists receives a block and a user and returns an array of block names
-func (r *RBSMulti) GetBlocksList(hash string, user string) ([]string, error) {
+func (r *RBSMulti) GetBlocksList(hash string, user string) (blocksList []string, err error) {
 	op := "remote.GetBlockList()"
-	block, err := r.GetBlock(hash, user)
-	if err != nil {
-		return nil, errors.Extend(op, err)
+	var blockList *BlocksList
+	var block []byte
+	for x := 0; x < 2; x++ {
+		blockList = &BlocksList{}
+		block, err = r.GetBlock(hash, user)
+		if err != nil {
+			continue
+		}
+		if err = json.Unmarshal(block, blockList); err != nil {
+			continue
+		}
+		break
 	}
-	blockList := &BlocksList{}
-	if err := json.Unmarshal(block, blockList); err != nil {
-		return nil, errors.Extend(op, err)
-	}
-	return blockList.Blocks, err
+	return blockList.Blocks, errors.Extend(op, err)
 }
 
 // GetBlockslists receives a lists of blocks from a user and returns an array of arrays of block names
