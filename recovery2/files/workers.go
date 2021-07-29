@@ -313,6 +313,7 @@ func fileWorker(
 		wg.Add(1)
 		log.Info("Recovering file %s\t[%s]", fd.OutputPath, utils.B2H(fd.Mt.Mf.Size))
 		bufferMap[fd.Mt.Mf.Hash] = make(map[string][]byte)
+		log.Infoln("Buffermap")
 		spew.Dump(bufferMap)
 		go func() {
 			for _, block := range fd.blocksList {
