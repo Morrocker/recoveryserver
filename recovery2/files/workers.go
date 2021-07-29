@@ -288,7 +288,7 @@ func blockListWorker(
 			break
 		}
 		blockList, err := rbs.GetBlocksList(block, user)
-		if err != nil {
+		if err != nil && len(blockList) == 0 {
 			log.Errorln(err)
 			rt.Counters["fileErrors"].Current(1)
 			continue
