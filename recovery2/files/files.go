@@ -211,8 +211,8 @@ func fetchFiles(fl map[string]*fileData, data Data, rbs remote.RBS, rt *tracker.
 	}
 
 	for _, fd := range orderedFiles {
-		bufferMap[fd.Mt.Mf.Hash] = make(map[string][]byte)
 		fdc <- fd
+		bufferMap[fd.Mt.Mf.Hash] = make(map[string][]byte)
 	}
 	time.Sleep(5 * time.Second)
 	close(fdc)
