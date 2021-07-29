@@ -311,6 +311,7 @@ func fileWorker(
 	for fd := range fdc {
 		wg.Add(1)
 		log.Info("Recovering file %s\t[%s]", fd.OutputPath, utils.B2H(fd.Mt.Mf.Size))
+		bufferMap[fd.Mt.Mf.Hash] = make(map[string][]byte)
 		go func() {
 			for _, block := range fd.blocksList {
 				newBlockData := blockData{
@@ -332,12 +333,14 @@ func fileWorker(
 					if _, err := f.Write(val); err != nil {
 						log.Errorln(errors.New(op, fmt.Sprintf("error could not write content for file '%s': %v\n", fd.OutputPath, err)))
 					}
+					delete(bufferMap, fd.Mt.Mf.Hash)
 					break
 				}
 				<-ls.C
 			}
 		}
 		f.Close()
+		delete(bufferMap, fd.Mt.Mf.Hash)
 		wg.Done()
 	}
 }
