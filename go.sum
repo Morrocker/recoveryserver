@@ -144,8 +144,6 @@ github.com/morrocker/benchmark v0.0.0-20210605042952-9c82b225f734 h1:35Th8kxJpCh
 github.com/morrocker/benchmark v0.0.0-20210605042952-9c82b225f734/go.mod h1:rmMcKVgW6HkT6hCd4cxwjki9uYnN1+nBfnEwV69zGDo=
 github.com/morrocker/broadcast v0.0.0-20210331144645-71f2ee18ca39 h1:XSzmEW1M80vR76B9HTevqib6WDtwxUQAVavG7UwG11w=
 github.com/morrocker/broadcast v0.0.0-20210331144645-71f2ee18ca39/go.mod h1:Y8C0U3vC37uSI2DE0NfTfh1L24R3XvrYpeaddhfpVqc=
-github.com/morrocker/errors v0.0.0-20210323144609-d8629b6d420a h1:5eM0pV4lXVkRyiRUvR9Vw7eb2/dTCPYFylyoGsr4KrA=
-github.com/morrocker/errors v0.0.0-20210323144609-d8629b6d420a/go.mod h1:MaVAsvgPemd2kMO+0xRrt0yeflz4aaWX1it59qu3/gU=
 github.com/morrocker/errors v0.0.0-20210616183851-68eef14f2373 h1:2bmkF7hn92fS2/OhQUIgceEjC/C+M3G4nMlr3vhOdU8=
 github.com/morrocker/errors v0.0.0-20210616183851-68eef14f2373/go.mod h1:MaVAsvgPemd2kMO+0xRrt0yeflz4aaWX1it59qu3/gU=
 github.com/morrocker/flow v0.0.0-20210526162134-cd31da452ce1 h1:Bxnvia5ny8CPmI3qVpB4BMxioBvdtK6aaB1x1adWKa8=

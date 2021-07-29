@@ -5,6 +5,7 @@ import (
 	"os"
 	"sync"
 
+	"github.com/davecgh/go-spew/spew"
 	"github.com/morrocker/broadcast"
 	"github.com/morrocker/errors"
 	"github.com/morrocker/flow"
@@ -312,6 +313,7 @@ func fileWorker(
 		wg.Add(1)
 		log.Info("Recovering file %s\t[%s]", fd.OutputPath, utils.B2H(fd.Mt.Mf.Size))
 		bufferMap[fd.Mt.Mf.Hash] = make(map[string][]byte)
+		spew.Dump(bufferMap)
 		go func() {
 			for _, block := range fd.blocksList {
 				newBlockData := blockData{
