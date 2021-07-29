@@ -10,6 +10,7 @@ import (
 	"github.com/morrocker/flow"
 	"github.com/morrocker/log"
 	"github.com/morrocker/recoveryserver/recovery2/remote"
+	"github.com/morrocker/utils"
 	"golang.org/x/text/unicode/norm"
 
 	// "github.com/morrocker/tracker"
@@ -309,6 +310,7 @@ func fileWorker(
 
 	for fd := range fdc {
 		wg.Add(1)
+		log.Info("Recovering file %s\t[%s]", fd.OutputPath, utils.B2H(fd.Mt.Mf.Size))
 		go func() {
 			for _, block := range fd.blocksList {
 				newBlockData := blockData{
@@ -361,6 +363,7 @@ func filesBlockWorker(
 		bytes, err := rbs.GetBlock(bd.hash, bd.user)
 		if err != nil {
 			log.Errorln(errors.Extend(op, err))
+			bytes = zeroedBuffer
 		}
 		bufferMap[bd.fileHash][bd.hash] = bytes
 		bc.Broadcast()
