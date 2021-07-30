@@ -47,20 +47,17 @@ func GetFiles(mt *tree.MetaTree, OutputPath string, data Data, rbs remote.RBS, r
 	}
 	filesList := make(map[string]*fileData)
 
-	// bwc, bwWg := startBlocksWorker()
-
-	// sfc, sfWg := startSmallFilesWorkers(data, rbs, rt, ctrl)
-	// bfc, bdc, bfWg, bdWg := startBigFilesWorkers(data, rbs, rt, ctrl)
-
 	if err := os.MkdirAll(OutputPath, 0700); err != nil {
 		return errors.New(op, errors.Extend(op, err))
 	}
 
 	log.Taskln("Filling files list")
 	log.Info("Starting Size:%d", len(filesList))
-
 	fillFilesList(OutputPath, fd, filesList)
 	log.Info("Filled list Size:%d", len(filesList))
+	for hash, fd := range filesList {
+		log.Info("[%s] %s", hash, fd.OutputPath)
+	}
 	filterDoneFiles(filesList, rt)
 	log.Info("Filtered list Size:%d", len(filesList))
 
@@ -69,45 +66,6 @@ func GetFiles(mt *tree.MetaTree, OutputPath string, data Data, rbs remote.RBS, r
 	fetchBlockLists(filesList, data, rbs, rt, ctrl)
 
 	fetchFiles(filesList, data, rbs, rt, ctrl)
-
-	// fetchFiles(filesList)
-
-	// bigFiles, smallFiles := sortFiles(fl)
-
-	// var size int64
-	// var subFl []*fileData
-
-	// // rt.StartAutoPrint(6 * time.Second)
-	// // rt.StartAutoMeasure("size", 20*time.Second)
-	// log.Notice("Sending small files lists. #%d", len(smallFiles))
-	// for _, fd := range smallFiles {
-	// 	fileSize := fd.Mt.Mf.Size
-	// 	if size+fileSize > 104857600 && size != 0 { // 10000 BLOCKS
-	// 		sfc <- subFl
-	// 		size = 0
-	// 		subFl = []*fileData{}
-	// 	}
-	// 	subFl = append(subFl, fd)
-	// 	size += fileSize
-	// }
-
-	// if len(subFl) > 0 {
-	// 	sfc <- subFl
-	// }
-	// time.Sleep(time.Second)
-	// close(sfc)
-	// sfWg.Wait()
-
-	// log.Notice("Sending big files lists. #%d", len(bigFiles))
-	// for _, fd := range bigFiles {
-	// 	bfc <- fd
-	// }
-	// // log.Info("Finished recovering big files")
-	// time.Sleep(time.Second)
-	// close(bfc)
-	// bfWg.Wait()
-	// close(bdc)
-	// bdWg.Wait()
 
 	// // rt.StopAutoPrint()
 	// // rt.StopAutoMeasure("size")
