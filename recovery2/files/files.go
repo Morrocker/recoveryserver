@@ -202,7 +202,7 @@ func fetchFiles(fl map[string]*fileData, data Data, rbs remote.RBS, rt *tracker.
 	fdc := make(chan *fileData)
 	bdc := make(chan blockData)
 	// bufferMap := make(map[string]map[string][]byte)
-	var bufferMap2 *sync.Map
+	var bufferMap2 *sync.Map = &sync.Map{}
 	bc := broadcast.New()
 	for x := 0; x < data.Workers; x++ {
 		go fileWorker(fdc, bdc, data.User, bufferMap2, bc.Listen(), wg, rbs, rt, ctrl)
@@ -212,7 +212,7 @@ func fetchFiles(fl map[string]*fileData, data Data, rbs remote.RBS, rt *tracker.
 	}
 
 	for _, fd := range orderedFiles {
-		var fileBufferMap *sync.Map
+		var fileBufferMap *sync.Map = &sync.Map{}
 		log.Info("first try")
 		bufferMap2.Store("ASD", 10)
 		log.Info("got through")
