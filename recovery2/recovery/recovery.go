@@ -55,8 +55,8 @@ type Resources struct {
 }
 
 type RemotesData struct {
-	address string
-	magic   string
+	Address string
+	Magic   string
 }
 
 func New(d Data, r Resources, rd []remotesData) Recovery {
