@@ -43,6 +43,11 @@ func GetFiles(mt *tree.MetaTree, OutputPath string, data Data, rbs remote.RBS, r
 	}
 	filesList := make(map[string]*fileData)
 
+	_, t := rt.Gauges["membuff"].RawValues()
+	if t == 0 {
+		return errors.New(op, "memory buffer parameter not set")
+	}
+
 	if err := os.MkdirAll(OutputPath, 0700); err != nil {
 		return errors.New(op, errors.Extend(op, err))
 	}

@@ -55,15 +55,22 @@ func fileWorker(
 		time.Sleep(1 * time.Second)
 		go func() {
 			for _, block := range fd.blocksList {
-				if ctrl.Checkpoint() != 0 {
-					return
+				for {
+					if ctrl.Checkpoint() != 0 {
+						return
+					}
+					c, t := rt.Gauges["membuff"].RawValues()
+					if c >= t {
+						continue
+					}
+					newBlockData := blockData{
+						user:     user,
+						hash:     block,
+						fileHash: fd.Mt.Mf.Hash,
+					}
+					bdc <- newBlockData
+					break
 				}
-				newBlockData := blockData{
-					user:     user,
-					hash:     block,
-					fileHash: fd.Mt.Mf.Hash,
-				}
-				bdc <- newBlockData
 			}
 		}()
 		f, err := os.Create(norm.NFC.String(fd.OutputPath))
@@ -85,6 +92,7 @@ func fileWorker(
 							log.Errorln(errors.New(op, fmt.Sprintf("error could not write content for file '%s': %v\n", fd.OutputPath, err)))
 						}
 						if val.ctr == 1 {
+							rt.Gauges["membuff"].Current(-1)
 							break
 						} else if val.ctr > 1 {
 							val.ctr--
@@ -149,6 +157,7 @@ func filesBlockWorker(
 				newData.ctr = val.ctr + 1
 				subMap.Store(bd.hash, val)
 			}
+			rt.Gauges["membuff"].Current(1)
 		}
 	}
 	wg.Done()
