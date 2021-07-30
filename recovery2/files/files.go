@@ -54,11 +54,20 @@ func GetFiles(mt *tree.MetaTree, OutputPath string, data Data, rbs remote.RBS, r
 
 	log.Taskln("Filling files list")
 
-	fillFilesList(OutputPath, fd, filesList)
+	fillFilesList(OutputPath, fd, filesList, ctrl)
+	if ctrl.Checkpoint() != 0 {
+		return nil
+	}
 
-	filterDoneFiles(filesList, rt)
+	filterDoneFiles(filesList, rt, ctrl)
+	if ctrl.Checkpoint() != 0 {
+		return nil
+	}
 
 	fetchBlockLists(filesList, data, rbs, rt, ctrl)
+	if ctrl.Checkpoint() != 0 {
+		return nil
+	}
 
 	fetchFiles(filesList, data, rbs, rt, ctrl)
 
@@ -68,7 +77,7 @@ func GetFiles(mt *tree.MetaTree, OutputPath string, data Data, rbs remote.RBS, r
 	return nil
 }
 
-func fillFilesList(output string, fd *fileData, fl map[string]*fileData) {
+func fillFilesList(output string, fd *fileData, fl map[string]*fileData, ctrl *flow.Controller) {
 	mf := fd.Mt.Mf
 	p := path.Join(output, mf.Name)
 	if mf.Type == reposerver.FolderType {
@@ -80,14 +89,14 @@ func fillFilesList(output string, fd *fileData, fl map[string]*fileData) {
 			}
 		}
 		for _, child := range fd.Mt.Children {
-			// if r.flowGate() {
-			// 	break
-			// }
+			if ctrl.Checkpoint() != 0 {
+				break
+			}
 			newFD := &fileData{
 				Mt:         child,
 				OutputPath: p,
 			}
-			fillFilesList(p, newFD, fl)
+			fillFilesList(p, newFD, fl, ctrl)
 		}
 		return
 	}
@@ -95,10 +104,13 @@ func fillFilesList(output string, fd *fileData, fl map[string]*fileData) {
 	fl[mf.Hash] = fd
 }
 
-func filterDoneFiles(fda map[string]*fileData, rt *tracker.RecoveryTracker) {
+func filterDoneFiles(fda map[string]*fileData, rt *tracker.RecoveryTracker, ctrl *flow.Controller) {
 	log.Taskln("Filtering Done Files")
 	delList := []string{}
 	for key, fd := range fda {
+		if ctrl.Checkpoint() != 0 {
+			return
+		}
 		size := fd.Mt.Mf.Size
 		path := fd.OutputPath
 		if fi, err := os.Stat(path); err == nil {
