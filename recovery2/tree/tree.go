@@ -44,7 +44,7 @@ func newMetaTree(mf *reposerver.Metafile) *MetaTree {
 }
 
 // GetRecoveryTree takes in a recovery data and returns a metafileTree
-func GetRecoveryTree(data Data, tt Throttling, rt *tracker.RecoveryTracker, ctrl *flow.Controller) (*MetaTree, error) {
+func GetRecoveryTree(data Data, tt Throttling, rt *tracker.RecoveryTracker, ctrl flow.Controller) (*MetaTree, error) {
 	log.Task("Starting metafile tree retrieval")
 
 	if ctrl.Checkpoint() != 0 {
@@ -83,7 +83,7 @@ func GetRecoveryTree(data Data, tt Throttling, rt *tracker.RecoveryTracker, ctrl
 	return mt, nil
 }
 
-func metaTreeWorker(data Data, tc chan *MetaTree, wg *sync.WaitGroup, tr *tracker.RecoveryTracker, ctrl *flow.Controller) {
+func metaTreeWorker(data Data, tc chan *MetaTree, wg *sync.WaitGroup, tr *tracker.RecoveryTracker, ctrl flow.Controller) {
 	log.Task("Starting metaTreeWorker")
 Outer:
 	for mt := range tc {
@@ -176,7 +176,7 @@ func getChildren(id string, data Data, rt *tracker.RecoveryTracker) ([]*MetaTree
 	return nil, errOut
 }
 
-func startWorkers(data Data, tt Throttling, rt *tracker.RecoveryTracker, ctrl *flow.Controller) (chan *MetaTree, *sync.WaitGroup) {
+func startWorkers(data Data, tt Throttling, rt *tracker.RecoveryTracker, ctrl flow.Controller) (chan *MetaTree, *sync.WaitGroup) {
 	log.Task("Starting %d metaTree workers", tt.Workers)
 
 	wg := &sync.WaitGroup{}

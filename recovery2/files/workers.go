@@ -22,7 +22,7 @@ func blockListWorker(
 	wg *sync.WaitGroup,
 	rbs remote.RBS,
 	rt *tracker.RecoveryTracker,
-	ctrl *flow.Controller) {
+	ctrl flow.Controller) {
 	for block := range blockChan {
 		if ctrl.Checkpoint() != 0 {
 			break
@@ -46,7 +46,7 @@ func fileWorker(
 	wg *sync.WaitGroup,
 	rbs remote.RBS,
 	rt *tracker.RecoveryTracker,
-	ctrl *flow.Controller) {
+	ctrl flow.Controller) {
 	op := "recovery.fileWorker()"
 
 	wg.Add(1)
@@ -129,7 +129,7 @@ func filesBlockWorker(
 	wg *sync.WaitGroup,
 	rbs remote.RBS,
 	rt *tracker.RecoveryTracker,
-	ctrl *flow.Controller) {
+	ctrl flow.Controller) {
 	op := "files.filesBlockWorker()"
 
 	wg.Add(1)

@@ -5,4 +5,6 @@ type RBS interface {
 	GetBlocks([]string, string) ([][]byte, error)
 	GetBlocksList(string, string) ([]string, error)
 	GetBlocksLists([]string, string) ([][]string, error)
+
+	SetBkp(string, string)
 }

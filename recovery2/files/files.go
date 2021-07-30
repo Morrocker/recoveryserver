@@ -13,7 +13,6 @@ import (
 	"github.com/morrocker/flow"
 	"github.com/morrocker/log"
 
-	// tracker "github.com/morrocker/progress-tracker"
 	"github.com/morrocker/recoveryserver/recovery2/remote"
 	"github.com/morrocker/recoveryserver/recovery2/tracker"
 	"github.com/morrocker/recoveryserver/recovery2/tree"
@@ -33,7 +32,7 @@ type fileData struct {
 
 var zeroedBuffer = make([]byte, 1024*1000)
 
-func GetFiles(mt *tree.MetaTree, OutputPath string, data Data, rbs remote.RBS, rt *tracker.RecoveryTracker, ctrl *flow.Controller) error {
+func GetFiles(mt *tree.MetaTree, OutputPath string, data Data, rbs remote.RBS, rt *tracker.RecoveryTracker, ctrl flow.Controller) error {
 	log.Taskln("Starting files recovery")
 	op := "recovery.getFiles()"
 
@@ -77,7 +76,7 @@ func GetFiles(mt *tree.MetaTree, OutputPath string, data Data, rbs remote.RBS, r
 	return nil
 }
 
-func fillFilesList(output string, fd *fileData, fl map[string]*fileData, ctrl *flow.Controller) {
+func fillFilesList(output string, fd *fileData, fl map[string]*fileData, ctrl flow.Controller) {
 	mf := fd.Mt.Mf
 	p := path.Join(output, mf.Name)
 	if mf.Type == reposerver.FolderType {
@@ -104,7 +103,7 @@ func fillFilesList(output string, fd *fileData, fl map[string]*fileData, ctrl *f
 	fl[mf.Hash] = fd
 }
 
-func filterDoneFiles(fda map[string]*fileData, rt *tracker.RecoveryTracker, ctrl *flow.Controller) {
+func filterDoneFiles(fda map[string]*fileData, rt *tracker.RecoveryTracker, ctrl flow.Controller) {
 	log.Taskln("Filtering Done Files")
 	delList := []string{}
 	for key, fd := range fda {
@@ -129,7 +128,7 @@ func filterDoneFiles(fda map[string]*fileData, rt *tracker.RecoveryTracker, ctrl
 	time.Sleep(1 * time.Second)
 }
 
-func fetchBlockLists(fl map[string]*fileData, data Data, rbs remote.RBS, rt *tracker.RecoveryTracker, ctrl *flow.Controller) {
+func fetchBlockLists(fl map[string]*fileData, data Data, rbs remote.RBS, rt *tracker.RecoveryTracker, ctrl flow.Controller) {
 	log.Taskln("Fetching blocklists")
 
 	wg := &sync.WaitGroup{}
@@ -155,7 +154,7 @@ func fetchBlockLists(fl map[string]*fileData, data Data, rbs remote.RBS, rt *tra
 	}
 }
 
-func fetchFiles(fl map[string]*fileData, data Data, rbs remote.RBS, rt *tracker.RecoveryTracker, ctrl *flow.Controller) {
+func fetchFiles(fl map[string]*fileData, data Data, rbs remote.RBS, rt *tracker.RecoveryTracker, ctrl flow.Controller) {
 	orderedFiles := []*fileData{}
 	for _, fd := range fl {
 		orderedFiles = append(orderedFiles, fd)
