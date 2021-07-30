@@ -330,7 +330,6 @@ func fileWorker(
 		if err != nil {
 			log.Errorln(errors.New(op, err))
 		}
-		ls := bc.Listen()
 		for _, block := range fd.blocksList {
 			for {
 				subMapIf, ok := bufferMap.Load(fd.Mt.Mf.Hash)
@@ -346,11 +345,10 @@ func fileWorker(
 					}
 				}
 				// val, ok := bufferMap[fd.Mt.Mf.Hash][block]
-				<-ls.C
+				time.Sleep(10 * time.Millisecond)
 			}
 		}
 		f.Close()
-		ls.Close()
 
 		// delete(bufferMap, fd.Mt.Mf.Hash)
 		bufferMap.Delete(fd.Mt.Mf.Hash)
