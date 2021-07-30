@@ -201,7 +201,7 @@ func fetchFiles(fl map[string]*fileData, data Data, rbs remote.RBS, rt *tracker.
 	wg2 := &sync.WaitGroup{}
 	fdc := make(chan *fileData)
 	bdc := make(chan blockData)
-	bufferMap := make(map[string]map[string][]byte)
+	// bufferMap := make(map[string]map[string][]byte)
 	var bufferMap2 *sync.Map
 	bc := broadcast.New()
 	for x := 0; x < data.Workers; x++ {
@@ -212,8 +212,9 @@ func fetchFiles(fl map[string]*fileData, data Data, rbs remote.RBS, rt *tracker.
 	}
 
 	for _, fd := range orderedFiles {
+		var fileBufferMap *sync.Map
+		bufferMap2.Store(fd.Mt.Mf.Hash, fileBufferMap)
 		fdc <- fd
-		bufferMap[fd.Mt.Mf.Hash] = make(map[string][]byte)
 	}
 	time.Sleep(5 * time.Second)
 	close(fdc)
