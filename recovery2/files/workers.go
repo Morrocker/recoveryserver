@@ -337,7 +337,7 @@ func fileWorker(
 					if _, err := f.Write(val); err != nil {
 						log.Errorln(errors.New(op, fmt.Sprintf("error could not write content for file '%s': %v\n", fd.OutputPath, err)))
 					}
-					delete(bufferMap, fd.Mt.Mf.Hash)
+					delete(bufferMap[fd.Mt.Mf.Hash], block)
 					break
 				}
 				<-ls.C
@@ -368,7 +368,7 @@ func filesBlockWorker(
 	for bd := range bdc {
 		wg.Add(1)
 		log.Info("fbw Buffermap")
-		spew.Dump(bufferMap)
+		// spew.Dump(bufferMap)
 		bytes, err := rbs.GetBlock(bd.hash, bd.user)
 		if err != nil {
 			log.Errorln(errors.Extend(op, err))
