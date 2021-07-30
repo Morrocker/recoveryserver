@@ -48,13 +48,10 @@ func GetFiles(mt *tree.MetaTree, OutputPath string, data Data, rbs remote.RBS, r
 	}
 
 	log.Taskln("Filling files list")
-	log.Info("Starting Size:%d", len(filesList))
-	fillFilesList(OutputPath, fd, filesList)
-	log.Info("Filled list Size:%d", len(filesList))
-	filterDoneFiles(filesList, rt)
-	log.Info("Filtered list Size:%d", len(filesList))
 
-	time.Sleep(5 * time.Second)
+	fillFilesList(OutputPath, fd, filesList)
+
+	filterDoneFiles(filesList, rt)
 
 	fetchBlockLists(filesList, data, rbs, rt, ctrl)
 
@@ -112,10 +109,11 @@ func filterDoneFiles(fda map[string]*fileData, rt *tracker.RecoveryTracker) {
 	for _, key := range delList {
 		delete(fda, key)
 	}
+	time.Sleep(1 * time.Second)
 }
 
 func fetchBlockLists(fl map[string]*fileData, data Data, rbs remote.RBS, rt *tracker.RecoveryTracker, ctrl *flow.Controller) {
-	log.Taskln("Pre-processing FQ (getting blocklists)")
+	log.Taskln("Fetching blocklists")
 
 	wg := &sync.WaitGroup{}
 	fdc := make(chan string)
@@ -151,7 +149,6 @@ func fetchFiles(fl map[string]*fileData, data Data, rbs remote.RBS, rt *tracker.
 	wg2 := &sync.WaitGroup{}
 	fdc := make(chan *fileData)
 	bdc := make(chan blockData)
-	// bufferMap := make(map[string]map[string][]byte)
 	var bufferMap2 *sync.Map = &sync.Map{}
 	for x := 0; x < data.Workers; x++ {
 		go fileWorker(fdc, bdc, data.User, bufferMap2, wg, rbs, rt, ctrl)
@@ -161,7 +158,6 @@ func fetchFiles(fl map[string]*fileData, data Data, rbs remote.RBS, rt *tracker.
 	}
 
 	for _, fd := range orderedFiles {
-		// log.Info("Sending file %s to recovery", fd.OutputPath)
 		var fileBufferMap *sync.Map = &sync.Map{}
 		bufferMap2.Store(fd.Mt.Mf.Hash, fileBufferMap)
 		fdc <- fd
@@ -177,21 +173,3 @@ func fetchFiles(fl map[string]*fileData, data Data, rbs remote.RBS, rt *tracker.
 	wg2.Wait()
 	log.Taskln("Ending Recovery")
 }
-
-// func sort(arr []*fileData, newFD *fileData) []*fileData {
-// 	fsz := newFD.Mt.Mf.Size
-// 	size := len(arr)
-// 	pre := arr[:size/2]
-// 	post := arr[size/2:]
-// 	if fsz <= post[len(post)-1].Mt.Mf.Size {
-// 		return append(arr, newFD)
-// 	} else if fsz >= pre[0].Mt.Mf.Size {
-// 		newArr := []*fileData{newFD}
-// 		return append(newArr, arr...)
-// 	} else if fsz > post[0].Mt.Mf.Size {
-// 		pre = splitInsertSort(pre, newFD)
-// 	} else {
-// 		post = splitInsertSort(post, newFD)
-// 	}
-// 	return append(pre, post...)
-// }

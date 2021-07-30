@@ -25,27 +25,6 @@ func New() *RecoveryTracker {
 
 	r.Gauges["membuff"] = tracker.NewGauge()
 	return r
-
-	// tr.AddGauge("buffer", 10)
-	// tr.AddGauge("files", 0)
-	// tr.AddGauge("metafiles", 0)
-	// tr.AddGauge("size", 0)
-	// tr.AddGauge("totalsize", 0)
-	// tr.AddGauge("errors", 0)
-	// tr.InitSpdRate("size", 40)
-	// tr.UnitsFunc("totalsize", utils.B2H)
-	// tr.UnitsFunc("size", utils.B2H)
-	// fn := func() {
-	// 	fe, et, _ := tr.RawValues("errors")
-	// 	cf, tf, _ := tr.RawValues("files")
-	// 	cs, ts, _ := tr.Values("totalsize")
-	// 	rt, _ := tr.TrueProgressRate("size")
-	// 	eta, _ := tr.ETA("size")
-	// 	log.Notice("Files: %d/%d | Size: %s/%s | Error Files/Total: %d/%d \t\t[ %sps | ETA: %s ]", cf, tf, cs, ts, fe, et, rt, eta)
-	// }
-	// tr.PrintFunc(fn)
-
-	// return tr
 }
 
 func (r *RecoveryTracker) AlreadyDone(size int64) {

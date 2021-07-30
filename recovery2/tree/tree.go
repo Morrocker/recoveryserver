@@ -181,8 +181,8 @@ func startWorkers(data Data, tt Throttling, rt *tracker.RecoveryTracker, ctrl *f
 
 	wg := &sync.WaitGroup{}
 	tc := make(chan *MetaTree, tt.BuffSize)
-	wg.Add(tt.Workers)
 	for x := 0; x < tt.Workers; x++ {
+		wg.Add(1)
 		go metaTreeWorker(data, tc, wg, rt, ctrl)
 	}
 

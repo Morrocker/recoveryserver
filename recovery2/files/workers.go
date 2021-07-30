@@ -13,8 +13,6 @@ import (
 	"github.com/morrocker/utils"
 	"golang.org/x/text/unicode/norm"
 
-	// "github.com/morrocker/tracker"
-
 	"github.com/morrocker/recoveryserver/recovery2/tracker"
 )
 
@@ -51,12 +49,15 @@ func fileWorker(
 	ctrl *flow.Controller) {
 	op := "recovery.fileWorker()"
 
+	wg.Add(1)
 	for fd := range fdc {
-		wg.Add(1)
 		log.Info("Recovering file %s\t[%s]", fd.OutputPath, utils.B2H(fd.Mt.Mf.Size))
 		time.Sleep(1 * time.Second)
 		go func() {
 			for _, block := range fd.blocksList {
+				if ctrl.Checkpoint() != 0 {
+					return
+				}
 				newBlockData := blockData{
 					user:     user,
 					hash:     block,
@@ -70,6 +71,9 @@ func fileWorker(
 			log.Errorln(errors.New(op, err))
 		}
 		for _, block := range fd.blocksList {
+			if ctrl.Checkpoint() != 0 {
+				break
+			}
 			for {
 				subMapIf, ok := bufferMap.Load(fd.Mt.Mf.Hash)
 				if ok {
@@ -96,8 +100,8 @@ func fileWorker(
 		f.Close()
 
 		bufferMap.Delete(fd.Mt.Mf.Hash)
-		wg.Done()
 	}
+	wg.Done()
 }
 
 type blockData struct {
@@ -120,10 +124,11 @@ func filesBlockWorker(
 	ctrl *flow.Controller) {
 	op := "files.filesBlockWorker()"
 
+	wg.Add(1)
 	for bd := range bdc {
-		wg.Add(1)
-		// log.Info("fbw Buffermap")
-		// spew.Dump(bufferMap)
+		if ctrl.Checkpoint() != 0 {
+			break
+		}
 		bytes, err := rbs.GetBlock(bd.hash, bd.user)
 		if err != nil {
 			log.Errorln(errors.Extend(op, err))
@@ -145,6 +150,6 @@ func filesBlockWorker(
 				subMap.Store(bd.hash, val)
 			}
 		}
-		wg.Done()
 	}
+	wg.Done()
 }
