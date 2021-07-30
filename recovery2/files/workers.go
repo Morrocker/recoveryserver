@@ -284,6 +284,7 @@ func blockListWorker(
 	rt *tracker.RecoveryTracker,
 	ctrl *flow.Controller) {
 	for block := range blockChan {
+		wg.Add(1)
 		if ctrl.Checkpoint() != 0 {
 			break
 		}
@@ -295,6 +296,7 @@ func blockListWorker(
 		}
 		destMap[block].blocksList = blockList
 		rt.Gauges["files"].Total(1)
+		wg.Done()
 	}
 }
 

@@ -136,6 +136,7 @@ func fetchBlockLists(fl map[string]*fileData, data Data, rbs remote.RBS, rt *tra
 	}
 	time.Sleep(5 * time.Second)
 	close(fdc)
+	wg.Wait()
 	for hash := range fl {
 		if len(fl[hash].blocksList) <= 0 {
 			delete(fl, hash)
