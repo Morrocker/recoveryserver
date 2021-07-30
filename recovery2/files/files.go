@@ -169,7 +169,7 @@ func fetchFiles(fl map[string]*fileData, data Data, rbs remote.RBS, rt *tracker.
 		log.Info("Sending file %s to recovery", fd.OutputPath)
 		var fileBufferMap *sync.Map = &sync.Map{}
 		bufferMap2.Store(fd.Mt.Mf.Hash, fileBufferMap)
-		// fdc <- fd
+		fdc <- fd
 	}
 	time.Sleep(5 * time.Second)
 	close(fdc)
