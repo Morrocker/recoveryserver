@@ -336,8 +336,8 @@ func fileWorker(
 				if ok {
 					subMap := subMapIf.(*sync.Map)
 					bytesIf, ok := subMap.LoadAndDelete(block)
-					bytes := bytesIf.([]byte)
 					if ok {
+						bytes := bytesIf.([]byte)
 						if _, err := f.Write(bytes); err != nil {
 							log.Errorln(errors.New(op, fmt.Sprintf("error could not write content for file '%s': %v\n", fd.OutputPath, err)))
 						}
