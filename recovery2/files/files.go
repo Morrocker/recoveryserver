@@ -57,13 +57,13 @@ func GetFiles(mt *tree.MetaTree, OutputPath string, data Data, rbs remote.RBS, r
 	log.Info("Filled list Size:%d", len(filesList))
 	filterDoneFiles(filesList, rt)
 	log.Info("Filtered list Size:%d", len(filesList))
-	for hash, fd := range filesList {
-		log.Info("MARK %s [%s]", fd.OutputPath, hash)
-	}
 
 	time.Sleep(5 * time.Second)
 
 	fetchBlockLists(filesList, data, rbs, rt, ctrl)
+	for hash, fd := range filesList {
+		log.Info("MARK %s [%s]", fd.OutputPath, hash)
+	}
 
 	fetchFiles(filesList, data, rbs, rt, ctrl)
 
