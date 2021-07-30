@@ -165,6 +165,13 @@ func fetchFiles(fl map[string]*fileData, data Data, rbs remote.RBS, rt *tracker.
 		go filesBlockWorker(bdc, bufferMap2, bc, wg2, rbs, rt, ctrl)
 	}
 
+	go func() {
+		for {
+			time.Sleep(10 * time.Millisecond)
+			bc.Broadcast()
+		}
+	}()
+
 	for _, fd := range orderedFiles {
 		// log.Info("Sending file %s to recovery", fd.OutputPath)
 		var fileBufferMap *sync.Map = &sync.Map{}
