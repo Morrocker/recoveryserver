@@ -212,6 +212,7 @@ func fetchFiles(fl map[string]*fileData, data Data, rbs remote.RBS, rt *tracker.
 	}
 
 	for _, fd := range orderedFiles {
+		log.Info("Sending file %s to recovery", fd.OutputPath)
 		var fileBufferMap *sync.Map = &sync.Map{}
 		bufferMap2.Store(fd.Mt.Mf.Hash, fileBufferMap)
 		fdc <- fd
