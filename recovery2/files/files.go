@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path"
+	"sort"
 	"sync"
 	"time"
 
@@ -146,11 +147,15 @@ func fetchBlockLists(fl map[string]*fileData, data Data, rbs remote.RBS, rt *tra
 func fetchFiles(fl map[string]*fileData, data Data, rbs remote.RBS, rt *tracker.RecoveryTracker, ctrl *flow.Controller) {
 	orderedFiles := []*fileData{}
 	for _, fd := range fl {
-		if len(orderedFiles) == 0 {
-			orderedFiles = append(orderedFiles, fd)
-		}
-		orderedFiles = splitInsertSort(orderedFiles, fd)
+		orderedFiles = append(orderedFiles, fd)
 	}
+	sort.Slice(orderedFiles, func(i, j int) bool { return orderedFiles[i].Mt.Mf.Size < orderedFiles[j].Mt.Mf.Size })
+	// for _, fd := range fl {
+	// 	if len(orderedFiles) == 0 {
+	// 		orderedFiles = append(orderedFiles, fd)
+	// 	}
+	// 	orderedFiles = splitInsertSort(orderedFiles, fd)
+	// }
 	for hash, fd := range fl {
 		log.Info("MARK %s [%s]", fd.OutputPath, hash)
 	}
@@ -185,20 +190,20 @@ func fetchFiles(fl map[string]*fileData, data Data, rbs remote.RBS, rt *tracker.
 	wg2.Wait()
 }
 
-func splitInsertSort(arr []*fileData, newFD *fileData) []*fileData {
-	fsz := newFD.Mt.Mf.Size
-	size := len(arr)
-	pre := arr[:size/2]
-	post := arr[size/2:]
-	if fsz <= post[len(post)-1].Mt.Mf.Size {
-		return append(arr, newFD)
-	} else if fsz >= pre[0].Mt.Mf.Size {
-		newArr := []*fileData{newFD}
-		return append(newArr, arr...)
-	} else if fsz > post[0].Mt.Mf.Size {
-		pre = splitInsertSort(pre, newFD)
-	} else {
-		post = splitInsertSort(post, newFD)
-	}
-	return append(pre, post...)
-}
+// func sort(arr []*fileData, newFD *fileData) []*fileData {
+// 	fsz := newFD.Mt.Mf.Size
+// 	size := len(arr)
+// 	pre := arr[:size/2]
+// 	post := arr[size/2:]
+// 	if fsz <= post[len(post)-1].Mt.Mf.Size {
+// 		return append(arr, newFD)
+// 	} else if fsz >= pre[0].Mt.Mf.Size {
+// 		newArr := []*fileData{newFD}
+// 		return append(newArr, arr...)
+// 	} else if fsz > post[0].Mt.Mf.Size {
+// 		pre = splitInsertSort(pre, newFD)
+// 	} else {
+// 		post = splitInsertSort(post, newFD)
+// 	}
+// 	return append(pre, post...)
+// }
