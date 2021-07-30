@@ -179,10 +179,15 @@ func fetchFiles(fl map[string]*fileData, data Data, rbs remote.RBS, rt *tracker.
 		fdc <- fd
 	}
 	time.Sleep(5 * time.Second)
+	log.Taskln("Closing fileWorkers Channels")
 	close(fdc)
+	log.Taskln("Waiting for fileWorkers to finish")
 	wg.Wait()
+	log.Taskln("Closing blockWorkers Channels")
 	close(bdc)
+	log.Taskln("Waiting for blockWorkers to finish")
 	wg2.Wait()
+	log.Taskln("Ending Recovery")
 }
 
 // func sort(arr []*fileData, newFD *fileData) []*fileData {
