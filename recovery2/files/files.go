@@ -56,7 +56,7 @@ func GetFiles(mt *tree.MetaTree, OutputPath string, data Data, rbs remote.RBS, r
 	fillFilesList(OutputPath, fd, filesList)
 	log.Info("Filled list Size:%d", len(filesList))
 	for hash, fd := range filesList {
-		log.Info("%s [%s]", fd.OutputPath, hash)
+		log.Info("IMARKI %s [%s]", fd.OutputPath, hash)
 	}
 	filterDoneFiles(filesList, rt)
 	log.Info("Filtered list Size:%d", len(filesList))
