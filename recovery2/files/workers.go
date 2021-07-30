@@ -301,7 +301,8 @@ func blockListWorker(
 
 func fileWorker(
 	fdc chan *fileData, bdc chan blockData,
-	bufferMap map[string]map[string][]byte, user string,
+	user string,
+	bufferMap *sync.Map,
 	ls *broadcast.Listener,
 	wg *sync.WaitGroup,
 	rbs remote.RBS,
@@ -331,19 +332,26 @@ func fileWorker(
 		}
 		for _, block := range fd.blocksList {
 			for {
-				val, ok := bufferMap[fd.Mt.Mf.Hash][block]
+				subMapIf, ok := bufferMap.Load(fd.Mt.Mf.Hash)
 				if ok {
-					if _, err := f.Write(val); err != nil {
-						log.Errorln(errors.New(op, fmt.Sprintf("error could not write content for file '%s': %v\n", fd.OutputPath, err)))
+					subMap := subMapIf.(*sync.Map)
+					bytesIf, ok := subMap.LoadAndDelete(block)
+					bytes := bytesIf.([]byte)
+					if ok {
+						if _, err := f.Write(bytes); err != nil {
+							log.Errorln(errors.New(op, fmt.Sprintf("error could not write content for file '%s': %v\n", fd.OutputPath, err)))
+						}
+						break
 					}
-					delete(bufferMap[fd.Mt.Mf.Hash], block)
-					break
 				}
+				// val, ok := bufferMap[fd.Mt.Mf.Hash][block]
 				<-ls.C
 			}
 		}
 		f.Close()
-		delete(bufferMap, fd.Mt.Mf.Hash)
+
+		// delete(bufferMap, fd.Mt.Mf.Hash)
+		bufferMap.Delete(fd.Mt.Mf.Hash)
 		wg.Done()
 	}
 }
@@ -356,7 +364,7 @@ type blockData struct {
 
 func filesBlockWorker(
 	bdc chan blockData,
-	bufferMap map[string]map[string][]byte,
+	bufferMap *sync.Map,
 	bc *broadcast.Broadcaster,
 	wg *sync.WaitGroup,
 	rbs remote.RBS,
@@ -373,7 +381,11 @@ func filesBlockWorker(
 			log.Errorln(errors.Extend(op, err))
 			bytes = zeroedBuffer
 		}
-		bufferMap[bd.fileHash][bd.hash] = bytes
+		subMapIf, ok := bufferMap.Load(bd.fileHash)
+		if ok {
+			subMap := subMapIf.(*sync.Map)
+			subMap.Store(bd.hash, bytes)
+		}
 		bc.Broadcast()
 		wg.Done()
 	}
