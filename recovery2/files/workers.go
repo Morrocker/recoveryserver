@@ -6,7 +6,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/davecgh/go-spew/spew"
 	"github.com/morrocker/broadcast"
 	"github.com/morrocker/errors"
 	"github.com/morrocker/flow"
@@ -314,8 +313,8 @@ func fileWorker(
 		wg.Add(1)
 		log.Info("Recovering file %s\t[%s]", fd.OutputPath, utils.B2H(fd.Mt.Mf.Size))
 		time.Sleep(1 * time.Second)
-		log.Infoln("Buffermap")
-		spew.Dump(bufferMap)
+		// log.Infoln("Buffermap")
+		// spew.Dump(bufferMap)
 		go func() {
 			for _, block := range fd.blocksList {
 				newBlockData := blockData{
@@ -367,7 +366,7 @@ func filesBlockWorker(
 
 	for bd := range bdc {
 		wg.Add(1)
-		log.Info("fbw Buffermap")
+		// log.Info("fbw Buffermap")
 		// spew.Dump(bufferMap)
 		bytes, err := rbs.GetBlock(bd.hash, bd.user)
 		if err != nil {
