@@ -303,7 +303,7 @@ func fileWorker(
 	fdc chan *fileData, bdc chan blockData,
 	user string,
 	bufferMap *sync.Map,
-	ls *broadcast.Listener,
+	bc *broadcast.Broadcaster,
 	wg *sync.WaitGroup,
 	rbs remote.RBS,
 	rt *tracker.RecoveryTracker,
@@ -330,6 +330,7 @@ func fileWorker(
 		if err != nil {
 			log.Errorln(errors.New(op, err))
 		}
+		ls := bc.Listen()
 		for _, block := range fd.blocksList {
 			for {
 				subMapIf, ok := bufferMap.Load(fd.Mt.Mf.Hash)
@@ -349,6 +350,7 @@ func fileWorker(
 			}
 		}
 		f.Close()
+		ls.Close()
 
 		// delete(bufferMap, fd.Mt.Mf.Hash)
 		bufferMap.Delete(fd.Mt.Mf.Hash)
