@@ -54,7 +54,7 @@ type Resources struct {
 	MemBuffer   int
 }
 
-type remotesData struct {
+type RemotesData struct {
 	address string
 	magic   string
 }
