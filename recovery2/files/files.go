@@ -150,18 +150,6 @@ func fetchFiles(fl map[string]*fileData, data Data, rbs remote.RBS, rt *tracker.
 		orderedFiles = append(orderedFiles, fd)
 	}
 	sort.Slice(orderedFiles, func(i, j int) bool { return orderedFiles[i].Mt.Mf.Size < orderedFiles[j].Mt.Mf.Size })
-	// for _, fd := range fl {
-	// 	if len(orderedFiles) == 0 {
-	// 		orderedFiles = append(orderedFiles, fd)
-	// 	}
-	// 	orderedFiles = splitInsertSort(orderedFiles, fd)
-	// }
-	for hash, fd := range fl {
-		log.Info("MARK %s [%s]", fd.OutputPath, hash)
-	}
-	for hash, fd := range orderedFiles {
-		log.Info("MARK %s [%s]", fd.OutputPath, hash)
-	}
 
 	wg := &sync.WaitGroup{}
 	wg2 := &sync.WaitGroup{}
