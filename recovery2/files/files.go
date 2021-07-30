@@ -149,7 +149,7 @@ func fetchFiles(fl map[string]*fileData, data Data, rbs remote.RBS, rt *tracker.
 	for _, fd := range fl {
 		orderedFiles = append(orderedFiles, fd)
 	}
-	sort.Slice(orderedFiles, func(i, j int) bool { return orderedFiles[i].Mt.Mf.Size < orderedFiles[j].Mt.Mf.Size })
+	sort.Slice(orderedFiles, func(i, j int) bool { return orderedFiles[i].Mt.Mf.Size > orderedFiles[j].Mt.Mf.Size })
 
 	wg := &sync.WaitGroup{}
 	wg2 := &sync.WaitGroup{}
@@ -161,7 +161,7 @@ func fetchFiles(fl map[string]*fileData, data Data, rbs remote.RBS, rt *tracker.
 	for x := 0; x < data.Workers; x++ {
 		go fileWorker(fdc, bdc, data.User, bufferMap2, bc.Listen(), wg, rbs, rt, ctrl)
 	}
-	for x := 0; x < data.Workers; x++ {
+	for x := 0; x < data.Workers*2; x++ {
 		go filesBlockWorker(bdc, bufferMap2, bc, wg2, rbs, rt, ctrl)
 	}
 
