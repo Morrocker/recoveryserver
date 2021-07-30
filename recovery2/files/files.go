@@ -123,6 +123,7 @@ func fetchBlockLists(fl map[string]*fileData, data Data, rbs remote.RBS, rt *tra
 
 	wg := &sync.WaitGroup{}
 	fdc := make(chan string)
+	wg.Add(data.Workers)
 	for x := 0; x < data.Workers; x++ {
 		go blockListWorker(fdc, fl, data.User, wg, rbs, rt, ctrl)
 	}
