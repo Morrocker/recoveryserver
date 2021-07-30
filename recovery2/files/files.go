@@ -167,7 +167,8 @@ func fetchFiles(fl map[string]*fileData, data Data, rbs remote.RBS, rt *tracker.
 
 	go func() {
 		for {
-			time.Sleep(10 * time.Millisecond)
+			time.Sleep(1 * time.Second)
+			log.Info("Sending Broadcast!")
 			bc.Broadcast()
 		}
 	}()
