@@ -206,7 +206,7 @@ func fetchFiles(fl map[string]*fileData, data Data, rbs remote.RBS, rt *tracker.
 	for x := 0; x < data.Workers; x++ {
 		go fileWorker(fdc, bdc, bufferMap, data.User, bc.Listen(), wg, rbs, rt, ctrl)
 	}
-	for x := 0; x < data.Workers*2; x++ {
+	for x := 0; x < data.Workers; x++ {
 		go filesBlockWorker(bdc, bufferMap, bc, wg2, rbs, rt, ctrl)
 	}
 
