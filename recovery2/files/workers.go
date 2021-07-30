@@ -6,7 +6,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/morrocker/broadcast"
 	"github.com/morrocker/errors"
 	"github.com/morrocker/flow"
 	"github.com/morrocker/log"
@@ -303,7 +302,6 @@ func fileWorker(
 	fdc chan *fileData, bdc chan blockData,
 	user string,
 	bufferMap *sync.Map,
-	bc *broadcast.Broadcaster,
 	wg *sync.WaitGroup,
 	rbs remote.RBS,
 	rt *tracker.RecoveryTracker,
@@ -365,7 +363,6 @@ type blockData struct {
 func filesBlockWorker(
 	bdc chan blockData,
 	bufferMap *sync.Map,
-	bc *broadcast.Broadcaster,
 	wg *sync.WaitGroup,
 	rbs remote.RBS,
 	rt *tracker.RecoveryTracker,
@@ -386,7 +383,6 @@ func filesBlockWorker(
 			subMap := subMapIf.(*sync.Map)
 			subMap.Store(bd.hash, bytes)
 		}
-		bc.Broadcast()
 		wg.Done()
 	}
 }

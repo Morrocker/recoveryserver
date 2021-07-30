@@ -9,7 +9,6 @@ import (
 	"time"
 
 	"github.com/clonercl/reposerver"
-	"github.com/morrocker/broadcast"
 	"github.com/morrocker/errors"
 	"github.com/morrocker/flow"
 	"github.com/morrocker/log"
@@ -157,21 +156,12 @@ func fetchFiles(fl map[string]*fileData, data Data, rbs remote.RBS, rt *tracker.
 	bdc := make(chan blockData)
 	// bufferMap := make(map[string]map[string][]byte)
 	var bufferMap2 *sync.Map = &sync.Map{}
-	bc := broadcast.New()
 	for x := 0; x < data.Workers; x++ {
-		go fileWorker(fdc, bdc, data.User, bufferMap2, bc, wg, rbs, rt, ctrl)
+		go fileWorker(fdc, bdc, data.User, bufferMap2, wg, rbs, rt, ctrl)
 	}
 	for x := 0; x < data.Workers; x++ {
-		go filesBlockWorker(bdc, bufferMap2, bc, wg2, rbs, rt, ctrl)
+		go filesBlockWorker(bdc, bufferMap2, wg2, rbs, rt, ctrl)
 	}
-
-	go func() {
-		for {
-			time.Sleep(1 * time.Second)
-			log.Info("Sending Broadcast!")
-			bc.Broadcast()
-		}
-	}()
 
 	for _, fd := range orderedFiles {
 		// log.Info("Sending file %s to recovery", fd.OutputPath)
