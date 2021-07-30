@@ -213,8 +213,11 @@ func fetchFiles(fl map[string]*fileData, data Data, rbs remote.RBS, rt *tracker.
 
 	for _, fd := range orderedFiles {
 		var fileBufferMap *sync.Map
+		log.Info("first try")
 		bufferMap2.Store("ASD", 10)
+		log.Info("got through")
 		bufferMap2.Store(fd.Mt.Mf.Hash, fileBufferMap)
+		log.Info("not quite through")
 		fdc <- fd
 	}
 	time.Sleep(5 * time.Second)
