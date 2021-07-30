@@ -25,10 +25,6 @@ type Data struct {
 	Workers int
 }
 
-// type filesList struct {
-// 	ToDo map[string]*fileData
-// }
-
 type fileData struct {
 	Mt         *tree.MetaTree
 	OutputPath string
