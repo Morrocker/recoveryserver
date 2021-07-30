@@ -59,20 +59,20 @@ type RemotesData struct {
 	Magic   string
 }
 
-func New(d Data, r Resources, rd []remotesData) Recovery {
+func New(d Data, r Resources, rd []RemotesData) Recovery {
 	var rbs remote.RBS
 	if len(rd) <= 0 {
 		log.Errorln(errors.New("recovery.New()", "no remotes set for the recovery"))
 		return nil
 	} else if len(rd) == 1 {
-		rbs = remote.NewRBS(rd[0].address, rd[0].magic)
+		rbs = remote.NewRBS(rd[0].Address, rd[0].Magic)
 	} else {
 		for i, data := range rd {
 			if i == 0 {
-				rbs = remote.NewRBS(rd[0].address, rd[0].magic)
+				rbs = remote.NewRBS(rd[0].Address, rd[0].Magic)
 				continue
 			}
-			rbs.SetBkp(data.address, data.magic)
+			rbs.SetBkp(data.Address, data.Magic)
 		}
 	}
 	newRecovery := &recovery{
