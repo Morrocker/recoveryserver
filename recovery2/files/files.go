@@ -9,7 +9,6 @@ import (
 	"time"
 
 	"github.com/clonercl/reposerver"
-	"github.com/davecgh/go-spew/spew"
 	"github.com/morrocker/errors"
 	"github.com/morrocker/flow"
 	"github.com/morrocker/log"
@@ -37,13 +36,13 @@ func GetFiles(mt *tree.MetaTree, OutputPath string, data Data, rbs remote.RBS, r
 	log.Taskln("Starting files recovery")
 	op := "recovery.getFiles()"
 
-	log.Info("GET FILES DATA")
-	spew.Dump(mt)
-	spew.Dump(OutputPath)
-	spew.Dump(data)
-	spew.Dump(rbs)
-	spew.Dump(rt)
-	spew.Dump(ctrl)
+	// log.Info("GET FILES DATA")
+	// spew.Dump(mt)
+	// spew.Dump(OutputPath)
+	// spew.Dump(data)
+	// spew.Dump(rbs)
+	// spew.Dump(rt)
+	// spew.Dump(ctrl)
 
 	fd := &fileData{
 		Mt:         mt,
