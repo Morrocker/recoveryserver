@@ -6,6 +6,7 @@ require (
 	github.com/clonercl/blockserver v0.1.9-0.20210421002115-9970c15b6dff
 	github.com/clonercl/kaon v0.1.8
 	github.com/clonercl/reposerver v0.0.0-20190806151941-b7d532a8c047
+	github.com/davecgh/go-spew v1.1.1
 	github.com/fatih/color v1.12.0 // indirect
 	github.com/gin-gonic/gin v1.6.3
 	github.com/go-playground/validator/v10 v10.4.1 // indirect
