@@ -138,7 +138,8 @@ func (r *recovery) GetTree() error {
 	}
 
 	tt := tree.Throttling{
-		Workers: r.resources.MetaWorkers,
+		Workers:  r.resources.MetaWorkers,
+		BuffSize: r.resources.MemBuffer * 100,
 	}
 
 	newTree, err := tree.GetRecoveryTree(data, tt, r.tracker, r.controller)
