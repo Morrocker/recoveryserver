@@ -141,7 +141,6 @@ func fetchBlockLists(fl map[string]*fileData, data Data, rbs remote.RBS, rt *tra
 
 	wg := &sync.WaitGroup{}
 	fdc := make(chan string)
-	wg.Add(data.Workers)
 	for x := 0; x < data.Workers; x++ {
 		go blockListWorker(fdc, fl, data.User, wg, rbs, rt, ctrl)
 	}
@@ -152,7 +151,7 @@ func fetchBlockLists(fl map[string]*fileData, data Data, rbs remote.RBS, rt *tra
 		}
 		fdc <- hash
 	}
-	time.Sleep(5 * time.Second)
+	time.Sleep(1 * time.Second)
 	close(fdc)
 	wg.Wait()
 	for hash := range fl {

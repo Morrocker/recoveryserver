@@ -23,6 +23,7 @@ func blockListWorker(
 	rbs remote.RBS,
 	rt *tracker.RecoveryTracker,
 	ctrl flow.Controller) {
+	wg.Add(1)
 	for block := range blockChan {
 		if ctrl.Checkpoint() != 0 {
 			break
@@ -49,8 +50,8 @@ func fileWorker(
 	ctrl flow.Controller) {
 	op := "recovery.fileWorker()"
 
+	wg.Add(1)
 	for fd := range fdc {
-		wg.Add(1)
 		log.Info("Recovering file %s\t[%s]", fd.OutputPath, utils.B2H(fd.Mt.Mf.Size))
 		time.Sleep(1 * time.Second)
 		go func() {
@@ -108,8 +109,8 @@ func fileWorker(
 		f.Close()
 
 		bufferMap.Delete(fd.Mt.Mf.Hash)
-		wg.Done()
 	}
+	wg.Done()
 }
 
 type blockData struct {
@@ -132,8 +133,8 @@ func filesBlockWorker(
 	ctrl flow.Controller) {
 	op := "files.filesBlockWorker()"
 
+	wg.Add(1)
 	for bd := range bdc {
-		wg.Add(1)
 		if ctrl.Checkpoint() != 0 {
 			break
 		}
@@ -159,6 +160,6 @@ func filesBlockWorker(
 			}
 			rt.Gauges["membuff"].Current(1)
 		}
-		wg.Done()
 	}
+	wg.Done()
 }
