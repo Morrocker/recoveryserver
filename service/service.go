@@ -55,24 +55,24 @@ func (s *Service) Handler() http.Handler {
 	// mux.Use(s.handleAuth)
 	// mux.Use(s.monitorHandler())
 
-	mux.POST("/add", s.addRecovery)
-	mux.POST("/change_priority", s.changePriority)
-	mux.POST("/set_output", s.setOutput)
-	mux.GET("/precalculate", s.precalculateSize)
-	mux.GET("/recoveries", s.getRecoveries)
-	// Recoveries run manipulation
-	mux.GET("/queue_recovery", s.queueRecovery)
-	mux.GET("/start_recovery", s.startRecovery)
-	mux.GET("/pause_recovery", s.pauseRecovery)
-	mux.GET("/cancel_recovery", s.cancelRecovery)
-	// PDF generation
-	mux.GET("/generate_delivery", s.writeDelivery)
-	// Disk operations
-	mux.GET("/devices", s.getDevices)
-	mux.GET("/mount", s.mountDevice)
-	mux.GET("/unmount", s.unmountDevice)
-	// Requests
-	mux.GET("/shutdown", s.shutdown)
+	// mux.POST("/add", s.addRecovery)
+	// mux.POST("/change_priority", s.changePriority)
+	// mux.POST("/set_output", s.setOutput)
+	// mux.GET("/precalculate", s.precalculateSize)
+	// mux.GET("/recoveries", s.getRecoveries)
+	// // Recoveries run manipulation
+	// mux.GET("/queue_recovery", s.queueRecovery)
+	// mux.GET("/start_recovery", s.startRecovery)
+	// mux.GET("/pause_recovery", s.pauseRecovery)
+	// mux.GET("/cancel_recovery", s.cancelRecovery)
+	// // PDF generation
+	// mux.GET("/generate_delivery", s.writeDelivery)
+	// // Disk operations
+	// mux.GET("/devices", s.getDevices)
+	// mux.GET("/mount", s.mountDevice)
+	// mux.GET("/unmount", s.unmountDevice)
+	// // Requests
+	// mux.GET("/shutdown", s.shutdown)
 
 	// mux.GET("/test", s.test)
 

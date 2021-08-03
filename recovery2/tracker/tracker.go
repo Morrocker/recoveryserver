@@ -31,26 +31,26 @@ func (r *RecoveryTracker) AlreadyDone(size int64) {
 	r.Gauges["files"].Current(1)
 	r.Gauges["size"].Total(size)
 	r.Gauges["size"].Current(size)
-	r.Gauges["totalsize"].Total(size)
-	r.Gauges["totalsize"].Current(size)
+	r.Gauges["totalSize"].Total(size)
+	r.Gauges["totalSize"].Current(size)
 }
 
 func (r *RecoveryTracker) FailedBlocklist(size int64) {
 	r.Gauges["files"].Total(1)
-	r.Gauges["totalsize"].Total(size)
+	r.Gauges["totalSize"].Total(size)
 	r.Counters["errors"].Current(1)
 }
 
 func (r *RecoveryTracker) AddFile(size int64) {
 	r.Gauges["files"].Total(1)
 	r.Gauges["size"].Total(size)
-	r.Gauges["totalsize"].Total(size)
+	r.Gauges["totalSize"].Total(size)
 }
 
 func (r *RecoveryTracker) CompleteFile(size int64) {
 	r.Gauges["files"].Current(1)
 	r.Gauges["size"].Current(size)
-	r.Gauges["totalsize"].Current(size)
+	r.Gauges["totalSize"].Current(size)
 }
 
 func (r *RecoveryTracker) FailedFiles(n int) {

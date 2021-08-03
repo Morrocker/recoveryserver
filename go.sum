@@ -153,6 +153,8 @@ github.com/morrocker/flow v0.0.0-20210529034807-e01aac64c787/go.mod h1:O8XpAgh0x
 github.com/morrocker/log v0.0.0-20210322121956-1387843cccea/go.mod h1:MjIRLB46zjJ4ECw3IGjLMlXBSz2+d9D/GIbZqie1Tl0=
 github.com/morrocker/log v1.0.0 h1:USbEIKyuIIxb2zijLbIQYhRRHklNtumk1V0ZmLQxu9I=
 github.com/morrocker/log v1.0.0/go.mod h1:MjIRLB46zjJ4ECw3IGjLMlXBSz2+d9D/GIbZqie1Tl0=
+github.com/morrocker/log v1.0.2 h1:tnqmsnXqpIOSH8IQ81/drudnuwq3Wl088rzv2syvmWQ=
+github.com/morrocker/log v1.0.2/go.mod h1:TvBAQJ0E/7yp1jobRZbiBFJlBX4sJO8tnQKVGqHerh8=
 github.com/morrocker/tracker v1.0.1 h1:Gbe4wEcHt3F5REt1FCWMVm0BSm25d6hpvkdGTwNyXcU=
 github.com/morrocker/tracker v1.0.1/go.mod h1:jlb8C4S5/6BB0ZbeIhHb4wB3DssC0lVa3aJcM9D77Oc=
 github.com/morrocker/utils v0.0.0-20210326152034-ee75a97c3c41/go.mod h1:kfvMwyMNz1837k6VSkty0EJ5zLwAm86grPz4tlvdJ+I=

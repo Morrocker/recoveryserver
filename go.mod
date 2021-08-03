@@ -17,7 +17,7 @@ require (
 	github.com/morrocker/broadcast v0.0.0-20210331144645-71f2ee18ca39
 	github.com/morrocker/errors v0.0.0-20210616183851-68eef14f2373
 	github.com/morrocker/flow v0.0.0-20210529034807-e01aac64c787
-	github.com/morrocker/log v1.0.0
+	github.com/morrocker/log v1.0.2
 	github.com/morrocker/tracker v1.0.1
 	github.com/morrocker/utils v0.0.0-20210422183138-f61d567976f4
 	github.com/sirupsen/logrus v1.8.1 // indirect

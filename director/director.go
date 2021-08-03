@@ -7,7 +7,6 @@ import (
 	"github.com/morrocker/recoveryserver/config"
 	"github.com/morrocker/recoveryserver/disks"
 	"github.com/morrocker/recoveryserver/pdf"
-	"github.com/morrocker/recoveryserver/recovery"
 )
 
 // Director orders and decides which recoveries should be executed next
@@ -15,28 +14,28 @@ type Director struct {
 	run bool
 
 	broadcaster *broadcast.Broadcaster
-	Recoveries  map[int]*recovery.Recovery
-	devices     map[string]disks.Device
+	// Recoveries  map[int]*recovery.Recovery
+	devices map[string]disks.Device
 }
 
 // StartDirector starts the Director service and all subservices
 func (d *Director) StartDirector() error {
-	log.Task("Starting Director Services")
-	ec := make(chan error)
+	// log.Task("Starting Director Services")
+	// ec := make(chan error)
 
-	d.init()
-	go d.devicesScanner()
-	go d.recoveryPicker()
-	<-ec
-	log.Info("Shutting down director")
+	// d.init()
+	// go d.devicesScanner()
+	// go d.recoveryPicker()
+	// <-ec
+	// log.Info("Shutting down director")
 	return nil
 }
 
 func (d *Director) init() {
-	d.run = config.Data.AutoRunRecoveries
-	d.devices = make(map[string]disks.Device)
-	d.Recoveries = make(map[int]*recovery.Recovery)
-	d.broadcaster = broadcast.New()
+	// d.run = config.Data.AutoRunRecoveries
+	// d.devices = make(map[string]disks.Device)
+	// d.Recoveries = make(map[int]*recovery.Recovery)
+	// d.broadcaster = broadcast.New()
 }
 
 // Stop sets Run to false

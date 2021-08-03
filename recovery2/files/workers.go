@@ -124,6 +124,8 @@ type mapBlockData struct {
 	ctr   int
 }
 
+var zeroedBuffer = make([]byte, 1024*1000)
+
 func filesBlockWorker(
 	bdc chan blockData,
 	bufferMap *sync.Map,

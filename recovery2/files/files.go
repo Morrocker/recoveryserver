@@ -30,19 +30,9 @@ type fileData struct {
 	blocksList []string
 }
 
-var zeroedBuffer = make([]byte, 1024*1000)
-
 func GetFiles(mt *tree.MetaTree, OutputPath string, data Data, rbs remote.RBS, rt *tracker.RecoveryTracker, ctrl flow.Controller) error {
 	log.Taskln("Starting files recovery")
 	op := "recovery.getFiles()"
-
-	// log.Info("GET FILES DATA")
-	// spew.Dump(mt)
-	// spew.Dump(OutputPath)
-	// spew.Dump(data)
-	// spew.Dump(rbs)
-	// spew.Dump(rt)
-	// spew.Dump(ctrl)
 
 	fd := &fileData{
 		Mt:         mt,

@@ -16,7 +16,8 @@ type Recovery interface {
 	GetFiles() error
 	Priority(...Prty) string //subject to change
 	Status(...State) string  //subject to change
-	Progress()
+	Progress() ProgressData
+
 	Output(...string) string
 
 	Run()
@@ -32,9 +33,23 @@ type recovery struct {
 	outputPath string
 	tree       *tree.MetaTree
 
+	logger     log.Logger
 	rbs        remote.RBS
 	tracker    *tracker.RecoveryTracker
 	controller flow.Controller
+}
+
+type ProgressData struct {
+	CurrFiles   int64
+	TotFiles    int64
+	CurrMetaf   int64
+	TotMetaf    int64
+	CurrSize    int64
+	TotSize     int64
+	CurrTotSize int64
+	TotTotSize  int64
+	Errors      int64
+	FileErrors  int64
 }
 
 type Data struct {
@@ -75,6 +90,8 @@ func New(d Data, r Resources, rd []RemotesData) Recovery {
 			rbs.SetBkp(data.Address, data.Magic)
 		}
 	}
+	lg := log.New()
+	lg.SetScope(true, true, true, true, false, false)
 	newRecovery := &recovery{
 		data:       d,
 		resources:  r,
@@ -83,6 +100,7 @@ func New(d Data, r Resources, rd []RemotesData) Recovery {
 		rbs:        rbs,
 		tracker:    tracker.New(),
 		controller: flow.New(),
+		logger:     lg,
 	}
 	newRecovery.tracker.Gauges["membuff"].SetTotal(int64(newRecovery.resources.MemBuffer))
 
@@ -101,7 +119,23 @@ func (r *recovery) Cancel() {
 	r.controller.Exit(int(Canceled))
 }
 
-func (r *recovery) Progress() {}
+func (r *recovery) Progress() ProgressData {
+	cf, tf := r.tracker.Gauges["files"].RawValues()
+	cmf, tmf := r.tracker.Gauges["metafiles"].RawValues()
+	csz, tsz := r.tracker.Gauges["size"].RawValues()
+	ctsz, ttsz := r.tracker.Gauges["totalSize"].RawValues()
+	errs := r.tracker.Counters["errors"].RawValue()
+	fErrs := r.tracker.Counters["fileErrors"].RawValue()
+	pd := ProgressData{
+		CurrFiles: cf, TotFiles: tf,
+		CurrMetaf: cmf, TotMetaf: tmf,
+		CurrSize: csz, TotSize: tsz,
+		CurrTotSize: ctsz, TotTotSize: ttsz,
+		Errors:     errs,
+		FileErrors: fErrs,
+	}
+	return pd
+}
 
 func (r *recovery) Status(s ...State) string {
 	if len(s) != 0 {
@@ -142,7 +176,7 @@ func (r *recovery) GetTree() error {
 		BuffSize: r.resources.MemBuffer * 100,
 	}
 
-	newTree, err := tree.GetRecoveryTree(data, tt, r.tracker, r.controller)
+	newTree, err := tree.GetRecoveryTree(data, tt, r.tracker, r.controller, r.logger)
 	if err != nil {
 		return errors.Extend(op, err)
 	}

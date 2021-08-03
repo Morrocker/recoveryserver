@@ -44,7 +44,7 @@ func newMetaTree(mf *reposerver.Metafile) *MetaTree {
 }
 
 // GetRecoveryTree takes in a recovery data and returns a metafileTree
-func GetRecoveryTree(data Data, tt Throttling, rt *tracker.RecoveryTracker, ctrl flow.Controller) (*MetaTree, error) {
+func GetRecoveryTree(data Data, tt Throttling, rt *tracker.RecoveryTracker, ctrl flow.Controller, lg log.Logger) (*MetaTree, error) {
 	log.Task("Starting metafile tree retrieval")
 
 	if ctrl.Checkpoint() != 0 {
